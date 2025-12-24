@@ -65,7 +65,7 @@ export const LoadSearchModal = ({ isOpen, onClose, onLoad }) => {
           <button
             key={search.id}
             onClick={() => setSelectedSearch(search)}
-            className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-200 ${
+            className={`w-full p-4 text-left transition-all duration-200 ${
               selectedSearch?.id === search.id
                 ? "border-blue-600 bg-blue-50"
                 : "border-gray-200 hover:border-gray-300"
