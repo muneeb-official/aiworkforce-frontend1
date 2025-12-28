@@ -12,14 +12,16 @@ export const userData = {
   avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
 };
 
+// data/mockData.js
+
 export const navItems = [
-  { key: "analytics", name: "Analytics", path: "/analytics" },
-  { key: "sales", name: "Sales Agent", path: "/sales" },
-  { key: "marketing", name: "Marketing Agent", path: "/marketing" },
-  { key: "support", name: "Support Agent", path: "/support" },
-  { key: "train", name: "Train Your AI", path: "/train" },
-  { key: "integration", name: "Integration Hub", path: "/integration" },
-  { key: "settings", name: "Settings", path: "/settings" },
+  { key: "analytics", name: "Analytics" },
+  { key: "sales", name: "Sales Agent" },
+  { key: "marketing", name: "Marketing Agent" },
+  { key: "support", name: "Support Agent" },
+  { key: "train", name: "Train" },
+  { key: "integration", name: "Integration" },
+  { key: "settings", name: "Settings" },  // Now after integration, not at bottom
 ];
 
 export const statsCards = [

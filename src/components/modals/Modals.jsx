@@ -57,46 +57,54 @@ export const LoadSearchModal = ({ isOpen, onClose, onLoad }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md">
-      <h2 className="text-xl font-bold text-gray-800 mb-1">Select Saved Search</h2>
-      <p className="text-gray-500 text-sm mb-6">Load a saved search list.</p>
+  <h2 className="text-xl font-bold text-gray-800 mb-1">Select Saved Search</h2>
+  <p className="text-gray-500 text-sm mb-6">Load a saved search list.</p>
 
-      <div className="space-y-3 mb-6">
-        {savedSearches.map((search) => (
-          <button
-            key={search.id}
-            onClick={() => setSelectedSearch(search)}
-            className={`w-full p-4 text-left transition-all duration-200 ${
-              selectedSearch?.id === search.id
-                ? "border-blue-600 bg-blue-50"
-                : "border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  selectedSearch?.id === search.id
-                    ? "border-blue-600 bg-blue-600"
-                    : "border-gray-300"
-                }`}
-              >
-                {selectedSearch?.id === search.id && (
-                  <div className="w-2 h-2 bg-white rounded-full" />
-                )}
-              </div>
-              <span className="font-medium text-gray-800">{search.name}</span>
-            </div>
-          </button>
-        ))}
-      </div>
-
+  <div className="space-y-3 mb-6">
+    {savedSearches.map((search) => (
       <button
-        onClick={handleLoad}
-        disabled={!selectedSearch}
-        className="w-full bg-gray-200 text-gray-600 py-3 rounded-full font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        key={search.id}
+        onClick={() => setSelectedSearch(search)}
+        className={`w-full p-4 text-left rounded-lg border transition-all duration-200 ${
+          selectedSearch?.id === search.id
+            ? "border-[#3C49F7] bg-[#F2F2FF]"
+            : "border-white hover:border-[#3C49F7] hover:bg-[#F2F2FF]"
+        }`}
       >
-        Load Search
+        <div className="flex items-center gap-3">
+          {selectedSearch?.id === search.id ? (
+            <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center">
+              <svg
+                className="w-3 h-3 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={3}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+          ) : (
+            <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
+          )}
+          <span className="font-medium text-gray-800">{search.name}</span>
+        </div>
       </button>
-    </Modal>
+    ))}
+  </div>
+
+  <button
+    onClick={handleLoad}
+    disabled={!selectedSearch}
+    className="w-full bg-gray-300 text-white py-3 rounded-full font-medium hover:bg-[#3C49F7] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    Load Search
+  </button>
+</Modal>
   );
 };
 

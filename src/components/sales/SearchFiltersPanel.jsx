@@ -3,11 +3,25 @@ import { useState, useRef, useEffect } from "react";
 import { FilterTag } from "../common/CommonComponents";
 
 // Icons
-const ChevronRight = ({ className = "" }) => (
-  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M9 18l6-6-6-6" />
+// const ChevronRight = ({ className = "" }) => (
+//   <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+//     <path d="M9 18l6-6-6-6" />
+//   </svg>
+// );
+const ChevronLeft = ({ className = "" }) => (
+  <svg
+    className={className}
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M15 18l-6-6 6-6" />
   </svg>
 );
+
 
 const ChevronDown = ({ className = "" }) => (
   <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -16,13 +30,11 @@ const ChevronDown = ({ className = "" }) => (
 );
 
 const FilterIcon = ({ className = "" }) => (
-  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="4" y1="6" x2="20" y2="6" />
-    <line x1="4" y1="12" x2="20" y2="12" />
-    <line x1="4" y1="18" x2="20" y2="18" />
-    <circle cx="8" cy="6" r="2" fill="currentColor" />
-    <circle cx="16" cy="12" r="2" fill="currentColor" />
-    <circle cx="10" cy="18" r="2" fill="currentColor" />
+  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <line x1="4" y1="8" x2="20" y2="8" />
+    <line x1="4" y1="16" x2="20" y2="16" />
+    <circle cx="8" cy="8" r="2" fill="none" />
+    <circle cx="16" cy="16" r="2" fill="none" />
   </svg>
 );
 
@@ -44,8 +56,8 @@ const FilterSection = ({ title, count, children, defaultOpen = false }) => {
             </span>
           )}
         </div>
-        <span className={`transition-transform duration-200 text-blue-500 ${isOpen ? "rotate-90" : ""}`}>
-          <ChevronRight />
+        <span className={`transition-transform duration-200 text-blue-500 ${isOpen ? "-rotate-90" : ""}`}>
+          <ChevronLeft />
         </span>
       </button>
       <div
@@ -222,26 +234,57 @@ const CheckboxListFilter = ({
 };
 
 // Location Filter with Expandable List (for B2C)
-const LocationFilter = ({ placeholder, options, activeFilters, onAddFilter, onRemoveFilter }) => {
+// Location Filter with Expandable List (for B2C)
+const LocationFilter = ({ 
+  filterKey = "location",
+  placeholder, 
+  options, 
+  activeFilters, 
+  onAddFilter, 
+  onRemoveFilter,
+  onUpdateModifier,
+  hasRadius = true 
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocations, setSelectedLocations] = useState([]);
   const [expandedItems, setExpandedItems] = useState({});
   const [radius, setRadius] = useState(0);
+  const [showModifierDropdown, setShowModifierDropdown] = useState(null);
+  const modifierRef = useRef(null);
+
+  // Close modifier dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modifierRef.current && !modifierRef.current.contains(event.target)) {
+        setShowModifierDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLocationSelect = (locationName) => {
     const isSelected = selectedLocations.includes(locationName);
     if (isSelected) {
       setSelectedLocations((prev) => prev.filter((l) => l !== locationName));
-      const filter = activeFilters.find((f) => f.type === "location" && f.value === locationName);
+      const filter = activeFilters.find((f) => f.type === filterKey && f.value === locationName);
       if (filter) onRemoveFilter(filter.id);
     } else {
       setSelectedLocations((prev) => [...prev, locationName]);
-      onAddFilter({ type: "location", value: locationName, icon: "location" });
+      onAddFilter({ type: filterKey, value: locationName, icon: "location" });
     }
   };
 
   const toggleExpand = (name) => {
     setExpandedItems((prev) => ({ ...prev, [name]: !prev[name] }));
+  };
+
+  const handleModifierSelect = (locationName, modifier) => {
+    const filter = activeFilters.find((f) => f.type === filterKey && f.value === locationName);
+    if (filter && onUpdateModifier) {
+      onUpdateModifier(filter.id, modifier);
+    }
+    setShowModifierDropdown(null);
   };
 
   const marks = [0, 25, 50, 75, 100];
@@ -258,79 +301,136 @@ const LocationFilter = ({ placeholder, options, activeFilters, onAddFilter, onRe
       <div className="mt-3 max-h-64 overflow-auto space-y-1">
         {options
           .filter((loc) => loc.name.toLowerCase().includes(searchTerm.toLowerCase()))
-          .map((loc) => (
-            <div key={loc.name}>
-              <div className="flex items-center gap-2 py-1.5 hover:bg-gray-50 rounded-lg px-2 transition-colors duration-150">
-                <button
-                  onClick={() => toggleExpand(loc.name)}
-                  className="p-0.5 hover:bg-gray-100 rounded transition-colors duration-150"
-                >
-                  <ChevronRight
-                    className={`text-gray-400 transition-transform duration-200 ${
-                      expandedItems[loc.name] ? "rotate-90" : ""
-                    }`}
-                  />
-                </button>
-                <label className="flex items-center gap-2 flex-1 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedLocations.includes(loc.name)}
-                    onChange={() => handleLocationSelect(loc.name)}
-                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">
-                    {loc.name} {loc.count && <span className="text-gray-400">({loc.count})</span>}
-                  </span>
-                </label>
-                <button className="p-1 hover:bg-gray-100 rounded transition-colors duration-150">
-                  <FilterIcon  className="text-gray-400" />
-                </button>
-              </div>
-              {expandedItems[loc.name] && loc.children && (
-                <div className="ml-8 mt-1 space-y-1">
-                  {loc.children.map((child, idx) => (
-                    <label
-                      key={idx}
-                      className="flex items-center gap-2 py-1.5 px-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors duration-150"
+          .map((loc) => {
+            const isSelected = selectedLocations.includes(loc.name);
+            const selectedFilter = activeFilters.find(
+              (f) => f.type === filterKey && f.value === loc.name
+            );
+
+            return (
+              <div key={loc.name}>
+                <div className="flex items-center gap-2 py-1.5 hover:bg-gray-50 rounded-lg px-2 transition-colors duration-150 group">
+                  <button
+                    onClick={() => toggleExpand(loc.name)}
+                    className="p-0.5 hover:bg-gray-100 rounded transition-colors duration-150"
+                  >
+                    <ChevronLeft
+                      className={`text-gray-400 transition-transform duration-200 ${
+                        expandedItems[loc.name] ? "-rotate-90" : ""
+                      }`}
+                    />
+                  </button>
+                  <label className="flex items-center gap-2 flex-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleLocationSelect(loc.name)}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">
+                      {loc.name} {loc.count && <span className="text-gray-400">({loc.count})</span>}
+                    </span>
+                  </label>
+                  
+                  {/* Filter/Modifier Button */}
+                  <div className="relative" ref={isSelected ? modifierRef : null}>
+                    <button 
+                      onClick={() => {
+                        if (isSelected) {
+                          setShowModifierDropdown(showModifierDropdown === loc.name ? null : loc.name);
+                        }
+                      }}
+                      className={`p-1 rounded transition-colors duration-150 ${
+                        isSelected 
+                          ? "hover:bg-gray-100 text-gray-500" 
+                          : "text-gray-300 opacity-0 group-hover:opacity-100"
+                      }`}
                     >
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        onChange={() => onAddFilter({ type: "location", value: child, icon: "location" })}
-                      />
-                      <span className="text-sm text-gray-600">{child}</span>
-                    </label>
-                  ))}
+                      <FilterIcon className="w-4 h-4" />
+                    </button>
+
+                    {/* Modifier Dropdown */}
+                    {isSelected && showModifierDropdown === loc.name && (
+                      <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                        <div className="px-3 py-1.5 text-xs font-medium text-gray-500 uppercase">
+                          Apply Modifier
+                        </div>
+                        <button
+                          onClick={() => handleModifierSelect(loc.name, "exact")}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <span>Exact</span>
+                          {selectedFilter?.modifier === "exact" && (
+                            <svg className="w-4 h-4 text-blue-600 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleModifierSelect(loc.name, "not")}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <span>Not</span>
+                          {selectedFilter?.modifier === "not" && (
+                            <svg className="w-4 h-4 text-blue-600 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {/* Expanded Children */}
+                {expandedItems[loc.name] && loc.children && (
+                  <div className="ml-8 mt-1 space-y-1">
+                    {loc.children.map((child, idx) => (
+                      <label
+                        key={idx}
+                        className="flex items-center gap-2 py-1.5 px-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors duration-150"
+                      >
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          onChange={() => onAddFilter({ type: filterKey, value: child, icon: "location" })}
+                        />
+                        <span className="text-sm text-gray-600">{child}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
       </div>
 
-      {/* Radius Slider */}
-      <div className="mt-4">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-sm font-medium text-gray-700">Radius (mi)</span>
-          <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs text-gray-400 cursor-help">
-            ?
-          </span>
-        </div>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value={radius}
-          onChange={(e) => setRadius(Number(e.target.value))}
-          className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-        />
-        <div className="flex justify-between mt-1">
-          {marks.map((mark) => (
-            <span key={mark} className="text-xs text-blue-500 font-medium">
-              {mark}
+      {/* Radius Slider - Only show if hasRadius is true */}
+      {hasRadius && (
+        <div className="mt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm font-medium text-gray-700">Radius (mi)</span>
+            <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs text-gray-400 cursor-help">
+              ?
             </span>
-          ))}
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={radius}
+            onChange={(e) => setRadius(Number(e.target.value))}
+            className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between mt-1">
+            {marks.map((mark) => (
+              <span key={mark} className="text-xs text-blue-500 font-medium">
+                {mark}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -433,14 +533,17 @@ export default function SearchFiltersPanel({
             )}
 
             {filterConfig.type === "location" && (
-              <LocationFilter
-                placeholder={filterConfig.placeholder}
-                options={filterConfig.options}
-                activeFilters={activeFilters}
-                onAddFilter={onAddFilter}
-                onRemoveFilter={onRemoveFilter}
-              />
-            )}
+  <LocationFilter
+    filterKey={filterConfig.key}
+    placeholder={filterConfig.placeholder}
+    options={filterConfig.options}
+    activeFilters={activeFilters}
+    onAddFilter={onAddFilter}
+    onRemoveFilter={onRemoveFilter}
+    onUpdateModifier={updateFilterModifier}
+    hasRadius={filterConfig.hasRadius}
+  />
+)}
 
             {filterConfig.type === "checkbox-list" && (
               <CheckboxListFilter

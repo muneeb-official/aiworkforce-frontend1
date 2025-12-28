@@ -4,6 +4,8 @@ import { ProfileCard } from "../profiles/ProfileComponents";
 import { CompanyCard } from "../profiles/CompanyCard";
 import { Pagination } from "../common/CommonComponents";
 import { AddToProjectModal } from "../modals/Modals";
+import { footerLinks } from "../../data/salesAgentData";
+import logofooter from "../../assets/Logo-Only.png";
 
 export default function SearchResultsView({ mode = "b2c", config, context }) {
   const {
@@ -80,77 +82,77 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
   };
 
   // Export Dropdown Component (B2C only)
-const ExportDropdown = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const ExportDropdown = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
+    // Close dropdown when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+          setIsOpen(false);
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleExport = (type) => {
+      console.log(`Exporting as ${type}...`);
+      // Add your export logic here
+      setIsOpen(false);
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
-  const handleExport = (type) => {
-    console.log(`Exporting as ${type}...`);
-    // Add your export logic here
-    setIsOpen(false);
+    return (
+      <div className="relative" ref={dropdownRef}>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="5" r="2" />
+            <circle cx="12" cy="12" r="2" />
+            <circle cx="12" cy="19" r="2" />
+          </svg>
+        </button>
+
+        {/* Dropdown Menu */}
+        {isOpen && (
+          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+            <button
+              onClick={() => handleExport("csv")}
+              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Export as .CSV
+            </button>
+            <button
+              onClick={() => handleExport("hubspot")}
+              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Export for Hubspot
+            </button>
+            <button
+              onClick={() => handleExport("salesforce")}
+              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Export in Salesforce
+            </button>
+          </div>
+        )}
+      </div>
+    );
   };
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="12" cy="5" r="2" />
-          <circle cx="12" cy="12" r="2" />
-          <circle cx="12" cy="19" r="2" />
-        </svg>
-      </button>
-
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-          <button
-            onClick={() => handleExport("csv")}
-            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            Export as .CSV
-          </button>
-          <button
-            onClick={() => handleExport("hubspot")}
-            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            Export for Hubspot
-          </button>
-          <button
-            onClick={() => handleExport("salesforce")}
-            className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            Export in Salesforce
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
 
   // Calculate display range
   const startIndex = (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, totalResults || paginatedItems.length);
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden">
+    <div className="flex-1 flex flex-col h-full gap-2 overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="p-4 border rounded bg-white border-gray-100">
         {/* Results Info Row */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-500">
               {startIndex} - {endIndex} of about {(totalResults || 234124).toLocaleString()} results.
@@ -188,35 +190,35 @@ const ExportDropdown = () => {
           </div>
 
           {selectedItems.length > 0 && (
-  <div className="flex items-center gap-3">
-    {/* Only show Enrich button for B2C */}
-    {!isB2B && config.hasEnrichment && (
-      <button
-        onClick={handleEnrichAll}
-        className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-blue-700 transition-colors"
-      >
-        Enrich Profile
-      </button>
-    )}
-    <button
-      onClick={handleAddAllToProject}
-      className="border border-gray-300 text-gray-700 px-4 py-2 rounded-full text-sm font-medium hover:border-blue-600 hover:text-blue-600 transition-colors"
-    >
-      Add to Project
-    </button>
-    
-    {/* Three Dots Menu - Only for B2C */}
-    {!isB2B && (
-      <ExportDropdown />
-    )}
-  </div>
-)}
+            <div className="flex items-center gap-3">
+              {/* Only show Enrich button for B2C */}
+              {!isB2B && config.hasEnrichment && (
+                <button
+                  onClick={handleEnrichAll}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Enrich Profile
+                </button>
+              )}
+              <button
+                onClick={handleAddAllToProject}
+                className="border border-gray-300 text-gray-700 px-4 py-2 rounded-full text-sm font-medium hover:border-blue-600 hover:text-blue-600 transition-colors"
+              >
+                Add to Project
+              </button>
+
+              {/* Three Dots Menu - Only for B2C */}
+              {!isB2B && (
+                <ExportDropdown />
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Items List */}
-      <div className="flex-1 overflow-auto p-4">
-        <div className="space-y-3">
+      <div className="flex-1 overflow-auto p-0">
+        <div className="space-y-1">
           {paginatedItems.map((item) => (
             isB2B ? (
               <CompanyCard
@@ -235,6 +237,14 @@ const ExportDropdown = () => {
                 onEnrich={handleEnrich}
                 onAddToProject={handleAddToProject}
               />
+              //           <ProfileCard
+              //   key={profile.id}
+              //   profile={profile}
+              //   isSelected={selectedProfiles.includes(profile.id)}
+              //   onSelect={handleSelectProfile}
+              //   onEnrich={handleEnrichProfile}
+              //   onAddToProject={handleAddToProject}
+              // />
             )
           ))}
         </div>
@@ -259,6 +269,25 @@ const ExportDropdown = () => {
         mode={mode}
         context={context}
       />
+
+      {/* Footer */}
+                    <footer className="border-t border-gray-100 bg-white px-6 py-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm text-gray-900">
+                        <img src={logofooter} alt="Logo" className="w-5 h-5 object-contain" />
+                        <span>© 2025 aiworkforce.co.uk</span>
+                      </div>
+                      <nav className="flex items-center gap-6">
+                        {footerLinks.map((link) => (
+                          <a
+                            key={link.name}
+                            href={link.href}
+                            className="text-sm text-gray-800 hover:text-blue-600 transition-colors"
+                          >
+                            {link.name}
+                          </a>
+                        ))}
+                      </nav>
+                    </footer>
     </div>
   );
 }

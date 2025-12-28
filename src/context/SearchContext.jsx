@@ -63,6 +63,15 @@ const [projects, setProjects] = useState([
     setSelectedProfiles([]);
   }, []);
 
+  // Update filter modifier
+const updateFilterModifier = useCallback((filterId, modifier) => {
+  setActiveFilters((prev) =>
+    prev.map((f) =>
+      f.id === filterId ? { ...f, modifier } : f
+    )
+  );
+}, []);
+
   // Load saved search
   const loadSavedSearch = useCallback((savedSearch) => {
     const filters = [];
@@ -178,6 +187,7 @@ const addToProject = useCallback((projectId, profileIds) => {
     activeFilters,
     addFilter,
     removeFilter,
+    updateFilterModifier,
     clearFilters,
     loadSavedSearch,
 

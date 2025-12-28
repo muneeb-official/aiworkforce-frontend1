@@ -12,7 +12,9 @@ import {
 } from "../components/modals/Modals";
 import { footerLinks } from "../data/salesAgentData";
 import { getAgentConfig } from "../data/agentConfig";
-import logo from "../assets/Logo.png";
+import logo from "../assets/Logo -.png";
+import logofooter from "../assets/Logo-Only.png";
+
 
 const SearchIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -83,9 +85,9 @@ useEffect(() => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex flex-1 overflow-hidden gap-4 p-4">
+      <div className="flex flex-1 overflow-hidden gap-3">
         {/* Filter Panel */}
-        <div className="flex flex-col bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+        <div className="flex flex-col bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden">
           {/* Search Type Toggle */}
           <div className="p-4 border-b border-gray-100">
             <div className="inline-flex bg-gray-100 rounded-full p-1">
@@ -120,21 +122,21 @@ useEffect(() => {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="flex-1 flex flex-col rounded shadow-sm overflow-hidden">
           {hasSearched ? (
             <SearchResultsView mode={mode} config={config} context={context} />
           ) : (
             <>
               {/* Search Content */}
-              <div className="flex-1 flex items-center justify-center p-8">
+              <div className="flex-1 flex items-center bg-white justify-center p-8">
                 <div className="text-center max-w-xl">
                   {/* Logo */}
-                  <div className="flex items-center justify-center gap-3 mb-8">
-                    <img src={logo} alt="Logo" className="w-16 h-16 object-contain" />
-                    <div className="text-left">
+                  <div className="flex items-center justify-center gap-3 mb-0">
+                    <img src={logo} alt="Logo" className="w-72 h-32 object-contain" />
+                    {/* <div className="text-left">
                       <div className="font-bold text-2xl text-gray-800">AI workforce</div>
                       <div className="text-gray-500">Create an AI employee</div>
-                    </div>
+                    </div> */}
                   </div>
 
                   {/* Heading */}
@@ -163,9 +165,9 @@ useEffect(() => {
               </div>
 
               {/* Footer */}
-              <footer className="border-t border-gray-100 px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <img src={logo} alt="Logo" className="w-5 h-5 object-contain" />
+              <footer className="border-t border-gray-100 bg-white px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-gray-900">
+                  <img src={logofooter} alt="Logo" className="w-5 h-5 object-contain" />
                   <span>© 2025 aiworkforce.co.uk</span>
                 </div>
                 <nav className="flex items-center gap-6">
@@ -173,7 +175,7 @@ useEffect(() => {
                     <a
                       key={link.name}
                       href={link.href}
-                      className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                      className="text-sm text-gray-800 hover:text-blue-600 transition-colors"
                     >
                       {link.name}
                     </a>

@@ -8,7 +8,6 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleRowClick = (e) => {
-    // Don't expand if clicking on buttons or checkbox
     if (e.target.closest('button') || e.target.closest('input[type="checkbox"]')) {
       return;
     }
@@ -17,9 +16,13 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
 
   return (
     <div
-      className={`bg-white rounded-xl border-2 transition-all duration-200 ${
-        isSelected ? "border-blue-500 bg-blue-50/30" : "border-gray-100 hover:border-gray-200"
-      } ${isExpanded ? "shadow-lg" : "hover:shadow-md"}`}
+      className={`rounded-md transition-all duration-200 ${
+        isSelected 
+          ? "bg-white " 
+          : isExpanded 
+            ? "bg-white shadow-lg" 
+            : "bg-white hover:bg-[#F2F2FF] hover:shadow-md"
+      }`}
     >
       {/* Main Row - Clickable */}
       <div
@@ -32,7 +35,7 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
             type="checkbox"
             checked={isSelected}
             onChange={() => onSelect(profile.id)}
-            className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+            className="w-5 h-5 rounded-2xl border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
             onClick={(e) => e.stopPropagation()}
           />
 
@@ -40,7 +43,7 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
           <img
             src={profile.avatar}
             alt={profile.name}
-            className="w-14 h-14 rounded-full object-cover border-2 border-gray-100"
+            className="w-[70px] h-[70px] rounded-full object-cover border-2 border-gray-100"
           />
 
           {/* Info */}

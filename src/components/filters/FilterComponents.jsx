@@ -2,14 +2,27 @@
 import { useState } from "react";
 
 // ✅ Updated Icons: Slightly thinner stroke for elegance
-const ChevronRight = ({ className = "" }) => (
-  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M9 18l6-6-6-6" />
+// const ChevronRight = ({ className = "" }) => (
+//   <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
+//     <path d="M9 18l6-6-6-6" />
+//   </svg>
+// );
+const ChevronLeft = ({ className = "" }) => (
+  <svg
+    className={className}
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M15 18l-6-6 6-6" />
   </svg>
 );
 
 const ChevronDown = ({ className = "" }) => (
-  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M6 9l6 6 6-6" />
   </svg>
 );
@@ -32,8 +45,8 @@ export const FilterSection = ({ title, children, defaultOpen = false }) => {
         className="w-full flex items-center justify-between py-3 px-4 text-left hover:bg-[#F4F5FB] transition-colors duration-150"
       >
         <span className="font-medium text-[#333333]">{title}</span>
-        <span className={`transition-transform duration-200 text-[#6C63FF] ${isOpen ? "rotate-90" : "rotate-180"}`}>
-          <ChevronRight />
+        <span className={`transition-transform duration-200 text-[#6C63FF] ${isOpen ? "-rotate-90" : "rotate-180"}`}>
+          <ChevronLeft />
         </span>
       </button>
       <div
@@ -86,7 +99,7 @@ export const ExpandableListItem = ({ item, onToggle, isSelected }) => {
           onClick={() => setIsExpanded(!isExpanded)}
           className="p-0.5 rounded hover:bg-white transition-colors"
         >
-          <ChevronRight className={`text-[#94A3B8] transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+          <ChevronLeft className={`text-[#94A3B8] transition-transform ${isExpanded ? "-rotate-90" : ""}`} />
         </button>
         <label className="flex items-center gap-2 flex-1 cursor-pointer">
           <input

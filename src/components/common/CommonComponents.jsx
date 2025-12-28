@@ -83,8 +83,8 @@ export const FilterTag = ({ filter, onRemove }) => {
   };
 
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm">
-      <span className="text-gray-500">{iconMap[filter.icon] || iconMap.name}</span>
+    <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-900 rounded text-sm">
+      <span className="text-gray-900">{iconMap[filter.icon] || iconMap.name}</span>
       <span>{filter.value}</span>
       <button
         onClick={() => onRemove(filter.id)}
