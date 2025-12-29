@@ -174,10 +174,10 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
         <div className="flex items-center justify-between py-3 px-4 rounded-lg">
           <div className="flex items-center gap-3">
             <input
-  type="checkbox"
-  checked={isAllSelected}
-  onChange={selectAll}
-  className="
+              type="checkbox"
+              checked={isAllSelected}
+              onChange={selectAll}
+              className="
     appearance-none
     w-[18px] h-[18px]
     rounded-[6px]
@@ -195,7 +195,7 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
     checked:after:rotate-45
     checked:after:translate-x-[5px] checked:after:translate-y-[1px]
   "
-/>
+            />
 
             <span className="text-sm text-gray-700">
               Select All
@@ -288,24 +288,7 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
         context={context}
       />
 
-      {/* Footer */}
-                    <footer className="border-t border-gray-100 bg-white px-6 py-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-gray-900">
-                        <img src={logofooter} alt="Logo" className="w-5 h-5 object-contain" />
-                        <span>© 2025 aiworkforce.co.uk</span>
-                      </div>
-                      <nav className="flex items-center gap-6">
-                        {footerLinks.map((link) => (
-                          <a
-                            key={link.name}
-                            href={link.href}
-                            className="text-sm text-gray-800 hover:text-blue-600 transition-colors"
-                          >
-                            {link.name}
-                          </a>
-                        ))}
-                      </nav>
-                    </footer>
+      
     </div>
   );
 }

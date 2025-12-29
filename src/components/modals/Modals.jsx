@@ -45,69 +45,100 @@ export const SaveSearchModal = ({ isOpen, onClose, onSave }) => {
 };
 
 // Load Search Modal
-export const LoadSearchModal = ({ isOpen, onClose, onLoad }) => {
+// ============================================
+// LOAD SEARCH MODAL
+// ============================================
+export const LoadSearchModal = ({ 
+  isOpen, 
+  onClose, 
+  savedSearches = [],
+  onLoadSearch 
+}) => {
   const [selectedSearch, setSelectedSearch] = useState(null);
+  const { setHasSearched, loadSavedSearch } = useSearch();
 
   const handleLoad = () => {
     if (selectedSearch) {
-      onLoad(selectedSearch);
-      onClose();
+      loadSavedSearch(selectedSearch);
+      setHasSearched(true);
+      if (onLoadSearch) {
+        onLoadSearch(selectedSearch);
+      }
+      setSelectedSearch(null);
+      onClose();  // Make sure this is called last
     }
   };
 
+  const handleClose = () => {
+    setSelectedSearch(null);
+    onClose();
+  };
+
+  // Reset selection when modal opens/closes
+  if (!isOpen && selectedSearch) {
+    setSelectedSearch(null);
+  }
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md">
-  <h2 className="text-xl font-bold text-gray-800 mb-1">Select Saved Search</h2>
-  <p className="text-gray-500 text-sm mb-6">Load a saved search list.</p>
+    <Modal isOpen={isOpen} onClose={handleClose} size="md">
+      <h2 className="text-xl font-bold text-gray-800 mb-1">Select Saved Search</h2>
+      <p className="text-gray-500 text-sm mb-6">Load a saved search list.</p>
 
-  <div className="space-y-3 mb-6">
-    {savedSearches.map((search) => (
+      <div className="space-y-3 mb-6">
+  {savedSearches.map((search) => (
+    <button
+      key={search.id}
+      onClick={() => setSelectedSearch(search)}
+      className={`w-full p-4 text-left rounded-lg border transition-all duration-200 ${
+        selectedSearch?.id === search.id
+          ? "border-blue-600 bg-[#F2F2FF]"
+          : "border-white hover:border-blue-600 hover:bg-[#F2F2FF]"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <input
+          type="checkbox"
+          checked={selectedSearch?.id === search.id}
+          onChange={() => setSelectedSearch(search)}
+          onClick={(e) => e.stopPropagation()}
+          className="
+            appearance-none
+            w-[18px] h-[18px]
+            rounded-full
+            border border-gray-300
+            bg-white
+            hover:border-blue-600
+            focus:outline-none focus:ring-2 focus:ring-blue-500/30
+            cursor-pointer
+
+            checked:bg-blue-600 checked:border-blue-600
+            checked:after:content-['']
+            checked:after:block
+            checked:after:w-[6px] checked:after:h-[10px]
+            checked:after:border-r-2 checked:after:border-b-2 checked:after:border-white
+            checked:rounded
+            checked:after:rotate-45
+            checked:after:translate-x-[5px] checked:after:translate-y-[1px]
+          "
+        />
+
+        <span className="font-medium text-gray-800">{search.name}</span>
+      </div>
+    </button>
+  ))}
+</div>
+
+
       <button
-        key={search.id}
-        onClick={() => setSelectedSearch(search)}
-        className={`w-full p-4 text-left rounded-lg border transition-all duration-200 ${
-          selectedSearch?.id === search.id
-            ? "border-[#3C49F7] bg-[#F2F2FF]"
-            : "border-white hover:border-[#3C49F7] hover:bg-[#F2F2FF]"
-        }`}
+        onClick={handleLoad}
+        disabled={!selectedSearch}
+        className="w-full bg-blue-500 text-white py-3 rounded-full font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <div className="flex items-center gap-3">
-          {selectedSearch?.id === search.id ? (
-            <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center">
-              <svg
-                className="w-3 h-3 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={3}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-          ) : (
-            <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
-          )}
-          <span className="font-medium text-gray-800">{search.name}</span>
-        </div>
+        Load Search
       </button>
-    ))}
-  </div>
-
-  <button
-    onClick={handleLoad}
-    disabled={!selectedSearch}
-    className="w-full bg-gray-300 text-white py-3 rounded-full font-medium hover:bg-[#3C49F7] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-  >
-    Load Search
-  </button>
-</Modal>
+    </Modal>
   );
 };
-
 // Add to Project Modal
 // Add this updated AddToProjectModal to your Modals.jsx file
 // It handles both B2C (profiles) and B2B (companies)

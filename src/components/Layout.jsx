@@ -382,7 +382,7 @@ useEffect(() => {
         {/* Right side */}
         <div className="flex items-center w-[325px] h-[42px] gap-4">
           <div className="flex items-center bg-white rounded-full px-3 py-1.5 shadow-sm border border-gray-900">
-            <span className="text-[14px] font-semibold text-gray-600 mr-3">
+            <span className="text-[14px] font-semibold italic text-gray-900 mr-3">
               {displayCredits} Credits
             </span>
             <button className="bg-gray-900 text-white text-[14px] px-2.5 py-1 rounded-full hover:bg-white hover:text-blue-700  transition-colors">

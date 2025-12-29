@@ -110,11 +110,10 @@ export const Checkbox = ({ checked, onChange, label, indeterminate = false }) =>
           className="sr-only"
         />
         <div
-          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
-            checked
-              ? "bg-blue-600 border-blue-600"
-              : "border-gray-300 bg-white"
-          }`}
+          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${checked
+            ? "bg-blue-600 border-blue-600"
+            : "border-gray-300 bg-white"
+            }`}
         >
           {checked && (
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
@@ -129,6 +128,8 @@ export const Checkbox = ({ checked, onChange, label, indeterminate = false }) =>
 };
 
 // Pagination Component
+// Updated Pagination Component for CommonComponents.jsx
+
 export const Pagination = ({
   currentPage,
   totalPages,
@@ -136,62 +137,111 @@ export const Pagination = ({
   itemsPerPage,
   onItemsPerPageChange,
 }) => {
-  const pages = [];
-  const maxVisiblePages = 9;
-  
-  for (let i = 1; i <= Math.min(totalPages, maxVisiblePages); i++) {
-    pages.push(i);
-  }
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 9;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page, last page, and pages around current
+      if (currentPage <= 5) {
+        for (let i = 1; i <= 7; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 4) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 6; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 2; i <= currentPage + 2; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
 
   return (
-    <div className="flex items-center justify-between mt-4">
-      <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between mt-0 pt-4">
+      {/* Items per page dropdown */}
+      <div className="flex items-center gap-2 relative">
         <select
           value={itemsPerPage}
           onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+          className="
+      appearance-none
+      px-3 py-2 pr-8
+      border border-gray-200
+      rounded-lg
+      text-sm
+       
+      bg-white
+    "
         >
           <option value={10}>10</option>
           <option value={20}>20</option>
           <option value={50}>50</option>
         </select>
+
+        {/* Custom arrow */}
+        {/* <span className="pointer-events-none absolute right-3 text-gray-500">
+    ▼
+  </span> */}
       </div>
-      
+
+      {/* Page navigation */}
       <div className="flex items-center gap-1">
+        {/* Previous arrow */}
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
-        
-        {pages.map((page) => (
-          <button
-            key={page}
-            onClick={() => onPageChange(page)}
-            className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-              currentPage === page
-                ? "bg-blue-600 text-white"
-                : "hover:bg-gray-100 text-gray-600"
-            }`}
-          >
-            {page}
-          </button>
+
+        {/* Page numbers */}
+        {getPageNumbers().map((page, index) => (
+          page === '...' ? (
+            <span key={`ellipsis-${index}`} className="w-8 h-8 flex items-center justify-center text-gray-400">
+              ...
+            </span>
+          ) : (
+            <button
+              key={page}
+              onClick={() => onPageChange(page)}
+              className={`w-[24px] h-[24px] rounded text-[14px] font-medium transition-colors ${currentPage === page
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+                }`}
+            >
+              {page}
+            </button>
+          )
         ))}
-        
+
+        {/* Next arrow */}
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M9 18l6-6-6-6" />
           </svg>
         </button>
       </div>
+
+      {/* Empty div for spacing balance */}
+      <div className="w-20"></div>
     </div>
   );
 };
@@ -218,6 +268,6 @@ export const SuccessIcon = () => (
 // LinkedIn Icon
 export const LinkedInIcon = ({ className = "" }) => (
   <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="#0A66C2">
-    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
   </svg>
 );

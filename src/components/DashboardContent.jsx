@@ -72,7 +72,7 @@ export default function DashboardContent() {
   return (
     <div
       className="px-8 py-6 h-full w-full overflow-auto bg-cover bg-center bg-no-repeat bg-fixed"
-      style={{ backgroundImage: `url(${backgroundImage})` }}
+      // style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       <h1 className="text-[40px] font-bold text-gray-800 mb-6">
         Hello {userData.name}, below are your insights

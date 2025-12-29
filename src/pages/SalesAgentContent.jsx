@@ -1,6 +1,5 @@
 // pages/SalesAgentContent.jsx
 import { useState, useEffect } from "react";
-import { useSearch } from "../context/SearchContext";
 import { useB2BSearch } from "../context/B2BSearchContext";
 import SearchFiltersPanel from "../components/sales/SearchFiltersPanel";
 import SearchResultsView from "../components/sales/SearchResultsView";
@@ -13,7 +12,8 @@ import {
 import { footerLinks } from "../data/salesAgentData";
 import { getAgentConfig } from "../data/agentConfig";
 import logo from "../assets/Logo -.png";
-import logofooter from "../assets/Logo-Only.png";
+import logofooter from "../assets/Logo-footer.svg";
+import { useSearch } from "../context/SearchContext";
 
 
 const SearchIcon = () => (
@@ -27,7 +27,7 @@ export default function SalesAgentContent({ mode = "b2c" }) {
   // Get the appropriate context based on mode
   const b2cContext = useSearch();
   const b2bContext = useB2BSearch();
-  
+  const { hasSearched } = useSearch();
   const context = mode === "b2b" ? b2bContext : b2cContext;
   const config = getAgentConfig(mode);
 
@@ -37,13 +37,14 @@ export default function SalesAgentContent({ mode = "b2c" }) {
     removeFilter,
     clearFilters,
     loadSavedSearch,
-    hasSearched,
+    // hasSearched,
     setHasSearched,
   } = context;
 
   // Search type state - uses first option from config
   const [searchType, setSearchType] = useState(config.searchTypes[0].key);
   const [searchQuery, setSearchQuery] = useState("");
+  
 
   // Reset search type when mode changes
 useEffect(() => {
@@ -82,6 +83,7 @@ useEffect(() => {
       }, 1500);
     }
   };
+  
 
   return (
     <div className="flex flex-col h-full">
@@ -164,10 +166,16 @@ useEffect(() => {
                 </div>
               </div>
 
-              {/* Footer */}
-              <footer className="border-t border-gray-100 bg-white px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-gray-900">
-                  <img src={logofooter} alt="Logo" className="w-5 h-5 object-contain" />
+              
+            </>
+          )}
+        </div>
+        
+      </div>
+      {/* Footer */}
+              <footer className="bg-white px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-[#000000]">
+                  <img src={logofooter} alt="Logo" className="w-5 h-5  object-contain" />
                   <span>© 2025 aiworkforce.co.uk</span>
                 </div>
                 <nav className="flex items-center gap-6">
@@ -182,10 +190,6 @@ useEffect(() => {
                   ))}
                 </nav>
               </footer>
-            </>
-          )}
-        </div>
-      </div>
 
       {/* Modals */}
       <SaveSearchModal

@@ -20,7 +20,7 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
         isSelected 
           ? "bg-white " 
           : isExpanded 
-            ? "bg-white shadow-lg" 
+            ? "bg-white border border-blue-600" 
             : "bg-white hover:bg-[#F2F2FF] hover:shadow-md"
       }`}
     >
@@ -143,23 +143,23 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
 
       {/* Expanded Details */}
       {isExpanded && (
-        <div className="px-4 pb-4 border-t border-gray-100">
-          <div className="mt-4 ml-24 space-y-4">
+        <div className="px-4 pb-4">
+          <div className="mt-2 ml-4 space-y-2">
             {/* Current Position */}
-            <div className="flex">
-              <span className="w-24 text-gray-500 text-sm font-medium">Current</span>
-              <div className="flex-1">
-                <p className="text-gray-800 text-sm">
+            <div className="flex border-b border-gray-200 pb-3 pl-2 -mb-3">
+              <span className="w-24 text-gray-900 text-sm font-bold">Current</span>
+              <div className="flex-1 ml-0">
+                <p className="text-gray-900 text-sm">
                   • {profile.currentPosition || profile.title} @ {profile.company} 
-                  <span className="text-gray-500 ml-2 italic">2022 - Current</span>
+                  <span className="text-gray-900 ml-2 italic">2022 - Current</span>
                 </p>
               </div>
             </div>
 
             {/* Past Positions */}
-            <div className="flex">
-              <span className="w-24 text-gray-500 text-sm font-medium">Past</span>
-              <div className="flex-1 space-y-1">
+            <div className="flex border-b border-gray-200 p-3">
+              <span className="w-24 text-gray-900 text-sm font-bold ml-4">Past</span>
+              <div className="flex-1 -ml-5">
                 {(profile.pastPositions || [
                   { title: "Operating Partner", company: "SCF Partners", years: "2020 - 2022" },
                   { title: "President and CEO", company: "Valaris Limited", years: "2014 - 2020" },
@@ -174,15 +174,15 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
             </div>
 
             {/* Education */}
-            <div className="flex">
-              <span className="w-24 text-gray-500 text-sm font-medium">Education</span>
-              <div className="flex-1 space-y-1">
+            <div className="flex border-b border-gray-200 pb-5">
+              <span className="w-24 text-gray-900 text-sm font-bold -ml-1.5">Education</span>
+              <div className="flex-1 ml-4 ">
                 {(profile.education || [
                   { school: "University of Oxford", years: "2010-2013" },
                   { school: "University of Cambridge", years: "2007-2010" },
                   { school: "Lauriston Boys' School", years: "2003-2007" }
                 ]).map((edu, idx) => (
-                  <p key={idx} className="text-gray-800 text-sm">
+                  <p key={idx} className="text-gray-900 text-sm">
                     • {edu.school}
                     <span className="text-gray-500 ml-2 italic">{edu.years}</span>
                   </p>
@@ -191,9 +191,9 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
             </div>
 
             {/* Contact Info */}
-            <div className="flex">
-              <span className="w-24 text-gray-500 text-sm font-medium">Contact Info</span>
-              <div className="flex-1 space-y-2">
+            <div className="flex ml-2">
+              <span className="w-24 text-gray-900 text-sm font-bold">Contact<br></br> Info</span>
+              <div className="flex-1 ml-1">
                 {profile.isEnriched ? (
                   <>
                     {/* Website */}
@@ -268,7 +268,7 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
               >
                 View Less
               </button>
-              <span className={`text-sm font-medium ${profile.isEnriched ? 'text-gray-600' : 'text-blue-600'}`}>
+              <span className={`text-sm font-medium ${profile.isEnriched ? 'text-gray-600' : 'text-[#000000]'}`}>
                 {profile.isEnriched ? "1 Credit Used" : "1 Credit"}
               </span>
             </div>

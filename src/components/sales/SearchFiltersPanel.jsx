@@ -1,7 +1,7 @@
 // components/sales/SearchFiltersPanel.jsx
 import { useState, useRef, useEffect } from "react";
 import { FilterTag } from "../common/CommonComponents";
-
+import { useSearch } from "../../context/SearchContext";
 // Icons
 const ChevronRight = ({ className = "" }) => (
   <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -22,7 +22,6 @@ const ChevronLeft = ({ className = "" }) => (
   </svg>
 );
 
-
 const ChevronDown = ({ className = "" }) => (
   <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M6 9l6 6 6-6" />
@@ -41,6 +40,8 @@ const FilterIcon = ({ className = "" }) => (
 // Filter Section Component
 const FilterSection = ({ title, count, children, defaultOpen = false }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+
+
 
   return (
     <div className="bg-[#F4F5FB] border-2 rounded-lg border-white">
@@ -444,6 +445,7 @@ export default function SearchFiltersPanel({
   onAddFilter,
   onRemoveFilter,
   onClearFilters,
+  // hasSearched,
   onSaveSearch,
   onLoadSearch,
   context,
@@ -470,6 +472,8 @@ export default function SearchFiltersPanel({
       onAddFilter({ type, value, icon: type });
     }
   };
+
+  const { hasSearched } = useSearch();
 
   // Get filters for current search type
   const currentFilters = config.filters[searchType] || [];
@@ -561,21 +565,31 @@ export default function SearchFiltersPanel({
         ))}
       </div>
 
-      {/* Action Buttons */}
       <div className="p-4 space-y-3 border-t border-gray-100">
-        {/* <button
-          onClick={onSaveSearch}
-          className="w-full bg-blue-600 text-white py-3 rounded-full font-medium hover:bg-blue-700 transition-all duration-200"
-        >
-          Save This Search
-        </button> */}
-        <button
-          onClick={onLoadSearch}
-          className="w-full bg-blue-600 text-white py-3 rounded-full font-medium border border-gray-200 hover:border-gray-300 transition-all duration-200"
-        >
-          Load Past Search
-        </button>
-      </div>
+  {hasSearched ? (
+    <>
+      <button
+        onClick={onSaveSearch}
+        className="w-full bg-blue-600 text-white py-3 rounded-full font-medium hover:bg-blue-700 transition-all duration-200"
+      >
+        Save This Search
+      </button>
+      <button
+        onClick={onLoadSearch}
+        className="w-full bg-white text-blue-700 py-3 rounded-full font-medium border-2 border-blue-700 hover:border-blue-800 transition-all duration-200"
+      >
+        Load Past Search
+      </button>
+    </>
+  ) : (
+    <button
+      onClick={onLoadSearch}
+      className="w-full bg-blue-600 text-white py-3 rounded-full font-medium hover:bg-blue-700 transition-all duration-200"
+    >
+      Load Past Search
+    </button>
+  )}
+</div>
     </div>
   );
 }
