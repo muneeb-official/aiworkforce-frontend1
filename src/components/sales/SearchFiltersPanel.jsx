@@ -43,13 +43,13 @@ const FilterSection = ({ title, count, children, defaultOpen = false }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border-b border-gray-100 last:border-b-0">
+    <div className="bg-[#F4F5FB] border-2 rounded-lg border-white">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between py-4 px-1 text-left hover:bg-gray-50 transition-all duration-200"
       >
         <div className="flex items-center gap-2">
-          <span className="font-medium text-gray-800">{title}</span>
+          <span className="font-medium text-[]#000000">{title}</span>
           {count > 0 && (
             <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
               {count}
@@ -479,7 +479,7 @@ export default function SearchFiltersPanel({
   const updateFilterModifier = context?.updateFilterModifier || (() => {});
 
   return (
-    <div className="w-80 bg-white flex flex-col h-full rounded-b-2xl">
+    <div className="w-80 bg-white flex flex-col gap-1 rounded-b-2xl">
       {/* Header */}
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
@@ -503,7 +503,7 @@ export default function SearchFiltersPanel({
       </div>
 
       {/* Scrollable Filters */}
-      <div className="flex-1 overflow-auto px-4">
+      <div className="flex-1 flex-col overflow-auto px-4">
         {currentFilters.map((filterConfig) => (
           <FilterSection
             key={filterConfig.key}
@@ -563,15 +563,15 @@ export default function SearchFiltersPanel({
 
       {/* Action Buttons */}
       <div className="p-4 space-y-3 border-t border-gray-100">
-        <button
+        {/* <button
           onClick={onSaveSearch}
           className="w-full bg-blue-600 text-white py-3 rounded-full font-medium hover:bg-blue-700 transition-all duration-200"
         >
           Save This Search
-        </button>
+        </button> */}
         <button
           onClick={onLoadSearch}
-          className="w-full bg-white text-gray-700 py-3 rounded-full font-medium border border-gray-200 hover:border-gray-300 transition-all duration-200"
+          className="w-full bg-blue-600 text-white py-3 rounded-full font-medium border border-gray-200 hover:border-gray-300 transition-all duration-200"
         >
           Load Past Search
         </button>

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { navItems, userData, appInfo } from "../data/mockData";
 import { salesAgentNavItems } from "../data/salesAgentData";
 import logo from "../assets/Logo.png";
-import backgroundImage from "../assets/AI Workforce background.png";
+import backgroundImage from "../assets/Background.png";
 import { useSearch } from "../context/SearchContext";
 import { useB2BSearch } from "../context/B2BSearchContext";
 
@@ -363,7 +363,7 @@ useEffect(() => {
 
   return (
     <div
-      className="h-screen flex flex-col overflow-hidden bg-cover bg-center bg-no-repeat bg-fixed"
+      className="h-screen w-screen flex flex-col overflow-hidden bg-cover bg-center bg-no-repeat bg-fixed"
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       {/* Fixed Full-Width Header */}
@@ -578,7 +578,7 @@ useEffect(() => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-auto transition-all duration-300 ease-in-out py-4">
+        <div className="flex-1 overflow-auto transition-all duration-300 ease-in-out py-0">
           <div className="rounded-3xl h-full shadow-sm">{children}</div>
         </div>
       </div>
