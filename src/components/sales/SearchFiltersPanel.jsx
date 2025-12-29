@@ -46,7 +46,7 @@ const FilterSection = ({ title, count, children, defaultOpen = false }) => {
     <div className="bg-[#F4F5FB] border-2 rounded-lg border-white">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-4 px-1 text-left hover:bg-gray-50 transition-all duration-200"
+        className="w-full flex items-center justify-between py-4 px-3 text-left hover:bg-gray-50 transition-all duration-200"
       >
         <div className="flex items-center gap-2">
           <span className="font-medium text-[]#000000">{title}</span>
