@@ -2,22 +2,16 @@
 import { useState, useRef, useEffect } from "react";
 import { FilterTag } from "../common/CommonComponents";
 import { useSearch } from "../../context/SearchContext";
+
 // Icons
 const ChevronRight = ({ className = "" }) => (
   <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M9 18l6-6-6-6" />
   </svg>
 );
+
 const ChevronLeft = ({ className = "" }) => (
-  <svg
-    className={className}
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
+  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M15 18l-6-6 6-6" />
   </svg>
 );
@@ -28,20 +22,12 @@ const ChevronDown = ({ className = "" }) => (
   </svg>
 );
 
-const FilterIcon = ({ className = "" }) => (
-  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="4" y1="8" x2="20" y2="8" />
-    <line x1="4" y1="16" x2="20" y2="16" />
-    <circle cx="8" cy="8" r="2" fill="none" />
-    <circle cx="16" cy="16" r="2" fill="none" />
-  </svg>
-);
+// Import FilterIcon from assets
+import FilterIcon from "../../assets/icons/FilterIcon.svg";
 
 // Filter Section Component
 const FilterSection = ({ title, count, children, defaultOpen = false }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-
-
 
   return (
     <div className="bg-[#F4F5FB] border-2 rounded-lg border-white">
@@ -62,9 +48,8 @@ const FilterSection = ({ title, count, children, defaultOpen = false }) => {
         </span>
       </button>
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={`overflow-hidden overflow-scroll scrollbar-hide transition-all duration-300 ease-in-out ${isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+          }`}
       >
         <div className="px-1 pb-4 pt-1">{children}</div>
       </div>
@@ -131,6 +116,30 @@ const CheckboxListFilter = ({
     opt.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Handle modifier selection - auto-select checkbox if "Exact" is chosen
+  const handleModifierClick = (option, modifier) => {
+    const isSelected = selectedValues.some(
+      (v) => v.type === filterKey && v.value === option.label
+    );
+
+    // If not selected and clicking a modifier, auto-select the checkbox first
+    if (!isSelected) {
+      onSelect(filterKey, option.label);
+    }
+
+    // Then apply the modifier
+    setTimeout(() => {
+      const filter = activeFilters.find(
+        (v) => v.type === filterKey && v.value === option.label
+      );
+      if (filter) {
+        onUpdateModifier(filter.id, modifier);
+      }
+    }, 0);
+
+    setShowModifierDropdown(null);
+  };
+
   return (
     <div>
       <input
@@ -153,14 +162,12 @@ const CheckboxListFilter = ({
             <div key={option.id} className="flex items-center justify-between group">
               <button
                 onClick={() => onSelect(filterKey, option.label)}
-                className={`flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                  isSelected ? "bg-blue-50" : "hover:bg-gray-50"
-                }`}
+                className={`flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isSelected ? "bg-blue-50" : "hover:bg-gray-50"
+                  }`}
               >
                 <div
-                  className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${
-                    isSelected ? "bg-blue-600 border-blue-600" : "border-gray-300"
-                  }`}
+                  className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${isSelected ? "bg-blue-600 border-blue-600" : "border-gray-300"
+                    }`}
                 >
                   {isSelected && (
                     <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -173,45 +180,44 @@ const CheckboxListFilter = ({
                 </span>
               </button>
 
-              {/* Modifier Button */}
-              {hasModifier && isSelected && (
+              {/* Modifier Button - Always visible, clickable anytime */}
+              {hasModifier && (
                 <div className="relative" ref={modifierRef}>
                   <button
                     onClick={() => setShowModifierDropdown(showModifierDropdown === option.id ? null : option.id)}
-                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    className={`p-2 rounded-lg transition-colors ${isSelected
+                        ? "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                        : "text-gray-300 opacity-100 group-hover:opacity-100 hover:text-gray-500 hover:bg-gray-100"
+                      }`}
                   >
-                    <FilterIcon />
+                    <img src={FilterIcon} alt="filter" className="w-4 h-4" />
                   </button>
 
                   {showModifierDropdown === option.id && (
-                    <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                      <div className="px-3 py-1.5 text-xs font-medium text-gray-500 uppercase">
+                    <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                      <div className="px-3 py-2 text-xs font-semibold text-gray-500 border-b border-gray-100">
                         Apply Modifier
                       </div>
                       <button
-                        onClick={() => {
-                          onUpdateModifier(selectedFilter.id, "exact");
-                          setShowModifierDropdown(null);
-                        }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        onClick={() => handleModifierClick(option, "exact")}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-50 ${selectedFilter?.modifier === "exact" ? "text-blue-600 font-medium" : "text-gray-700"
+                          }`}
                       >
                         <span>Exact</span>
                         {selectedFilter?.modifier === "exact" && (
-                          <svg className="w-4 h-4 text-blue-600 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         )}
                       </button>
                       <button
-                        onClick={() => {
-                          onUpdateModifier(selectedFilter.id, "not");
-                          setShowModifierDropdown(null);
-                        }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        onClick={() => handleModifierClick(option, "not")}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-gray-50 ${selectedFilter?.modifier === "not" ? "text-blue-600 font-medium" : "text-gray-700"
+                          }`}
                       >
                         <span>Not</span>
                         {selectedFilter?.modifier === "not" && (
-                          <svg className="w-4 h-4 text-blue-600 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         )}
@@ -219,12 +225,6 @@ const CheckboxListFilter = ({
                     </div>
                   )}
                 </div>
-              )}
-
-              {!isSelected && (
-                <button className="p-2 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <FilterIcon />
-                </button>
               )}
             </div>
           );
@@ -235,19 +235,19 @@ const CheckboxListFilter = ({
 };
 
 // Location Filter with Expandable List (for B2C)
-// Location Filter with Expandable List (for B2C)
-const LocationFilter = ({ 
+const LocationFilter = ({
   filterKey = "location",
-  placeholder, 
-  options, 
-  activeFilters, 
-  onAddFilter, 
+  placeholder,
+  options,
+  activeFilters,
+  onAddFilter,
   onRemoveFilter,
   onUpdateModifier,
-  hasRadius = true 
+  hasRadius = true
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocations, setSelectedLocations] = useState([]);
+  const [selectedChildren, setSelectedChildren] = useState([]); // Track selected children
   const [expandedItems, setExpandedItems] = useState({});
   const [radius, setRadius] = useState(0);
   const [showModifierDropdown, setShowModifierDropdown] = useState(null);
@@ -264,15 +264,62 @@ const LocationFilter = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLocationSelect = (locationName) => {
-    const isSelected = selectedLocations.includes(locationName);
+  // Handle parent location select - auto-select all children
+  const handleLocationSelect = (location) => {
+    const isSelected = selectedLocations.includes(location.name);
+
     if (isSelected) {
-      setSelectedLocations((prev) => prev.filter((l) => l !== locationName));
-      const filter = activeFilters.find((f) => f.type === filterKey && f.value === locationName);
+      // Deselect parent and all children
+      setSelectedLocations((prev) => prev.filter((l) => l !== location.name));
+      const filter = activeFilters.find((f) => f.type === filterKey && f.value === location.name);
       if (filter) onRemoveFilter(filter.id);
+
+      // Remove all children
+      if (location.children) {
+        location.children.forEach((child) => {
+          setSelectedChildren((prev) => prev.filter((c) => c !== child));
+          const childFilter = activeFilters.find((f) => f.type === filterKey && f.value === child);
+          if (childFilter) onRemoveFilter(childFilter.id);
+        });
+      }
     } else {
-      setSelectedLocations((prev) => [...prev, locationName]);
-      onAddFilter({ type: filterKey, value: locationName, icon: "location" });
+      // Select parent
+      setSelectedLocations((prev) => [...prev, location.name]);
+      onAddFilter({ type: filterKey, value: location.name, icon: "location" });
+
+      // Auto-select all children
+      if (location.children) {
+        location.children.forEach((child) => {
+          if (!selectedChildren.includes(child)) {
+            setSelectedChildren((prev) => [...prev, child]);
+            onAddFilter({ type: filterKey, value: child, icon: "location" });
+          }
+        });
+      }
+    }
+  };
+
+  // Handle child location select
+  const handleChildSelect = (parentLocation, childName) => {
+    const isChildSelected = selectedChildren.includes(childName);
+
+    if (isChildSelected) {
+      setSelectedChildren((prev) => prev.filter((c) => c !== childName));
+      const filter = activeFilters.find((f) => f.type === filterKey && f.value === childName);
+      if (filter) onRemoveFilter(filter.id);
+
+      // If all children are deselected, deselect parent too
+      const remainingChildren = selectedChildren.filter((c) =>
+        c !== childName && parentLocation.children?.includes(c)
+      );
+      if (remainingChildren.length === 0 && selectedLocations.includes(parentLocation.name)) {
+        setSelectedLocations((prev) => prev.filter((l) => l !== parentLocation.name));
+        const parentFilter = activeFilters.find((f) => f.type === filterKey && f.value === parentLocation.name);
+        if (parentFilter) onRemoveFilter(parentFilter.id);
+      }
+    } else {
+      setSelectedChildren((prev) => [...prev, childName]);
+      onAddFilter({ type: filterKey, value: childName, icon: "location" });
     }
   };
 
@@ -280,11 +327,34 @@ const LocationFilter = ({
     setExpandedItems((prev) => ({ ...prev, [name]: !prev[name] }));
   };
 
-  const handleModifierSelect = (locationName, modifier) => {
-    const filter = activeFilters.find((f) => f.type === filterKey && f.value === locationName);
-    if (filter && onUpdateModifier) {
-      onUpdateModifier(filter.id, modifier);
+  // Handle modifier selection - auto-select if not selected
+  const handleModifierSelect = (location, modifier) => {
+    const isSelected = selectedLocations.includes(location.name);
+
+    // If not selected, select it first
+    if (!isSelected) {
+      setSelectedLocations((prev) => [...prev, location.name]);
+      onAddFilter({ type: filterKey, value: location.name, icon: "location" });
+
+      // Auto-select all children
+      if (location.children) {
+        location.children.forEach((child) => {
+          if (!selectedChildren.includes(child)) {
+            setSelectedChildren((prev) => [...prev, child]);
+            onAddFilter({ type: filterKey, value: child, icon: "location" });
+          }
+        });
+      }
     }
+
+    // Apply modifier after a brief delay to ensure filter is added
+    setTimeout(() => {
+      const filter = activeFilters.find((f) => f.type === filterKey && f.value === location.name);
+      if (filter && onUpdateModifier) {
+        onUpdateModifier(filter.id, modifier);
+      }
+    }, 0);
+
     setShowModifierDropdown(null);
   };
 
@@ -299,7 +369,7 @@ const LocationFilter = ({
         onChange={(e) => setSearchTerm(e.target.value)}
         className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-all duration-200"
       />
-      <div className="mt-3 max-h-64 overflow-auto space-y-1">
+      <div className="mt-3 max-h-64 overflow-scroll scrollbar-hide space-y-1">
         {options
           .filter((loc) => loc.name.toLowerCase().includes(searchTerm.toLowerCase()))
           .map((loc) => {
@@ -310,70 +380,66 @@ const LocationFilter = ({
 
             return (
               <div key={loc.name}>
-                <div className="flex items-center gap-2 py-1.5 hover:bg-gray-50 rounded-lg px-2 transition-colors duration-150 group">
+                <div className="flex items-center gap-2 py-1.5 hover:bg-blue-100 rounded px-2 transition-colors duration-150 group">
                   <button
                     onClick={() => toggleExpand(loc.name)}
-                    className="p-0.5 hover:bg-gray-100 rounded transition-colors duration-150"
+                    className="p-0.5 hover:bg-blue-100 rounded transition-colors duration-150"
                   >
                     <ChevronRight
-                      className={`text-[#3C49F7] transition-transform duration-200 ${
-                        expandedItems[loc.name] ? "rotate-90" : ""
-                      }`}
+                      className={`text-[#3C49F7] transition-transform duration-200 ${expandedItems[loc.name] ? "rotate-90" : ""
+                        }`}
                     />
                   </button>
                   <label className="flex items-center gap-2 flex-1 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={isSelected}
-                      onChange={() => handleLocationSelect(loc.name)}
+                      onChange={() => handleLocationSelect(loc)}
                       className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700">
                       {loc.name} {loc.count && <span className="text-gray-400">({loc.count})</span>}
                     </span>
                   </label>
-                  
-                  {/* Filter/Modifier Button */}
-                  <div className="relative" ref={isSelected ? modifierRef : null}>
-                    <button 
-                      onClick={() => {
-                        if (isSelected) {
-                          setShowModifierDropdown(showModifierDropdown === loc.name ? null : loc.name);
-                        }
-                      }}
-                      className={`p-1 rounded transition-colors duration-150 ${
-                        isSelected 
-                          ? "hover:bg-gray-100 text-gray-500" 
-                          : "text-gray-300 opacity-0 group-hover:opacity-100"
-                      }`}
+
+                  {/* Filter/Modifier Button - Always clickable */}
+                  <div className="relative" ref={showModifierDropdown === loc.name ? modifierRef : null}>
+                    <button
+                      onClick={() => setShowModifierDropdown(showModifierDropdown === loc.name ? null : loc.name)}
+                      className={`p-1 rounded transition-colors duration-150 ${isSelected
+                          ? "hover:bg-gray-100 text-gray-500"
+                          : "text-gray-300 opacity-100 group-hover:opacity-100 hover:text-gray-500 hover:bg-blue-100"
+                        }`}
                     >
-                      <FilterIcon className="w-4 h-4" />
+                      <img src={FilterIcon} alt="filter" className="w-5 h-5" />
                     </button>
 
-                    {/* Modifier Dropdown */}
-                    {isSelected && showModifierDropdown === loc.name && (
-                      <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                        <div className="px-3 py-1.5 text-xs font-medium text-gray-500 uppercase">
+                    {/* Modifier Dropdown - Matches design */}
+                    {showModifierDropdown === loc.name && (
+                      <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                        <div className="px-3 py-2 text-sm font-semibold text-[#000000] border-b border-gray-100">
                           Apply Modifier
                         </div>
                         <button
-                          onClick={() => handleModifierSelect(loc.name, "exact")}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => handleModifierSelect(loc, "exact")}
+                          className={`w-full flex items-center justify-between px-3 py-2 text-sm font-semibold hover:text-blue-600 ${selectedFilter?.modifier === "exact" ? "text-blue-600 font-medium" : "text-gray-700"
+                            }`}
                         >
                           <span>Exact</span>
                           {selectedFilter?.modifier === "exact" && (
-                            <svg className="w-4 h-4 text-blue-600 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           )}
                         </button>
                         <button
-                          onClick={() => handleModifierSelect(loc.name, "not")}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => handleModifierSelect(loc, "not")}
+                          className={`w-full flex items-center justify-between px-3 py-2 text-sm font-semibold hover:text-blue-600 ${selectedFilter?.modifier === "not" ? "text-blue-600 font-medium" : "text-gray-700"
+                            }`}
                         >
                           <span>Not</span>
                           {selectedFilter?.modifier === "not" && (
-                            <svg className="w-4 h-4 text-blue-600 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           )}
@@ -384,21 +450,38 @@ const LocationFilter = ({
                 </div>
 
                 {/* Expanded Children */}
+                {/* Expanded Children */}
                 {expandedItems[loc.name] && loc.children && (
                   <div className="ml-8 mt-1 space-y-1">
-                    {loc.children.map((child, idx) => (
-                      <label
-                        key={idx}
-                        className="flex items-center gap-2 py-1.5 px-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors duration-150"
-                      >
-                        <input
-                          type="checkbox"
-                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          onChange={() => onAddFilter({ type: filterKey, value: child, icon: "location" })}
-                        />
-                        <span className="text-sm text-gray-600">{child}</span>
-                      </label>
-                    ))}
+                    {loc.children.map((child, idx) => {
+                      const isChildSelected = selectedChildren.includes(child);
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between py-1.5 px-2 hover:bg-gray-50 rounded-lg transition-colors duration-150 group"
+                        >
+                          <label className="flex items-center gap-2 flex-1 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isChildSelected}
+                              onChange={() => handleChildSelect(loc, child)}
+                              className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="text-sm text-gray-600">{child}</span>
+                          </label>
+
+                          {/* Filter Icon for Children */}
+                          <button
+                            className={`p-1 rounded transition-colors duration-150 ${isChildSelected
+                                ? "hover:bg-gray-100 text-gray-500"
+                                : "text-gray-300 opacity-100 group-hover:opacity-100 hover:text-gray-500 hover:bg-gray-100"
+                              }`}
+                          >
+                            <img src={FilterIcon} alt="filter" className="w-5 h-5" />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -407,25 +490,49 @@ const LocationFilter = ({
       </div>
 
       {/* Radius Slider - Only show if hasRadius is true */}
+      {/* Radius Slider - Only show if hasRadius is true */}
       {hasRadius && (
-        <div className="mt-4">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm font-medium text-gray-700">Radius (mi)</span>
-            <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-xs text-gray-400 cursor-help">
+        <div className="mt-6 px-2">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-lg font-semibold text-gray-800">Radius (mi)</span>
+            <span className="w-5 h-5 rounded-full bg-gray-700 text-white flex items-center justify-center text-xs font-medium cursor-help">
               ?
             </span>
           </div>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={radius}
-            onChange={(e) => setRadius(Number(e.target.value))}
-            className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-          />
-          <div className="flex justify-between mt-1">
-            {marks.map((mark) => (
-              <span key={mark} className="text-xs text-blue-500 font-medium">
+
+          {/* Custom Slider Track */}
+          <div className="relative">
+            {/* Track Background */}
+            <div className="h-1 bg-gray-300 rounded-full relative">
+              {/* Tick Marks */}
+              {marks.map((mark, index) => (
+                <div
+                  key={mark}
+                  className="absolute top-1/2 -translate-y-1/2 w-0.5 h-3 bg-gray-400"
+                  style={{ left: `${(index / (marks.length - 1)) * 100}%` }}
+                />
+              ))}
+            </div>
+
+            {/* Range Input */}
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="25"
+              value={radius}
+              onChange={(e) => setRadius(Number(e.target.value))}
+              className="absolute top-0 left-0 w-full h-1 opacity-0 cursor-pointer"
+            />
+          </div>
+
+          {/* Labels */}
+          <div className="flex justify-between mt-3">
+            {marks.map((mark, index) => (
+              <span
+                key={mark}
+                className={`text-sm font-semibold ${index === 0 ? 'text-blue-600' : 'text-gray-700'}`}
+              >
                 {mark}
               </span>
             ))}
@@ -445,7 +552,6 @@ export default function SearchFiltersPanel({
   onAddFilter,
   onRemoveFilter,
   onClearFilters,
-  // hasSearched,
   onSaveSearch,
   onLoadSearch,
   context,
@@ -480,7 +586,7 @@ export default function SearchFiltersPanel({
   const getFilterCount = (type) => activeFilters.filter((f) => f.type === type).length;
 
   // Get updateFilterModifier from context if available (B2B)
-  const updateFilterModifier = context?.updateFilterModifier || (() => {});
+  const updateFilterModifier = context?.updateFilterModifier || (() => { });
 
   return (
     <div className="w-80 bg-white flex flex-col gap-1 rounded-b-2xl">
@@ -537,17 +643,17 @@ export default function SearchFiltersPanel({
             )}
 
             {filterConfig.type === "location" && (
-  <LocationFilter
-    filterKey={filterConfig.key}
-    placeholder={filterConfig.placeholder}
-    options={filterConfig.options}
-    activeFilters={activeFilters}
-    onAddFilter={onAddFilter}
-    onRemoveFilter={onRemoveFilter}
-    onUpdateModifier={updateFilterModifier}
-    hasRadius={filterConfig.hasRadius}
-  />
-)}
+              <LocationFilter
+                filterKey={filterConfig.key}
+                placeholder={filterConfig.placeholder}
+                options={filterConfig.options}
+                activeFilters={activeFilters}
+                onAddFilter={onAddFilter}
+                onRemoveFilter={onRemoveFilter}
+                onUpdateModifier={updateFilterModifier}
+                hasRadius={filterConfig.hasRadius}
+              />
+            )}
 
             {filterConfig.type === "checkbox-list" && (
               <CheckboxListFilter
@@ -565,31 +671,31 @@ export default function SearchFiltersPanel({
         ))}
       </div>
 
-      <div className="p-4 space-y-3 border-t border-gray-100">
-  {hasSearched ? (
-    <>
-      <button
-        onClick={onSaveSearch}
-        className="w-full bg-blue-600 text-white py-3 rounded-full font-medium hover:bg-blue-700 transition-all duration-200"
-      >
-        Save This Search
-      </button>
-      <button
-        onClick={onLoadSearch}
-        className="w-full bg-white text-blue-700 py-3 rounded-full font-medium border-2 border-blue-700 hover:border-blue-800 transition-all duration-200"
-      >
-        Load Past Search
-      </button>
-    </>
-  ) : (
-    <button
-      onClick={onLoadSearch}
-      className="w-full bg-blue-600 text-white py-3 rounded-full font-medium hover:bg-blue-700 transition-all duration-200"
-    >
-      Load Past Search
-    </button>
-  )}
-</div>
+      <div className="sticky bottom-0 bg-white p-4 space-y-3 border-t border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        {hasSearched ? (
+          <>
+            <button
+              onClick={onSaveSearch}
+              className="w-full bg-blue-600 text-white py-2 rounded-full font-medium hover:bg-blue-700 transition-all duration-200"
+            >
+              Save This Search
+            </button>
+            <button
+              onClick={onLoadSearch}
+              className="w-full bg-white text-blue-700 py-1.5 rounded-full font-medium border-2 border-blue-700 hover:border-blue-800 transition-all duration-200"
+            >
+              Load Past Search
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={onLoadSearch}
+            className="w-full bg-blue-600 text-white py-2 rounded-full font-medium hover:bg-blue-700 transition-all duration-200"
+          >
+            Load Past Search
+          </button>
+        )}
+      </div>
     </div>
   );
 }

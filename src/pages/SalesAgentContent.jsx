@@ -86,10 +86,10 @@ useEffect(() => {
   
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex flex-1 overflow-hidden gap-3">
+    <div className="flex flex-col h-full overflow-scroll scrollbar-hide">
+      <div className="flex flex-1 overflow-scroll scrollbar-hide gap-3">
         {/* Filter Panel */}
-        <div className="flex flex-col bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="flex flex-col bg-white rounded-lg shadow-sm overflow-scroll scrollbar-hide">
           {/* Search Type Toggle */}
           <div className="p-4 border-b border-gray-100">
             <div className="inline-flex bg-gray-100 rounded-full p-1">
@@ -124,7 +124,7 @@ useEffect(() => {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col rounded shadow-sm overflow-hidden">
+        <div className="flex-1 flex flex-col rounded shadow-sm overflow-auto">
           {hasSearched ? (
             <SearchResultsView mode={mode} config={config} context={context} />
           ) : (

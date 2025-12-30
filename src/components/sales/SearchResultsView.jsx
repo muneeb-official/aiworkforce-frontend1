@@ -126,16 +126,34 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
               Export as .CSV
             </button>
             <button
+              onClick={() => handleExport("Odoo")}
+              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Export to Odoo
+            </button>
+            <button
               onClick={() => handleExport("hubspot")}
               className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Export for Hubspot
+              Export to hubspot
             </button>
             <button
               onClick={() => handleExport("salesforce")}
               className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Export in Salesforce
+              Export to Salesforce
+            </button>
+            <button
+              onClick={() => handleExport("Bullhorn")}
+              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Export to Bullhorn 
+            </button>
+            <button
+              onClick={() => handleExport("salesforce")}
+              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Export to Pipedrive
             </button>
           </div>
         )}
@@ -148,9 +166,9 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
   const endIndex = Math.min(currentPage * itemsPerPage, totalResults || paginatedItems.length);
 
   return (
-    <div className="flex-1 flex flex-col h-full gap-1.5 overflow-hidden">
+    <div className="flex-1 flex flex-col h-full gap-1.5 overflow-y-scroll">
       {/* Header */}
-      <div className="p-4 border rounded bg-white border-gray-100">
+      <div className="p-4 border overflow-hidden overflow-y-scroll scroll-hidden rounded bg-white border-gray-100">
         {/* Results Info Row */}
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-4">
@@ -235,7 +253,7 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
       </div>
 
       {/* Items List */}
-      <div className="flex-1 overflow-auto p-0">
+      <div className="flex-1 h-10">
         <div className="space-y-1">
           {paginatedItems.map((item) => (
             isB2B ? (
