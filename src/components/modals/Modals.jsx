@@ -17,11 +17,11 @@ export const SaveSearchModal = ({ isOpen, onClose, onSave }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md">
-      <h2 className="text-xl font-bold text-gray-800 mb-1">Save your search</h2>
-      <p className="text-gray-500 text-sm mb-6">Fill details for new project</p>
+      <h2 className="text-xl font-bold text-[#000000] mb-1">Save your search</h2>
+      <p className="text-[#000000] text-sm mb-6">Fill details for new project</p>
 
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-[#000000] mb-2">
           Search Name
         </label>
         <input
@@ -29,7 +29,7 @@ export const SaveSearchModal = ({ isOpen, onClose, onSave }) => {
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
           placeholder="Enter Search Name"
-          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+          className="w-full px-4 py-3 border border-gray-400 rounded-lg hover:border-blue-500 focus:outline-none focus:border-blue-500 transition-colors"
         />
       </div>
 
@@ -338,15 +338,15 @@ export const AddToProjectModal = ({
                 onClick={() => setSelectedProject(project)}
                 className={`w-full flex items-center gap-3 p-4 rounded-xl transition-all ${
                   selectedProject?.id === project.id
-                    ? "bg-blue-50 border-2 border-blue-500"
-                    : "bg-white hover:bg-gray-50 border-2 border-transparent"
+                    ? "bg-[#F2F2FF] border border-blue-600"
+                    : "bg-white hover:bg-[#F2F2FF] hover:border hover:border-blue-600"
                 }`}
               >
                 <div
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                  className={`w-5 h-5  border-2 flex items-center justify-center transition-all ${
                     selectedProject?.id === project.id
-                      ? "border-blue-500 bg-blue-500"
-                      : "border-gray-300 bg-white"
+                      ? "border-blue-500 rounded bg-blue-500"
+                      : "border-gray-300 rounded-full bg-white"
                   }`}
                 >
                   {selectedProject?.id === project.id && (

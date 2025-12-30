@@ -168,22 +168,22 @@ export const Pagination = ({
   };
 
   return (
-    <div className="flex items-center justify-between mt-0 pt-4">
+    <div className="flex bg-white items-center justify-between mt-0 pt-4">
       {/* Items per page dropdown */}
-      <div className="flex items-center gap-2 relative">
+      <div className="flex items-center gap-2 ml-5 relative">
         <select
           value={itemsPerPage}
           onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
           className="
-      appearance-none
-      px-3 py-2 pr-8
-      border border-gray-200
-      rounded-lg
-      text-sm
-       
-      bg-white
-    "
-        >
+                appearance-none
+                px-3 py-2 pr-8
+                border border-gray-300
+                rounded-lg
+                text-sm
+                
+                bg-white
+              "
+                >
           <option value={10}>10</option>
           <option value={20}>20</option>
           <option value={50}>50</option>

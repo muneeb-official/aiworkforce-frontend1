@@ -122,7 +122,7 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
                   e.stopPropagation();
                   onEnrich(profile.id);
                 }}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 transition-colors"
               >
                 Enrich Profile
               </button>
@@ -133,7 +133,7 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
                 e.stopPropagation();
                 onAddToProject(profile);
               }}
-              className="px-4 py-2 border-2 border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border-2 border-blue-700 text-blue-700 text-sm font-medium rounded-full hover:border-blue-600 hover:bg-gray-50 transition-colors"
             >
               Add to Project
             </button>

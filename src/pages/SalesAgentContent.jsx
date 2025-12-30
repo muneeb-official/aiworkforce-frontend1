@@ -89,7 +89,7 @@ useEffect(() => {
     <div className="flex flex-col h-full">
       <div className="flex flex-1 overflow-hidden gap-3">
         {/* Filter Panel */}
-        <div className="flex flex-col bg-white border border-gray-100 rounded-lg shadow-sm overflow-hidden">
+        <div className="flex flex-col bg-white rounded-lg shadow-sm overflow-hidden">
           {/* Search Type Toggle */}
           <div className="p-4 border-b border-gray-100">
             <div className="inline-flex bg-gray-100 rounded-full p-1">

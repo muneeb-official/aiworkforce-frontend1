@@ -148,7 +148,7 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
   const endIndex = Math.min(currentPage * itemsPerPage, totalResults || paginatedItems.length);
 
   return (
-    <div className="flex-1 flex flex-col h-full gap-2 overflow-hidden">
+    <div className="flex-1 flex flex-col h-full gap-1.5 overflow-hidden">
       {/* Header */}
       <div className="p-4 border rounded bg-white border-gray-100">
         {/* Results Info Row */}
