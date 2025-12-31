@@ -569,7 +569,7 @@ export default function Layout({ children, activePage, setActivePage }) {
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 overflow-scroll scrollbar-hide transition-all duration-300 ease-in-out py-0">
+                <div className="flex-1 transition-all duration-300 ease-in-out py-0">
                     <div className="rounded-3xl h-full shadow-sm">{children}</div>
                 </div>
             </div>

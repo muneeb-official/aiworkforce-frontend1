@@ -86,7 +86,7 @@ useEffect(() => {
   
 
   return (
-    <div className="flex flex-col h-full overflow-scroll scrollbar-hide">
+    <div className="pt-3 flex flex-col h-full overflow-scroll scrollbar-hide">
       <div className="flex flex-1 overflow-scroll scrollbar-hide gap-3">
         {/* Filter Panel */}
         <div className="flex flex-col bg-white rounded-lg shadow-sm overflow-scroll scrollbar-hide">
@@ -173,9 +173,9 @@ useEffect(() => {
         
       </div>
       {/* Footer */}
-              <footer className="bg-white px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[#000000]">
-                  <img src={logofooter} alt="Logo" className="w-5 h-5  object-contain" />
+              <footer className="bg-white h-[24px] p-5 flex items-center justify-between">
+                <div className="flex items-center gap-1 text-[#000000]">
+                  <img src={logofooter} alt="Logo" className="w-5 h-4  object-contain" />
                   <span>© 2025 aiworkforce.co.uk</span>
                 </div>
                 <nav className="flex items-center gap-6">

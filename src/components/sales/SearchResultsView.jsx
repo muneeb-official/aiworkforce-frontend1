@@ -104,7 +104,7 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
     };
 
     return (
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative " ref={dropdownRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -168,7 +168,7 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
   return (
     <div className="flex-1 flex flex-col h-full gap-1.5 overflow-y-scroll">
       {/* Header */}
-      <div className="p-4 border overflow-hidden overflow-y-scroll scroll-hidden rounded bg-white border-gray-100">
+      <div className="p-4 border overflow-hidden rounded bg-white border-gray-100">
         {/* Results Info Row */}
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-4">
@@ -253,7 +253,7 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
       </div>
 
       {/* Items List */}
-      <div className="flex-1 h-10">
+      <div className="flex-1 h-5 z-[0]">
         <div className="space-y-1">
           {paginatedItems.map((item) => (
             isB2B ? (

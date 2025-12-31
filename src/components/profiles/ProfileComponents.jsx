@@ -27,7 +27,7 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
     >
       {/* Main Row - Clickable */}
       <div
-        className="p-4 cursor-pointer"
+        className="p-2 cursor-pointer z-[100]"
         onClick={handleRowClick}
       >
         <div className="flex items-center gap-4">

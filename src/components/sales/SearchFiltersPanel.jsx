@@ -17,7 +17,7 @@ const ChevronLeft = ({ className = "" }) => (
 );
 
 const ChevronDown = ({ className = "" }) => (
-  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M6 9l6 6 6-6" />
   </svg>
 );
@@ -83,7 +83,7 @@ const SelectFilterInput = ({ options, value, onChange }) => (
         </option>
       ))}
     </select>
-    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-blue-600 pointer-events-none" />
   </div>
 );
 
@@ -186,8 +186,8 @@ const CheckboxListFilter = ({
                   <button
                     onClick={() => setShowModifierDropdown(showModifierDropdown === option.id ? null : option.id)}
                     className={`p-2 rounded-lg transition-colors ${isSelected
-                        ? "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                        : "text-gray-300 opacity-100 group-hover:opacity-100 hover:text-gray-500 hover:bg-gray-100"
+                      ? "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                      : "text-gray-300 opacity-100 group-hover:opacity-100 hover:text-gray-500 hover:bg-gray-100"
                       }`}
                   >
                     <img src={FilterIcon} alt="filter" className="w-4 h-4" />
@@ -358,17 +358,68 @@ const LocationFilter = ({
     setShowModifierDropdown(null);
   };
 
+  // Handle modifier selection from search input
+  const handleSearchInputModifier = (modifier) => {
+    if (searchTerm.trim()) {
+      // Add filter with the search term and modifier
+      onAddFilter({
+        type: filterKey,
+        value: searchTerm.trim(),
+        icon: "location",
+        modifier: modifier
+      });
+      setSearchTerm(""); // Clear search input after adding
+    }
+    setShowModifierDropdown(null);
+  };
+
   const marks = [0, 25, 50, 75, 100];
 
   return (
     <div>
-      <input
-        type="text"
-        placeholder={placeholder}
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-all duration-200"
-      />
+      {/* Search Input with Filter Icon */}
+      <div className="relative flex items-center gap-2">
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-all duration-200"
+        />
+
+        {/* Filter Icon - appears when typing */}
+        {searchTerm.trim() && (
+          <div className="relative" ref={showModifierDropdown === "search-input" ? modifierRef : null}>
+            <button
+              onClick={() => setShowModifierDropdown(showModifierDropdown === "search-input" ? null : "search-input")}
+              className="p-1.5 rounded hover:bg-blue-100 transition-colors duration-150"
+            >
+              <img src={FilterIcon} alt="filter" className="w-5 h-5" />
+            </button>
+
+            {/* Modifier Dropdown for Search Input */}
+            {showModifierDropdown === "search-input" && (
+              <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                <div className="px-3 py-2 text-sm font-semibold text-[#000000] border-b border-gray-100">
+                  Apply Modifier
+                </div>
+                <button
+                  onClick={() => handleSearchInputModifier("exact")}
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold hover:text-blue-600 text-gray-700"
+                >
+                  <span>Exact</span>
+                </button>
+                <button
+                  onClick={() => handleSearchInputModifier("not")}
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold hover:text-blue-600 text-gray-700"
+                >
+                  <span>Not</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       <div className="mt-3 max-h-64 overflow-scroll scrollbar-hide space-y-1">
         {options
           .filter((loc) => loc.name.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -407,8 +458,8 @@ const LocationFilter = ({
                     <button
                       onClick={() => setShowModifierDropdown(showModifierDropdown === loc.name ? null : loc.name)}
                       className={`p-1 rounded transition-colors duration-150 ${isSelected
-                          ? "hover:bg-gray-100 text-gray-500"
-                          : "text-gray-300 opacity-100 group-hover:opacity-100 hover:text-gray-500 hover:bg-blue-100"
+                        ? "hover:bg-gray-100 text-gray-500"
+                        : "text-gray-300 opacity-100 group-hover:opacity-100 hover:text-gray-500 hover:bg-blue-100"
                         }`}
                     >
                       <img src={FilterIcon} alt="filter" className="w-5 h-5" />
@@ -473,8 +524,8 @@ const LocationFilter = ({
                           {/* Filter Icon for Children */}
                           <button
                             className={`p-1 rounded transition-colors duration-150 ${isChildSelected
-                                ? "hover:bg-gray-100 text-gray-500"
-                                : "text-gray-300 opacity-100 group-hover:opacity-100 hover:text-gray-500 hover:bg-gray-100"
+                              ? "hover:bg-gray-100 text-gray-500"
+                              : "text-gray-300 opacity-100 group-hover:opacity-100 hover:text-gray-500 hover:bg-gray-100"
                               }`}
                           >
                             <img src={FilterIcon} alt="filter" className="w-5 h-5" />
@@ -556,6 +607,369 @@ export default function SearchFiltersPanel({
   onLoadSearch,
   context,
 }) {
+
+  // Multi-Section Filter (for Role & Department, Education, etc.)
+  const MultiSectionFilter = ({
+    filterKey,
+    sections,
+    activeFilters,
+    onAddFilter,
+    onRemoveFilter,
+    onUpdateModifier,
+  }) => {
+    const [inputValues, setInputValues] = useState({});
+    const [expandedItems, setExpandedItems] = useState({});
+    const [showModifierDropdown, setShowModifierDropdown] = useState(null);
+    const modifierRef = useRef(null);
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (modifierRef.current && !modifierRef.current.contains(event.target)) {
+          setShowModifierDropdown(null);
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleInputChange = (sectionKey, value) => {
+      setInputValues((prev) => ({ ...prev, [sectionKey]: value }));
+    };
+
+    const handleInputModifier = (sectionKey, modifier) => {
+      const value = inputValues[sectionKey]?.trim();
+      if (value) {
+        onAddFilter({
+          type: `${filterKey}.${sectionKey}`,
+          value: value,
+          icon: filterKey,
+          modifier: modifier,
+        });
+        setInputValues((prev) => ({ ...prev, [sectionKey]: "" }));
+      }
+      setShowModifierDropdown(null);
+    };
+
+    const handleCheckboxSelect = (sectionKey, option) => {
+      const filterType = `${filterKey}.${sectionKey}`;
+      const exists = activeFilters.some(
+        (f) => f.type === filterType && f.value === option.label
+      );
+
+      if (exists) {
+        const filter = activeFilters.find(
+          (f) => f.type === filterType && f.value === option.label
+        );
+        onRemoveFilter(filter.id);
+      } else {
+        onAddFilter({
+          type: filterType,
+          value: option.label,
+          icon: filterKey,
+        });
+      }
+    };
+
+    const handleOptionModifier = (sectionKey, option, modifier) => {
+      const filterType = `${filterKey}.${sectionKey}`;
+      const exists = activeFilters.some(
+        (f) => f.type === filterType && f.value === option.label
+      );
+
+      if (!exists) {
+        onAddFilter({
+          type: filterType,
+          value: option.label,
+          icon: filterKey,
+          modifier: modifier,
+        });
+      } else {
+        const filter = activeFilters.find(
+          (f) => f.type === filterType && f.value === option.label
+        );
+        if (filter && onUpdateModifier) {
+          onUpdateModifier(filter.id, modifier);
+        }
+      }
+      setShowModifierDropdown(null);
+    };
+
+    const toggleExpand = (itemKey) => {
+      setExpandedItems((prev) => ({ ...prev, [itemKey]: !prev[itemKey] }));
+    };
+
+    const renderSection = (sectionKey, section) => {
+      const inputValue = inputValues[sectionKey] || "";
+
+      return (
+        <div key={sectionKey} className="mb-4">
+          <div className="text-sm font-semibold text-gray-800 mb-2">{section.label}</div>
+
+          {/* Text Input with Filter Icon */}
+          {(section.type === "text" || section.type === "text-with-options") && (
+            <div className="relative flex items-center gap-2 mb-2">
+              <input
+                type="text"
+                placeholder={section.placeholder}
+                value={inputValue}
+                onChange={(e) => handleInputChange(sectionKey, e.target.value)}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 transition-all duration-200"
+              />
+
+              {inputValue.trim() && (
+                <div className="relative" ref={showModifierDropdown === `input-${sectionKey}` ? modifierRef : null}>
+                  <button
+                    onClick={() =>
+                      setShowModifierDropdown(
+                        showModifierDropdown === `input-${sectionKey}` ? null : `input-${sectionKey}`
+                      )
+                    }
+                    className="p-1.5 rounded hover:bg-blue-100 transition-colors duration-150"
+                  >
+                    <img src={FilterIcon} alt="filter" className="w-5 h-5" />
+                  </button>
+
+                  {showModifierDropdown === `input-${sectionKey}` && (
+                    <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                      <div className="px-3 py-2 text-sm font-semibold text-[#000000] border-b border-gray-100">
+                        Apply Modifier
+                      </div>
+                      <button
+                        onClick={() => handleInputModifier(sectionKey, "exact")}
+                        className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold hover:text-blue-600 text-gray-700"
+                      >
+                        <span>Exact</span>
+                      </button>
+                      <button
+                        onClick={() => handleInputModifier(sectionKey, "not")}
+                        className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold hover:text-blue-600 text-gray-700"
+                      >
+                        <span>Not</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Options with Expandable Items */}
+          {section.type === "text-with-options" && section.options && (
+            <div className="space-y-1 max-h-60 overflow-y-auto">
+              {section.options.map((option) => {
+                const filterType = `${filterKey}.${sectionKey}`;
+                const isSelected = activeFilters.some(
+                  (f) => f.type === filterType && f.value === option.label
+                );
+                const selectedFilter = activeFilters.find(
+                  (f) => f.type === filterType && f.value === option.label
+                );
+
+                return (
+                  <div key={option.id}>
+                    <div className="flex items-center justify-between py-1.5 px-2 hover:bg-blue-50 rounded-lg transition-colors duration-150 group">
+                      {option.hasChildren && (
+                        <button
+                          onClick={() => toggleExpand(`${sectionKey}-${option.id}`)}
+                          className="p-0.5 hover:bg-blue-100 rounded transition-colors duration-150"
+                        >
+                          <ChevronRight
+                            className={`text-[#3C49F7] transition-transform duration-200 ${expandedItems[`${sectionKey}-${option.id}`] ? "rotate-90" : ""
+                              }`}
+                          />
+                        </button>
+                      )}
+
+                      <label className="flex items-center gap-2 flex-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleCheckboxSelect(sectionKey, option)}
+                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">
+                          {option.label}
+                          {option.count && <span className="text-gray-400 ml-1">({option.count})</span>}
+                        </span>
+                      </label>
+
+                      <div className="relative" ref={showModifierDropdown === `option-${sectionKey}-${option.id}` ? modifierRef : null}>
+                        <button
+                          onClick={() =>
+                            setShowModifierDropdown(
+                              showModifierDropdown === `option-${sectionKey}-${option.id}`
+                                ? null
+                                : `option-${sectionKey}-${option.id}`
+                            )
+                          }
+                          className={`p-1 rounded transition-colors duration-150 ${isSelected
+                              ? "hover:bg-gray-100 text-gray-500"
+                              : "text-gray-300 opacity-0 group-hover:opacity-100 hover:text-gray-500 hover:bg-gray-100"
+                            }`}
+                        >
+                          <img src={FilterIcon} alt="filter" className="w-4 h-4" />
+                        </button>
+
+                        {showModifierDropdown === `option-${sectionKey}-${option.id}` && (
+                          <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                            <div className="px-3 py-2 text-sm font-semibold text-[#000000] border-b border-gray-100">
+                              Apply Modifier
+                            </div>
+                            <button
+                              onClick={() => handleOptionModifier(sectionKey, option, "exact")}
+                              className={`w-full flex items-center justify-between px-3 py-2 text-sm font-semibold hover:text-blue-600 ${selectedFilter?.modifier === "exact" ? "text-blue-600" : "text-gray-700"
+                                }`}
+                            >
+                              <span>Exact</span>
+                              {selectedFilter?.modifier === "exact" && (
+                                <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleOptionModifier(sectionKey, option, "not")}
+                              className={`w-full flex items-center justify-between px-3 py-2 text-sm font-semibold hover:text-blue-600 ${selectedFilter?.modifier === "not" ? "text-blue-600" : "text-gray-700"
+                                }`}
+                            >
+                              <span>Not</span>
+                              {selectedFilter?.modifier === "not" && (
+                                <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Simple Checkbox List */}
+          {section.type === "checkbox-list" && section.options && (
+            <div className="space-y-1 max-h-60 overflow-y-auto">
+              {section.options.map((option) => {
+                const filterType = `${filterKey}.${sectionKey}`;
+                const isSelected = activeFilters.some(
+                  (f) => f.type === filterType && f.value === option.label
+                );
+                const selectedFilter = activeFilters.find(
+                  (f) => f.type === filterType && f.value === option.label
+                );
+
+                return (
+                  <div
+                    key={option.id}
+                    className="flex items-center justify-between py-1.5 px-2 hover:bg-blue-50 rounded-lg transition-colors duration-150 group"
+                  >
+                    <label className="flex items-center gap-2 flex-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleCheckboxSelect(sectionKey, option)}
+                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">{option.label}</span>
+                    </label>
+
+                    <div className="relative" ref={showModifierDropdown === `cb-${sectionKey}-${option.id}` ? modifierRef : null}>
+                      <button
+                        onClick={() =>
+                          setShowModifierDropdown(
+                            showModifierDropdown === `cb-${sectionKey}-${option.id}`
+                              ? null
+                              : `cb-${sectionKey}-${option.id}`
+                          )
+                        }
+                        className={`p-1 rounded transition-colors duration-150 ${isSelected
+                            ? "hover:bg-gray-100 text-gray-500"
+                            : "text-gray-300 opacity-0 group-hover:opacity-100 hover:text-gray-500 hover:bg-gray-100"
+                          }`}
+                      >
+                        <img src={FilterIcon} alt="filter" className="w-4 h-4" />
+                      </button>
+
+                      {showModifierDropdown === `cb-${sectionKey}-${option.id}` && (
+                        <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                          <div className="px-3 py-2 text-sm font-semibold text-[#000000] border-b border-gray-100">
+                            Apply Modifier
+                          </div>
+                          <button
+                            onClick={() => handleOptionModifier(sectionKey, option, "exact")}
+                            className={`w-full flex items-center justify-between px-3 py-2 text-sm font-semibold hover:text-blue-600 ${selectedFilter?.modifier === "exact" ? "text-blue-600" : "text-gray-700"
+                              }`}
+                          >
+                            <span>Exact</span>
+                            {selectedFilter?.modifier === "exact" && (
+                              <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleOptionModifier(sectionKey, option, "not")}
+                            className={`w-full flex items-center justify-between px-3 py-2 text-sm font-semibold hover:text-blue-600 ${selectedFilter?.modifier === "not" ? "text-blue-600" : "text-gray-700"
+                              }`}
+                          >
+                            <span>Not</span>
+                            {selectedFilter?.modifier === "not" && (
+                              <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Select Dropdown */}
+          {section.type === "select" && (
+            <div className="relative">
+              <select
+                value={inputValues[sectionKey] || section.placeholder}
+                onChange={(e) => {
+                  handleInputChange(sectionKey, e.target.value);
+                  if (e.target.value !== section.placeholder) {
+                    onAddFilter({
+                      type: `${filterKey}.${sectionKey}`,
+                      value: e.target.value,
+                      icon: filterKey,
+                    });
+                  }
+                }}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 appearance-none bg-white pr-8 transition-all duration-200"
+              >
+                {section.options.map((opt, idx) => (
+                  <option key={idx} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-blue-400 pointer-events-none" />
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    return (
+      <div>
+        {Object.entries(sections).map(([sectionKey, section]) =>
+          renderSection(sectionKey, section)
+        )}
+      </div>
+    );
+  };
+
   const [filterValues, setFilterValues] = useState({});
 
   const handleFilterChange = (key, value) => {
@@ -652,6 +1066,17 @@ export default function SearchFiltersPanel({
                 onRemoveFilter={onRemoveFilter}
                 onUpdateModifier={updateFilterModifier}
                 hasRadius={filterConfig.hasRadius}
+              />
+
+            )}
+            {(filterConfig.type === "role-department" || filterConfig.type === "education") && (
+              <MultiSectionFilter
+                filterKey={filterConfig.key}
+                sections={filterConfig.sections}
+                activeFilters={activeFilters}
+                onAddFilter={onAddFilter}
+                onRemoveFilter={onRemoveFilter}
+                onUpdateModifier={updateFilterModifier}
               />
             )}
 
