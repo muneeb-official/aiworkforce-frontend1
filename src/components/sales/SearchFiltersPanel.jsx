@@ -30,13 +30,13 @@ const FilterSection = ({ title, count, children, defaultOpen = false }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="bg-[#F4F5FB] border-2 rounded-lg border-white">
+    <div className="bg-[#F4F5FB] text-[15px] border-2 rounded-md border-white">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-4 px-3 text-left hover:bg-gray-50 transition-all duration-200"
+        className="w-full flex items-center justify-between py-2 px-3 text-left hover:bg-gray-50 transition-all duration-200"
       >
         <div className="flex items-center gap-2">
-          <span className="font-medium text-[]#000000">{title}</span>
+          <span className="font-medium text-[#000000]">{title}</span>
           {count > 0 && (
             <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
               {count}
@@ -1096,7 +1096,7 @@ export default function SearchFiltersPanel({
         ))}
       </div>
 
-      <div className="sticky bottom-0 bg-white p-4 space-y-3 border-t border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <div className="sticky bottom-0 bg-white p-4 space-y-3">
         {hasSearched ? (
           <>
             <button
