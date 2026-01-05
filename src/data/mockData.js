@@ -7,8 +7,8 @@ export const appInfo = {
 
 export const userData = {
   name: "Max",
-  credits: 3000,
-  creditsUsedPercentage: 10,
+  credits: 300,
+  creditsUsedPercentage: 50,
   avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
 };
 

@@ -68,11 +68,11 @@ const MeetingCard = ({ meeting }) => (
   </div>
 );
 
-export default function DashboardContent() {
+export default function DashboardContent({ setActivePage }) {
   return (
     <div
       className="px-8 py-6 h-full w-full overflow-auto bg-cover bg-center bg-no-repeat bg-fixed"
-      // style={{ backgroundImage: `url(${backgroundImage})` }}
+    // style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       <h1 className="text-[40px] font-bold text-gray-800 mb-6">
         Hello {userData.name}, below are your insights
@@ -97,7 +97,10 @@ export default function DashboardContent() {
               far!
             </p>
           </div>
-          <button className="text-blue-600 font-medium text-sm border border-transparent hover:border-[#3C49F7] border-4 py-2 px-4 rounded-full transition-all duration-200">
+          <button
+            onClick={() => setActivePage("credits")}
+            className="text-blue-600 font-medium text-sm border border-transparent hover:border-[#3C49F7] border-4 py-2 px-4 rounded-full transition-all duration-200"
+          >
             Get More Credits
           </button>
         </div>

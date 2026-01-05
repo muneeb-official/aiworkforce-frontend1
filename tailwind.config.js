@@ -22,7 +22,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+        sans: ['"DM Sans"', 'sans-serif'],
       },
       animation: {
         'float': 'float 3s ease-in-out infinite',

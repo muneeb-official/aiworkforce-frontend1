@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -71,6 +71,31 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 } */
+
+/* Apply DM Sans globally to EVERYTHING */
+@layer base {
+  * {
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  
+  html {
+    font-family: 'DM Sans', sans-serif !important;
+  }
+  
+  body {
+    font-family: 'DM Sans', sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'DM Sans', sans-serif !important;
+  }
+
+  p, span, a, button, input, select, textarea, label, div {
+    font-family: 'DM Sans', sans-serif !important;
+  }
+}
 
 * {
   margin: 0;
@@ -195,6 +220,15 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
+
+/* .scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+} */
 
 /* Range slider styling */
 input[type="range"] {

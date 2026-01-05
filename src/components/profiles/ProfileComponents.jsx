@@ -2,12 +2,32 @@
 import { useState } from "react";
 import { Checkbox, } from "../common/CommonComponents";
 import LinkedInIcon from "../../assets/icons/LinkedIn.png";
-
+import VerifiedIcon from "../../assets/icons/Verified.svg";
 // Replace the entire ProfileCard component with this:
+
+const LoadingDots = () => (
+  <div className="flex items-center justify-center gap-2">
+    <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '500ms' }}></span>
+    <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '600ms' }}></span>
+    <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '700ms' }}></span>
+  </div>
+);
 
 export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToProject }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isEnriching, setIsEnriching] = useState(false);
 
+ const handleEnrich = async () => {
+    if (isEnriching || profile.isEnriched) return;
+    
+    setIsEnriching(true);
+    
+    // Simulate loading delay (or wait for actual API call)
+    setTimeout(() => {
+      onEnrich(profile.id);
+      setIsEnriching(false);
+    }, 2000);
+  }
   const handleRowClick = (e) => {
     if (e.target.closest('button') || e.target.closest('input[type="checkbox"]')) {
       return;
@@ -107,13 +127,30 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
             >
               <img src={LinkedInIcon} alt="linkedin" className="w-5 h-5" />
             </a>
+            {/* Enrich Button */}
+          {!profile.isEnriched ? (
+            <button
+              onClick={handleEnrich}
+              disabled={isEnriching}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-[120px] ${
+                isEnriching
+                  ? "bg-[#3C49F7] text-white cursor-wait"
+                  : "bg-[#3C49F7] text-white hover:bg-blue-700"
+              }`}
+            >
+              {isEnriching ? <LoadingDots /> : "Enrich Profile"}
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1 bg-[#F2F2FF] rounded text-[#0028B6]">
+                <img src={VerifiedIcon} alt="linkedin" className="w-7 h-7" />
+                <span className="text-[12px] font-semibold">Enriched Contact</span>
+              </div>
+          )}
 
-            {profile.isEnriched ? (
-              <div className="flex items-center gap-2 text-blue-600">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm font-medium">Enriched Contact</span>
+            {/* {profile.isEnriched ? (
+              <div className="flex items-center gap-2 px-3 py-1 bg-[#F2F2FF] text-[#0028B6]">
+                <img src={VerifiedIcon} alt="linkedin" className="w-7 h-7" />
+                <span className="text-[12px] font-semibold">Enriched Contact</span>
               </div>
             ) : (
               <button
@@ -125,14 +162,14 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
               >
                 Enrich Profile
               </button>
-            )}
+            )} */}
 
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onAddToProject(profile);
               }}
-              className="px-4 py-1.5 border-2 border-[#3C49F7] text-[#3C49F7] text-sm font-medium rounded-full"
+              className="px-4 py-1.5 border-2 border-[#3C49F7] text-[#3C49F7] text-[14px] font-medium rounded-full"
             >
               Add to Project
             </button>
@@ -267,7 +304,7 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
               >
                 View Less
               </button>
-              <span className={`text-sm font-medium ${profile.isEnriched ? 'text-gray-600' : 'text-[#000000]'}`}>
+              <span className={`py-0.5 px-2 text-sm italic bg-[#E8EAFF] font-medium ${profile.isEnriched ? 'text-[#000000]' : 'text-[#000000]'}`}>
                 {profile.isEnriched ? "1 Credit Used" : "1 Credit"}
               </span>
             </div>
@@ -413,12 +450,24 @@ export const SelectAllRow = ({
 
       {selectedCount > 0 && (
         <div className="flex items-center gap-3">
-          <button
-            onClick={onEnrichAll}
-            className="bg-[#3C49F7] text-white px-4 py-1.5 rounded-full text-sm font-medium"
-          >
-            Enrich Profile
-          </button>
+          {!profile.isEnriched ? (
+            <button
+              onClick={handleEnrich}
+              disabled={isEnriching}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-[120px] ${
+                isEnriching
+                  ? "bg-[#3C49F7] text-white cursor-wait"
+                  : "bg-[#3C49F7] text-white hover:bg-blue-700"
+              }`}
+            >
+              {isEnriching ? <LoadingDots /> : "Enrich Profile"}
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1 bg-[#F2F2FF] rounded text-[#0028B6]">
+                <img src={VerifiedIcon} alt="linkedin" className="w-7 h-7" />
+                <span className="text-[12px] font-semibold">Enriched Contact</span>
+              </div>
+          )}
           <button
             onClick={onAddAllToProject}
             className="border border-gray-300 text-gray-700 px-4 py-1.5 rounded-full text-sm font-medium hover:border-[#3C49F7] hover:text-[#3C49F7] transition-colors"

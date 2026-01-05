@@ -42,6 +42,7 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
   const [targetItemId, setTargetItemId] = useState(null);
   const [targetItem, setTargetItem] = useState(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [isEnrichingAll, setIsEnrichingAll] = useState(false);
 
   const paginatedItems = getPaginatedItems ? getPaginatedItems() : [];
   const isAllSelected =
@@ -61,14 +62,21 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
     // Add your export logic here
   };
 
-  // Handler for enrich all selected
   const handleEnrichAll = () => {
-    if (enrichMultipleProfiles && !isB2B) {
-      const unenrichedSelected = selectedItems.filter(
-        (id) => !paginatedItems.find((p) => p.id === id)?.isEnriched
-      );
+    if (isEnrichingAll || !enrichMultipleProfiles || isB2B) return;
+
+    const unenrichedSelected = selectedItems.filter(
+      (id) => !paginatedItems.find((p) => p.id === id)?.isEnriched
+    );
+
+    if (unenrichedSelected.length === 0) return;
+
+    setIsEnrichingAll(true);
+
+    setTimeout(() => {
       enrichMultipleProfiles(unenrichedSelected);
-    }
+      setIsEnrichingAll(false);
+    }, 2000);
   };
 
   // Handler for add single item to project
@@ -163,9 +171,21 @@ export default function SearchResultsView({ mode = "b2c", config, context }) {
                 {!isB2B && config.hasEnrichment && (
                   <button
                     onClick={handleEnrichAll}
-                    className="bg-[#3C49F7] text-white px-4 py-1.5 rounded-full text-sm font-medium"
+                    disabled={isEnrichingAll}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-[120px] ${isEnrichingAll
+                        ? "bg-[#3C49F7] text-white cursor-wait"
+                        : "bg-[#3C49F7] text-white hover:bg-blue-700"
+                      }`}
                   >
-                    Enrich Profile
+                    {isEnrichingAll ? (
+                      <div className="flex items-center justify-center gap-1">
+                        <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                        <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                        <span className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                      </div>
+                    ) : (
+                      "Enrich Profile"
+                    )}
                   </button>
                 )}
                 <button

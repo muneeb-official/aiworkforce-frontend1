@@ -159,13 +159,13 @@ function AppContent() {
   const renderContent = () => {
     switch (activePage) {
       case "analytics":
-        return <DashboardContent />;
+        return <DashboardContent setActivePage={setActivePage} />;
       case "b2c":
         return <SalesAgentContent mode="b2c" />;
       case "b2b":
         return <SalesAgentContent mode="b2b" />;
       default:
-        return <DashboardContent />;
+        return <DashboardContent setActivePage={setActivePage} />;
     }
   };
 

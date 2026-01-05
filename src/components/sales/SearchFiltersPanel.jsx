@@ -28,6 +28,22 @@ import FilterIcon from "../../assets/icons/FilterIcon.svg";
 // Filter Section Component
 const FilterSection = ({ title, count, children, defaultOpen = false }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  
+  // Track if we've already auto-opened to prevent repeated updates
+  const hasAutoOpened = useRef(false);
+
+  // ✅ FIXED: Only auto-open once when count changes from 0 to > 0
+  useEffect(() => {
+    if (count > 0 && !hasAutoOpened.current) {
+      setIsOpen(true);
+      hasAutoOpened.current = true;
+    }
+    // Reset when count goes back to 0
+    if (count === 0) {
+      hasAutoOpened.current = false;
+    }
+  }, [count]);
+
 
   return (
     <div className="bg-[#F4F5FB] text-[15px] border-2 rounded-md border-white">
@@ -92,7 +108,7 @@ const CheckboxListFilter = ({
   filterKey,
   placeholder,
   options,
-  selectedValues,
+  selectedValues,  // This is activeFilters passed from parent
   onSelect,
   hasModifier,
   onUpdateModifier,
@@ -142,6 +158,7 @@ const CheckboxListFilter = ({
 
   return (
     <div>
+      {/* Search input */}
       <input
         type="text"
         placeholder={placeholder}
@@ -151,7 +168,8 @@ const CheckboxListFilter = ({
       />
       <div className="space-y-1 max-h-60 overflow-y-auto">
         {filteredOptions.map((option) => {
-          const isSelected = selectedValues.some(
+          // ✅ This check should use activeFilters to determine if selected
+          const isSelected = activeFilters.some(
             (v) => v.type === filterKey && v.value === option.label
           );
           const selectedFilter = activeFilters.find(
@@ -235,6 +253,7 @@ const CheckboxListFilter = ({
 };
 
 // Location Filter with Expandable List (for B2C)
+
 const LocationFilter = ({
   filterKey = "location",
   placeholder,
@@ -247,11 +266,62 @@ const LocationFilter = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocations, setSelectedLocations] = useState([]);
-  const [selectedChildren, setSelectedChildren] = useState([]); // Track selected children
+  const [selectedChildren, setSelectedChildren] = useState([]);
   const [expandedItems, setExpandedItems] = useState({});
   const [radius, setRadius] = useState(0);
   const [showModifierDropdown, setShowModifierDropdown] = useState(null);
   const modifierRef = useRef(null);
+
+  // ✅ FIXED: Use JSON.stringify to create stable dependency
+  const activeFiltersString = JSON.stringify(
+    activeFilters.filter(f => f.type === filterKey).map(f => f.value)
+  );
+  const optionsString = JSON.stringify(options.map(o => ({ name: o.name, children: o.children })));
+
+  useEffect(() => {
+    const locationFilters = activeFilters.filter(f => f.type === filterKey);
+    
+    if (locationFilters.length === 0) {
+      setSelectedLocations([]);
+      setSelectedChildren([]);
+      return;
+    }
+    
+    // Get all parent location names from options
+    const parentNames = options.map(opt => opt.name);
+    
+    // Get all possible children from options
+    const allChildren = options.flatMap(opt => opt.children || []);
+    
+    // Separate parent locations and children from active filters
+    const parentLocations = locationFilters
+      .filter(f => parentNames.includes(f.value))
+      .map(f => f.value);
+    
+    const childLocations = locationFilters
+      .filter(f => allChildren.includes(f.value))
+      .map(f => f.value);
+    
+    setSelectedLocations(parentLocations);
+    setSelectedChildren(childLocations);
+    
+    // Auto-expand parents that have selected children
+    const expandedParents = {};
+    options.forEach(opt => {
+      if (opt.children) {
+        const hasSelectedChild = opt.children.some(child => childLocations.includes(child));
+        if (hasSelectedChild || parentLocations.includes(opt.name)) {
+          expandedParents[opt.name] = true;
+        }
+      }
+    });
+    
+    if (Object.keys(expandedParents).length > 0) {
+      setExpandedItems(prev => ({ ...prev, ...expandedParents }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFiltersString, optionsString, filterKey]);
+
 
   // Close modifier dropdown when clicking outside
   useEffect(() => {
@@ -298,6 +368,8 @@ const LocationFilter = ({
       }
     }
   };
+
+
 
   // Handle child location select
   const handleChildSelect = (parentLocation, childName) => {
@@ -623,6 +695,38 @@ export default function SearchFiltersPanel({
     const [showModifierDropdown, setShowModifierDropdown] = useState(null);
     const modifierRef = useRef(null);
 
+     const activeFiltersString = JSON.stringify(activeFilters);
+  
+  useEffect(() => {
+    const sectionKeys = Object.keys(sections);
+    const expanded = {};
+    let hasChanges = false;
+    
+    sectionKeys.forEach(sectionKey => {
+      const filterType = `${filterKey}.${sectionKey}`;
+      const hasActiveFilter = activeFilters.some(f => f.type === filterType);
+      if (hasActiveFilter && !expandedItems[sectionKey]) {
+        expanded[sectionKey] = true;
+        hasChanges = true;
+      }
+    });
+    
+    if (hasChanges) {
+      setExpandedItems(prev => ({ ...prev, ...expanded }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFiltersString, filterKey]);
+
+    // useEffect(() => {
+    //   const newFilterValues = {};
+    //   activeFilters.forEach(filter => {
+    //     if (!filter.type.includes('.')) {
+    //       newFilterValues[filter.type] = filter.value;
+    //     }
+    //   });
+    //   setFilterValues(newFilterValues);
+    // }, [activeFilters]);
+
     useEffect(() => {
       const handleClickOutside = (event) => {
         if (modifierRef.current && !modifierRef.current.contains(event.target)) {
@@ -804,8 +908,8 @@ export default function SearchFiltersPanel({
                             )
                           }
                           className={`p-1 rounded transition-colors duration-150 ${isSelected
-                              ? "hover:bg-gray-100 text-gray-500"
-                              : "text-gray-300 opacity-0 group-hover:opacity-100 hover:text-gray-500 hover:bg-gray-100"
+                            ? "hover:bg-gray-100 text-gray-500"
+                            : "text-gray-300 opacity-0 group-hover:opacity-100 hover:text-gray-500 hover:bg-gray-100"
                             }`}
                         >
                           <img src={FilterIcon} alt="filter" className="w-4 h-4" />
@@ -887,8 +991,8 @@ export default function SearchFiltersPanel({
                           )
                         }
                         className={`p-1 rounded transition-colors duration-150 ${isSelected
-                            ? "hover:bg-gray-100 text-gray-500"
-                            : "text-gray-300 opacity-0 group-hover:opacity-100 hover:text-gray-500 hover:bg-gray-100"
+                          ? "hover:bg-gray-100 text-gray-500"
+                          : "text-gray-300 opacity-0 group-hover:opacity-100 hover:text-gray-500 hover:bg-gray-100"
                           }`}
                       >
                         <img src={FilterIcon} alt="filter" className="w-4 h-4" />
