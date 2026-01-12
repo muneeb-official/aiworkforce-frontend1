@@ -119,7 +119,7 @@ export default function SearchResultsView({ mode = "b2c", config, context, searc
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={excludeInProject || false}
@@ -127,7 +127,7 @@ export default function SearchResultsView({ mode = "b2c", config, context, searc
               className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
             />
             <span className="text-sm text-gray-600">Exclude profiles already in project.</span>
-          </div>
+          </div> */}
         </div>
 
         {/* Select All Row */}

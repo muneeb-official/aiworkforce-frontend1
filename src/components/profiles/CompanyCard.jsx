@@ -217,7 +217,22 @@ export const CompanyCard = ({
           type="checkbox"
           checked={isSelected}
           onChange={() => onSelect(company.id)}
-          className="w-5 h-5 rounded border-gray-100 text-blue-600 focus:ring-blue-500 cursor-pointer flex-shrink-0"
+          className="appearance-none
+    w-[18px] h-[18px]
+    rounded-[6px]
+    border border-gray-300
+    bg-white
+    hover:border-blue-600
+    focus:outline-none focus:ring-2 focus:ring-blue-500/30
+    cursor-pointer
+
+    checked:bg-blue-600 checked:border-blue-600
+    checked:after:content-['']
+    checked:after:block
+    checked:after:w-[6px] checked:after:h-[10px]
+    checked:after:border-r-2 checked:after:border-b-2 checked:after:border-white
+    checked:after:rotate-45
+    checked:after:translate-x-[5px] checked:after:translate-y-[1px]"
         />
 
         {/* Company Logo */}
