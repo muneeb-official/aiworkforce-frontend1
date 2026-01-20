@@ -1,6 +1,6 @@
 // src/services/authService.js
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = 'http://localhost:8000/api/platform/auth';
 
 export const authService = {
   /**
@@ -9,69 +9,95 @@ export const authService = {
    * @param {string} password 
    * @returns {Promise<{success: boolean, user?: object, token?: string, error?: string}>}
    */
-  login: async (email, password) => {
-    // TODO: Replace with real API call when backend is ready
-    // Example real implementation:
-    // const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ email, password }),
-    // });
-    // return response.json();
 
-    // Simulated response for UI testing
-    console.log('Login called with:', { email });
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Simulate validation
-    if (email === 'error@test.com') {
-      return { success: false, error: 'Invalid credentials' };
+  
+login: async (email, password) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data.message || data.detail || 'Login failed. Please check your credentials.',
+      };
     }
+
+    // Check subscription status from response
+    const hasSubscription = !!(data.service_ids && data.service_ids.length > 0);
     
     return {
       success: true,
-      user: {
-        id: '1',
-        email,
-        firstName: 'Test',
-        lastName: 'User',
-        organisation: 'Test Org',
-      },
-      token: 'mock-jwt-token-' + Date.now(),
+      user: data.user,
+      token: data.access_token,
+      organization: data.organization,
+      seatId: data.seat_id,
+      serviceIds: data.service_ids,
+      serviceDetails: data.service_details,
+      hasSubscription: hasSubscription,
     };
-  },
+  } catch (error) {
+    console.error('Login error:', error);
+    return {
+      success: false,
+      error: 'Network error. Please try again.',
+    };
+  }
+},
 
   /**
    * Register new user
-   * @param {object} userData - { firstName, lastName, organisation, location, email, phone, countryCode, password }
+   * @param {object} userData - { firstName, lastName, email, password, organisation, location, phone, countryCode }
    * @returns {Promise<{success: boolean, message?: string, error?: string}>}
    */
   signUp: async (userData) => {
-    // TODO: Replace with real API call when backend is ready
-    // Example real implementation:
-    // const response = await fetch(`${API_BASE_URL}/auth/register`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(userData),
-    // });
-    // return response.json();
+    try {
+      const response = await fetch(`${API_BASE_URL}/owner/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userData.email,
+          password: userData.password,
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+          organization_name: userData.organisation,
+          organization_type: 'solo', // Default value
+        }),
+      });
 
-    console.log('SignUp called with:', userData);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Simulate email already exists error
-    if (userData.email === 'exists@test.com') {
-      return { success: false, error: 'Email already registered' };
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.message || data.detail || 'Registration failed. Please try again.',
+        };
+      }
+
+      return {
+        success: true,
+        message: data.message || 'Account created successfully.',
+        user: data.user || data,
+      };
+    } catch (error) {
+      console.error('SignUp error:', error);
+      return {
+        success: false,
+        error: 'Network error. Please try again.',
+      };
     }
-    
-    return {
-      success: true,
-      message: 'Account created successfully. Please login.',
-    };
   },
 
   /**
@@ -79,17 +105,22 @@ export const authService = {
    * @returns {Promise<{success: boolean}>}
    */
   logout: async () => {
-    // TODO: Replace with real API call if backend requires logout endpoint
-    // Example real implementation:
-    // const token = localStorage.getItem('token');
-    // await fetch(`${API_BASE_URL}/auth/logout`, {
-    //   method: 'POST',
-    //   headers: { 'Authorization': `Bearer ${token}` },
-    // });
+    try {
+      // If your backend has a logout endpoint, uncomment below:
+      // const token = localStorage.getItem('token');
+      // await fetch(`${API_BASE_URL}/logout`, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Authorization': `Bearer ${token}`,
+      //     'Content-Type': 'application/json',
+      //   },
+      // });
 
-    console.log('Logout called');
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return { success: true };
+      return { success: true };
+    } catch (error) {
+      console.error('Logout error:', error);
+      return { success: true }; // Still return success to clear local state
+    }
   },
 
   /**
@@ -98,13 +129,35 @@ export const authService = {
    * @returns {Promise<{success: boolean, message?: string}>}
    */
   forgotPassword: async (email) => {
-    // TODO: Replace with real API call
-    console.log('Forgot password for:', email);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return {
-      success: true,
-      message: 'Password reset link sent to your email.',
-    };
+    try {
+      const response = await fetch(`${API_BASE_URL}/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.message || data.detail || 'Failed to send reset email.',
+        };
+      }
+
+      return {
+        success: true,
+        message: data.message || 'Password reset link sent to your email.',
+      };
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      return {
+        success: false,
+        error: 'Network error. Please try again.',
+      };
+    }
   },
 
   /**
@@ -112,20 +165,31 @@ export const authService = {
    * @returns {Promise<{valid: boolean, user?: object}>}
    */
   verifyToken: async () => {
-    // TODO: Replace with real API call
-    // const token = localStorage.getItem('token');
-    // const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-    //   headers: { 'Authorization': `Bearer ${token}` },
-    // });
-    // return response.json();
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return { valid: false };
 
-    const token = localStorage.getItem('token');
-    if (!token) return { valid: false };
-    
-    return {
-      valid: true,
-      user: JSON.parse(localStorage.getItem('user') || '{}'),
-    };
+      const response = await fetch(`${API_BASE_URL}/verify`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        return { valid: false };
+      }
+
+      const data = await response.json();
+      return {
+        valid: true,
+        user: data.user || data,
+      };
+    } catch (error) {
+      console.error('Token verification error:', error);
+      return { valid: false };
+    }
   },
 };
 

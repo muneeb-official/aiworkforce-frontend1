@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/layout/Header';
+import { useSubscription } from '../../services/SubscriptionContext';
 import backgroundImage from '../../assets/Background.png';
 
 // Check Icon (Blue)
@@ -33,98 +34,54 @@ const CartIcon = ({ count = 0 }) => (
   </div>
 );
 
-// Plans Data
-const mainPlans = [
-  {
-    id: 'tier1',
-    name: 'Tier - 1',
-    price: 420,
-    hasAgentToggle: true,
-    features: [
-      'Cold Outbound Agent',
-      '2 Email Provided'
-    ],
-    isBestseller: false,
-  },
-  {
-    id: 'tier2',
-    name: 'Tier - 2',
-    price: 720,
-    hasAgentToggle: true,
-    features: [
-      'B2C Lead Builder Agent',
-      'Organic Lead builder Agent',
-      'Call Inbound Agent',
-      'Cold Outbound Agent',
-      '3 Email Domains'
-    ],
-    isBestseller: false,
-  },
-  {
-    id: 'tier3',
-    name: 'Tier - 3',
-    price: 1299,
-    hasAgentToggle: false,
-    bothAgents: true,
-    features: [
-      'B2C Lead Builder Agent',
-      'B2B Lead Builder Agent',
-      'Get 2000 Enrichment Credits',
-      'Organic Lead builder Agent',
-      'Call Inbound Agent - 1000 Min. Credits',
-      'Brochure Creating Agent',
-      'SEO Blog & Content Engine Agent',
-      'Personal Assistant Agent',
-      'Meeting Notetaker / Summarizer',
-      '4 Email hosting'
-    ],
-    isBestseller: true,
-  },
-];
+// Loading Spinner
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center py-20">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4F46E5]"></div>
+  </div>
+);
 
-const seoAddons = [
-  { id: 'seo0', name: 'Tier - 0', price: 0, words: '4000 Words.' },
-  { id: 'seo1', name: 'Tier - 1', price: 15, words: '15,000 Words.' },
-  { id: 'seo2', name: 'Tier - 2', price: 29, words: '25,000 Words.' },
-  { id: 'seo3', name: 'Tier - 3', price: 49, words: '50,000 Words.' },
-];
+// Error Message
+const ErrorMessage = ({ message, onRetry }) => (
+  <div className="flex flex-col items-center justify-center py-20">
+    <p className="text-red-500 mb-4">{message}</p>
+    <button
+      onClick={onRetry}
+      className="px-4 py-2 bg-[#4F46E5] text-white rounded-lg hover:bg-[#4338CA]"
+    >
+      Try Again
+    </button>
+  </div>
+);
 
 // Agent Toggle Component
-const AgentToggle = ({ selected, onChange }) => {
-  return (
-    <div className="flex gap-0 mt-2">
-      <button
-        onClick={() => onChange('B2C')}
-        className={`px-4 py-2 text-sm transition-all ${
-          selected === 'B2C'
-            ? 'bg-[#1E293B] text-white rounded-l-full'
-            : 'bg-white text-gray-700 border border-gray-300 rounded-l-full'
-        }`}
-      >
-        B2C Lead Builder Agent
-      </button>
-      <button
-        onClick={() => onChange('B2B')}
-        className={`px-4 py-2 text-sm transition-all ${
-          selected === 'B2B'
-            ? 'bg-[#1E293B] text-white rounded-r-full'
-            : 'bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-full'
-        }`}
-      >
-        B2B Lead Builder Agent
-      </button>
-    </div>
-  );
-};
+const AgentToggle = ({ selected, onChange }) => (
+  <div className="flex gap-0 mt-2">
+    <button
+      onClick={() => onChange('B2C')}
+      className={`px-4 py-2 text-sm transition-all ${
+        selected === 'B2C'
+          ? 'bg-[#1E293B] text-white rounded-l-full'
+          : 'bg-white text-gray-700 border border-gray-300 rounded-l-full'
+      }`}
+    >
+      B2C Lead Builder Agent
+    </button>
+    <button
+      onClick={() => onChange('B2B')}
+      className={`px-4 py-2 text-sm transition-all ${
+        selected === 'B2B'
+          ? 'bg-[#1E293B] text-white rounded-r-full'
+          : 'bg-white text-gray-700 border border-l-0 border-gray-300 rounded-r-full'
+      }`}
+    >
+      B2B Lead Builder Agent
+    </button>
+  </div>
+);
 
 // Plan Card Component
-const PlanCard = ({ 
-  plan, 
-  selectedAgent, 
-  onAgentChange, 
-  selectedPlanId,
-  onSelectPlan 
-}) => {
+const PlanCard = ({ plan, selectedAgent, onAgentChange, selectedPlanId, onSelectPlan }) => {
   const isSelected = selectedPlanId === plan.id;
   const hasSelectedPlan = selectedPlanId !== null;
 
@@ -136,29 +93,18 @@ const PlanCard = ({
         </span>
       );
     }
-    if (hasSelectedPlan) {
-      return (
-        <button
-          onClick={() => onSelectPlan(plan)}
-          className="flex items-center gap-2 text-[#4F46E5] font-semibold hover:text-[#4338CA] transition-colors"
-        >
-          Switch Plan <ArrowIcon />
-        </button>
-      );
-    }
     return (
       <button
         onClick={() => onSelectPlan(plan)}
         className="flex items-center gap-2 text-[#4F46E5] font-semibold hover:text-[#4338CA] transition-colors"
       >
-        Get This Plan <ArrowIcon />
+        {hasSelectedPlan ? 'Switch Plan' : 'Get This Plan'} <ArrowIcon />
       </button>
     );
   };
 
   return (
     <div className="border border-gray-200 rounded-xl p-6 flex flex-col bg-white h-full">
-      {/* Header */}
       <div className="flex justify-between items-start mb-1">
         <span className="text-gray-600 text-base">{plan.name}</span>
         {plan.isBestseller && (
@@ -168,20 +114,15 @@ const PlanCard = ({
         )}
       </div>
 
-      {/* Price */}
       <div className="mb-4">
         <span className="text-[#1E293B] text-5xl font-bold">£{plan.price}</span>
         <span className="text-gray-500 text-base">/ month per seat</span>
       </div>
 
-      {/* Agent Toggle or Both Message */}
       {plan.hasAgentToggle && (
         <div className="mb-6">
           <span className="text-gray-900 text-sm font-medium">Choose any one</span>
-          <AgentToggle 
-            selected={selectedAgent[plan.id]} 
-            onChange={(agent) => onAgentChange(plan.id, agent)} 
-          />
+          <AgentToggle selected={selectedAgent} onChange={onAgentChange} />
         </div>
       )}
 
@@ -195,7 +136,6 @@ const PlanCard = ({
         </div>
       )}
 
-      {/* Features */}
       <div className="flex-1">
         <p className="text-gray-900 font-medium mb-3">You will get</p>
         <ul className="space-y-2.5">
@@ -208,23 +148,14 @@ const PlanCard = ({
         </ul>
       </div>
 
-      {/* Button */}
-      <div className="mt-6">
-        {getButtonContent()}
-      </div>
+      <div className="mt-6">{getButtonContent()}</div>
     </div>
   );
 };
 
 // SEO Addon Card Component
-const SEOAddonCard = ({ 
-  addon, 
-  selectedPlanId, 
-  selectedSEOId, 
-  onSelectSEO 
-}) => {
-  const isTier3Selected = selectedPlanId === 'tier3';
-  const isDisabled = isTier3Selected; // Only disabled when Tier-3 is selected
+const SEOAddonCard = ({ addon, selectedPlanId, selectedSEOId, onSelectSEO, isPremiumSelected }) => {
+  const isDisabled = isPremiumSelected;
   const isSelected = selectedSEOId === addon.id;
   const hasSelectedSEO = selectedSEOId !== null;
 
@@ -238,21 +169,8 @@ const SEOAddonCard = ({
     }
     if (isDisabled) {
       return (
-        <button
-          disabled
-          className="flex items-center gap-1 text-gray-400 font-semibold text-sm cursor-not-allowed"
-        >
+        <button disabled className="flex items-center gap-1 text-gray-400 font-semibold text-sm cursor-not-allowed">
           Buy This Plan <ArrowIcon />
-        </button>
-      );
-    }
-    if (hasSelectedSEO) {
-      return (
-        <button
-          onClick={() => onSelectSEO(addon)}
-          className="flex items-center gap-1 text-[#4F46E5] font-semibold text-sm hover:text-[#4338CA] transition-colors"
-        >
-          Switch Plan <ArrowIcon />
         </button>
       );
     }
@@ -261,7 +179,7 @@ const SEOAddonCard = ({
         onClick={() => onSelectSEO(addon)}
         className="flex items-center gap-1 text-[#4F46E5] font-semibold text-sm hover:text-[#4338CA] transition-colors"
       >
-        Buy This Plan <ArrowIcon />
+        {hasSelectedSEO ? 'Switch Plan' : 'Buy This Plan'} <ArrowIcon />
       </button>
     );
   };
@@ -270,15 +188,15 @@ const SEOAddonCard = ({
     <div className={`border border-gray-200 rounded-xl p-5 bg-white min-w-[350px] flex flex-col ${isDisabled ? 'opacity-50' : ''}`}>
       <p className={`text-sm mb-1 ${isDisabled ? 'text-gray-400' : 'text-gray-600'}`}>{addon.name}</p>
       <div className="mb-3">
-        <span className={`text-4xl font-bold ${isDisabled ? 'text-gray-400' : 'text-[#1E293B]'}`}>£{addon.price}</span>
+        <span className={`text-4xl font-bold ${isDisabled ? 'text-gray-400' : 'text-[#1E293B]'}`}>
+          £{addon.price}
+        </span>
         {addon.price > 0 && <span className={`text-sm ${isDisabled ? 'text-gray-400' : 'text-gray-500'}`}>/ month</span>}
       </div>
       <p className={`flex items-center gap-2 text-sm mb-4 ${isDisabled ? 'text-gray-400' : 'text-gray-600'}`}>
         <CheckIcon color={isDisabled ? "#9CA3AF" : "#4F46E5"} /> {addon.words}
       </p>
-      <div className="mt-auto">
-        {getButtonContent()}
-      </div>
+      <div className="mt-auto">{getButtonContent()}</div>
     </div>
   );
 };
@@ -286,81 +204,71 @@ const SEOAddonCard = ({
 // Main Page Component
 const ChoosePlanPage = () => {
   const navigate = useNavigate();
-  
-  const [selectedAgent, setSelectedAgent] = useState({
-    tier1: 'B2C',
-    tier2: 'B2C',
-    tier3: 'B2C',
-  });
+  const {
+    mainPlans,
+    seoAddons,
+    loading,
+    error,
+    selectedPlan,
+    selectedSEO,
+    selectedAgent,
+    selectPlan,
+    selectSEO,
+    setSelectedAgent,
+    getCartCount,
+    fetchServices,
+  } = useSubscription();
 
-  const [selectedPlanId, setSelectedPlanId] = useState(null);
-  const [selectedSEOId, setSelectedSEOId] = useState(null);
-
-  // Calculate cart count
-  const getCartCount = () => {
-    let count = 0;
-    if (selectedPlanId) {
-      count += 1;
-      // Tier-3 automatically includes SEO
-      if (selectedPlanId === 'tier3') {
-        count += 1;
-      }
-    }
-    if (selectedSEOId && selectedPlanId !== 'tier3') {
-      count += 1;
-    }
-    return count;
-  };
-
+  const [agentSelections, setAgentSelections] = useState({});
   const cartCount = getCartCount();
+  const isPremiumSelected = selectedPlan?.bothAgents || selectedPlan?.name?.toLowerCase().includes('tier 3');
 
   const handleAgentChange = (planId, agent) => {
-    setSelectedAgent(prev => ({ ...prev, [planId]: agent }));
+    setAgentSelections(prev => ({ ...prev, [planId]: agent }));
+    if (selectedPlan?.id === planId) {
+      setSelectedAgent(agent);
+    }
   };
 
   const handleSelectPlan = (plan) => {
-    setSelectedPlanId(plan.id);
-    // If switching to Tier-3, clear SEO selection (it's included)
-    if (plan.id === 'tier3') {
-      setSelectedSEOId(null);
-    }
-  };
-
-  const handleSelectSEO = (addon) => {
-    setSelectedSEOId(addon.id);
+    selectPlan(plan);
+    const agent = agentSelections[plan.id] || 'B2C';
+    setSelectedAgent(agent);
   };
 
   const handleProceedToCheckout = () => {
-    const selectedPlan = mainPlans.find(p => p.id === selectedPlanId);
-    const selectedSEO = seoAddons.find(s => s.id === selectedSEOId);
-    
-    navigate('/cart', {
-      state: {
-        plan: selectedPlan,
-        selectedAgent: selectedAgent[selectedPlanId],
-        seoAddon: selectedPlanId === 'tier3' ? 'included' : selectedSEO,
-      },
-    });
+    navigate('/cart');
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed" style={{ backgroundImage: `url(${backgroundImage})` }}>
+        <Header variant="simple" />
+        <main className="max-w-8xl mx-auto px-6 py-8 mt-6 bg-white">
+          <LoadingSpinner />
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed" style={{ backgroundImage: `url(${backgroundImage})` }}>
+        <Header variant="simple" />
+        <main className="max-w-8xl mx-auto px-6 py-8 mt-6 bg-white">
+          <ErrorMessage message={error} onRetry={fetchServices} />
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen overflow-hidden bg-cover bg-center bg-no-repeat bg-fixed"
-    style={{ backgroundImage: `url(${backgroundImage})` }}
-    >
-      {/* Header */}
+    <div className="min-h-screen overflow-hidden bg-cover bg-center bg-no-repeat bg-fixed" style={{ backgroundImage: `url(${backgroundImage})` }}>
       <Header variant="simple" />
 
-      {/* Gradient Line */}
-      
-
-      {/* Main Content */}
       <main className="max-w-8xl mx-auto px-6 py-8 mt-6 bg-white">
-        {/* Title Row */}
         <div className="flex items-center justify-between mb-8">
-          <h1 
-            className="text-3xl font-medium text-gray-900"
-            style={{ fontFamily: 'DM Sans, sans-serif' }}
-          >
+          <h1 className="text-3xl font-medium text-gray-900" style={{ fontFamily: 'DM Sans, sans-serif' }}>
             Choose a Plan
           </h1>
           <div className="flex items-center gap-4">
@@ -376,43 +284,37 @@ const ChoosePlanPage = () => {
           </div>
         </div>
 
-        {/* Plans Grid */}
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           {mainPlans.map((plan) => (
             <PlanCard
               key={plan.id}
               plan={plan}
-              selectedAgent={selectedAgent}
-              onAgentChange={handleAgentChange}
-              selectedPlanId={selectedPlanId}
+              selectedAgent={agentSelections[plan.id] || 'B2C'}
+              onAgentChange={(agent) => handleAgentChange(plan.id, agent)}
+              selectedPlanId={selectedPlan?.id}
               onSelectPlan={handleSelectPlan}
             />
           ))}
         </div>
 
-        {/* SEO Add-ons Section */}
-        <div className="mb-8 ">
+        <div className="mb-8">
           <p className="text-gray-500 text-sm mb-1">Add-ons</p>
           <div className="flex flex-col md:flex-row md:items-start gap-6">
-            {/* Title */}
             <div className="md:min-w-[180px]">
-              <h2 
-                className="text-2xl font-bold text-gray-900 leading-tight"
-                style={{ fontFamily: 'DM Sans, sans-serif' }}
-              >
+              <h2 className="text-2xl font-bold text-gray-900 leading-tight" style={{ fontFamily: 'DM Sans, sans-serif' }}>
                 SEO Blog &<br />Content Engine<br />Agent
               </h2>
             </div>
 
-            {/* Addon Cards */}
             <div className="flex gap-4 overflow-hidden pb-5 ml-24">
               {seoAddons.map((addon) => (
                 <SEOAddonCard
                   key={addon.id}
                   addon={addon}
-                  selectedPlanId={selectedPlanId}
-                  selectedSEOId={selectedSEOId}
-                  onSelectSEO={handleSelectSEO}
+                  selectedPlanId={selectedPlan?.id}
+                  selectedSEOId={selectedSEO?.id}
+                  onSelectSEO={selectSEO}
+                  isPremiumSelected={isPremiumSelected}
                 />
               ))}
             </div>

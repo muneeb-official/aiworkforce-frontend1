@@ -21,11 +21,11 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEnriching, setIsEnriching] = useState(false);
 
- const handleEnrich = async () => {
+  const handleEnrich = async () => {
     if (isEnriching || profile.isEnriched) return;
-    
+
     setIsEnriching(true);
-    
+
     // Simulate loading delay (or wait for actual API call)
     setTimeout(() => {
       onEnrich(profile.id);
@@ -41,13 +41,12 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
 
   return (
     <div
-      className={`rounded-md transition-all duration-200 ${
-        isSelected 
-          ? "bg-white " 
-          : isExpanded 
-            ? "bg-white border border-blue-600" 
+      className={`rounded-md transition-all duration-200 ${isSelected
+          ? "bg-white "
+          : isExpanded
+            ? "bg-white border border-blue-600"
             : "bg-white hover:bg-[#F2F2FF] hover:shadow-md"
-      }`}
+        }`}
     >
       {/* Main Row - Clickable */}
       <div
@@ -80,29 +79,7 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
   "
             onClick={(e) => e.stopPropagation()}
           />
-{/* <input
-  type="checkbox"
-  checked={isAllSelected}
-  onChange={selectAll}
-  className="
-    appearance-none
-    w-[18px] h-[18px]
-    rounded-[6px]
-    border border-gray-300
-    bg-white
-    hover:border-blue-600
-    focus:outline-none focus:ring-2 focus:ring-blue-500/30
-    cursor-pointer
 
-    checked:bg-blue-600 checked:border-blue-600
-    checked:after:content-['']
-    checked:after:block
-    checked:after:w-[6px] checked:after:h-[10px]
-    checked:after:border-r-2 checked:after:border-b-2 checked:after:border-white
-    checked:after:rotate-45
-    checked:after:translate-x-[5px] checked:after:translate-y-[1px]
-  "
-/> */}
           {/* Avatar */}
           <img
             src={profile.avatar}
@@ -111,58 +88,58 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
           />
 
           {/* Info */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1">
             <h3 className="font-bold text-[#000000] text-lg">{profile.name}</h3>
             <p className="text-[#000000] font-semibold text-sm">{profile.title}</p>
             <p className="text-[#000000] text-sm">
               {profile.location} • {profile.industry}
             </p>
           </div>
+          <div className="flex flex-col gap-1">
+              {/* Website */}
+              <div className="flex items-center gap-2">
+                <img src={companyicon} alt="linkedin" className="w-4 h-4" />
+                <span className="text-gray-800 text-sm">@ {profile.website || "chchelicopter.com"}</span>
+              </div>
+
+              {/* Phone */}
+              <div className="flex items-center gap-2">
+                <img src={phonenumbericon} alt="linkedin" className="w-4 h-4" />
+                {profile.isEnriched ? (
+                  <span className="text-gray-800 text-sm">
+                    {profile.phones?.join(" , ") || "+44 - 123 34 123, +44 - 123 34 123, +44 - 123 34 123"}
+                  </span>
+                ) : (
+                  <span className="text-gray-800 text-sm flex items-center gap-1">
+                    +44 - <span className="bg-[#F2F2FF] text-[#F2F2FF] rounded px-4 py-0.5">hidden</span>
+                    <span className="text-[#000000] bg-[#F2F2FF] rounded px-1 py-0.5 text-xs">+ 2 more</span>
+                  </span>
+                )}
+              </div>
+
+              {/* Email */}
+              <div className="flex items-center gap-2">
+                <img src={emailicon} alt="linkedin" className="w-4 h-4" />
+                {profile.isEnriched ? (
+                  <div className="flex items-center gap-1">
+                    {(profile.emails || ["radio@helicopter.com,radio@helicopter.com"]).map((email, idx) => (
+                      <a key={idx} href={`mailto:${email}`} className="text-blue-600 hover:underline text-sm">
+                        {email}{idx < (profile.emails?.length || 1) - 1 ? " ," : ""}
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-gray-800 text-sm flex items-center gap-1">
+                    xxx@<span className="bg-[#F2F2FF] text-[#F2F2FF] rounded px-6 py-0.5">hidden</span>
+                    <span className="text-[#000000] bg-[#F2F2FF] rounded px-1 py-0.5 text-xs">+ 1 more</span>
+                  </span>
+                )}
+              </div>
+            </div>
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <div className="flex flex-col gap-1">
-  {/* Website */}
-  <div className="flex items-center gap-2">
-   <img src={companyicon} alt="linkedin" className="w-4 h-4" />
-    <span className="text-gray-800 text-sm">@ {profile.website || "chchelicopter.com"}</span>
-  </div>
-  
-  {/* Phone */}
-  <div className="flex items-center gap-2">
-    <img src={phonenumbericon} alt="linkedin" className="w-4 h-4" />
-    {profile.isEnriched ? (
-      <span className="text-gray-800 text-sm">
-        {profile.phones?.join(" , ") || "+44 - 123 34 123, +44 - 123 34 123, +44 - 123 34 123"}
-      </span>
-    ) : (
-      <span className="text-gray-800 text-sm flex items-center gap-1">
-        +44 - <span className="bg-[#F2F2FF] text-[#F2F2FF] rounded px-4 py-0.5">hidden</span>
-        <span className="text-[#000000] bg-[#F2F2FF] rounded px-1 py-0.5 text-xs">+ 2 more</span>
-      </span>
-    )}
-  </div>
-  
-  {/* Email */}
-  <div className="flex items-center gap-2">
-    <img src={emailicon} alt="linkedin" className="w-4 h-4" />
-    {profile.isEnriched ? (
-      <div className="flex items-center gap-1">
-        {(profile.emails || ["radio@helicopter.com,radio@helicopter.com"]).map((email, idx) => (
-          <a key={idx} href={`mailto:${email}`} className="text-blue-600 hover:underline text-sm">
-            {email}{idx < (profile.emails?.length || 1) - 1 ? " ," : ""}
-          </a>
-        ))}
-      </div>
-    ) : (
-      <span className="text-gray-800 text-sm flex items-center gap-1">
-        xxx@<span className="bg-[#F2F2FF] text-[#F2F2FF] rounded px-6 py-0.5">hidden</span>
-        <span className="text-[#000000] bg-[#F2F2FF] rounded px-1 py-0.5 text-xs">+ 1 more</span>
-      </span>
-    )}
-  </div>
-</div>
-
+            
             {/* LinkedIn Icon */}
             <a
               href={profile.linkedin || "#"}
@@ -174,24 +151,23 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
               <img src={LinkedInIcon} alt="linkedin" className="w-5 h-5" />
             </a>
             {/* Enrich Button */}
-          {!profile.isEnriched ? (
-            <button
-              onClick={handleEnrich}
-              disabled={isEnriching}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-w-[120px] ${
-                isEnriching
-                  ? "bg-[#3C49F7] text-white cursor-wait"
-                  : "bg-[#3C49F7] text-white hover:bg-blue-700"
-              }`}
-            >
-              {isEnriching ? <LoadingDots /> : "Enrich Profile"}
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-[#F2F2FF] rounded text-[#0028B6]">
+            {!profile.isEnriched ? (
+              <button
+                onClick={handleEnrich}
+                disabled={isEnriching}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-w-[120px] ${isEnriching
+                    ? "bg-[#3C49F7] text-white cursor-wait"
+                    : "bg-[#3C49F7] text-white hover:bg-blue-700"
+                  }`}
+              >
+                {isEnriching ? <LoadingDots /> : "Enrich Profile"}
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-[#F2F2FF] rounded text-[#0028B6]">
                 <img src={VerifiedIcon} alt="linkedin" className="w-7 h-7" />
                 <span className="text-[12px] font-semibold">Enriched Contact</span>
               </div>
-          )}
+            )}
 
             {/* {profile.isEnriched ? (
               <div className="flex items-center gap-2 px-3 py-1 bg-[#F2F2FF] text-[#0028B6]">
@@ -232,7 +208,7 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
               <span className="w-24 text-gray-900 text-sm font-bold">Current</span>
               <div className="flex-1 ml-0">
                 <p className="text-gray-900 text-sm">
-                  • {profile.currentPosition || profile.title} @ {profile.company} 
+                  • {profile.currentPosition || profile.title} @ {profile.company}
                   <span className="text-gray-900 ml-2 italic">2022 - Current</span>
                 </p>
               </div>
@@ -477,10 +453,10 @@ export const SelectAllRow = ({
           )}
         </span>
         <button className="text-[#3C49F7] px-4 py-1.5 rounded-full text-sm font-medium hover:border-2 hover:border-[#3C49F7] transition-colors">
-            Export Leads
-          </button>
+          Export Leads
+        </button>
       </div>
-      
+
 
       {selectedCount > 0 && (
         <div className="flex items-center gap-3">
@@ -488,19 +464,18 @@ export const SelectAllRow = ({
             <button
               onClick={handleEnrich}
               disabled={isEnriching}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-[120px] ${
-                isEnriching
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-[120px] ${isEnriching
                   ? "bg-[#3C49F7] text-white cursor-wait"
                   : "bg-[#3C49F7] text-white hover:bg-blue-700"
-              }`}
+                }`}
             >
               {isEnriching ? <LoadingDots /> : "Enrich Profile"}
             </button>
           ) : (
             <div className="flex items-center gap-2 px-3 py-1 bg-[#F2F2FF] rounded text-[#0028B6]">
-                <img src={VerifiedIcon} alt="linkedin" className="w-7 h-7" />
-                <span className="text-[12px] font-semibold">Enriched Contact</span>
-              </div>
+              <img src={VerifiedIcon} alt="linkedin" className="w-7 h-7" />
+              <span className="text-[12px] font-semibold">Enriched Contact</span>
+            </div>
           )}
           <button
             onClick={onAddAllToProject}

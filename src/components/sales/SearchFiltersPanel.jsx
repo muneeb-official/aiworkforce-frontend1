@@ -18,7 +18,7 @@ import {
 import FilterIcon from "../../assets/icons/FilterIcon.svg";
 
 // Education Filter
-const EducationFilter = ({ filterKey, sections, hasModifier, activeFilters, onAddFilter, onRemoveFilter, onUpdateModifier }) => {
+export const EducationFilter = ({ filterKey, sections, hasModifier, activeFilters, onAddFilter, onRemoveFilter, onUpdateModifier }) => {
   const [values, setValues] = useState({});
 
   const handleTextKeyDown = (e, sectionKey) => {
@@ -99,7 +99,7 @@ const EducationFilter = ({ filterKey, sections, hasModifier, activeFilters, onAd
 };
 
 // Role & Department Filter
-const RoleDepartmentFilter = ({ filterKey, sections, hasModifier, activeFilters, onAddFilter, onRemoveFilter, onUpdateModifier }) => {
+export const RoleDepartmentFilter = ({ filterKey, sections, hasModifier, activeFilters, onAddFilter, onRemoveFilter, onUpdateModifier }) => {
   const [values, setValues] = useState({});
   const [expandedDepts, setExpandedDepts] = useState({});
 

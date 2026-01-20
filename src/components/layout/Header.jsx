@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { userData } from '../../data/mockData';
-import logo from '../../assets/logo.png'; // Adjust path as needed
+import logo from '../../assets/Logo.png'; // Adjust path as needed
 
 // Bell Icon Component
 const BellIcon = () => (

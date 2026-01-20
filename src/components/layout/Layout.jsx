@@ -4,8 +4,6 @@ import { navItems, userData, appInfo } from "../../data/mockData";
 import { salesAgentNavItems } from "../../data/salesAgentData";
 import backgroundImage from "../../assets/Background.png";
 import Header from "./Header";
-// import { useSearch } from "../context/SearchContext";
-// import { useB2BSearch } from "../context/B2BSearchContext";
 
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -23,9 +21,14 @@ import CampaignIcon from "../../assets/icons/campaign.svg?react";
 import CalendarIcon from "../../assets/icons/calender.svg?react";
 import InboxIcon from "../../assets/icons/inbox1.svg?react";
 import CallLogsIcon from "../../assets/icons/calll-logs.svg?react";
+// Marketing Icons - Add these when you have them
+// import SEOIcon from "../../assets/icons/seo.svg?react";
+// import TemplateIcon from "../../assets/icons/template.svg?react";
 
 import CreditsPage from "../../pages/CreditsPage";
-import OrganicLeadBuilder from "../../pages/OrganicLeadBuilder"; // Add this import
+import OrganicLeadBuilder from "../../pages/OrganicLeadBuilder";
+import CampaignManager from "../../pages/CampaignManager";
+import BlogContentEngine from "../../pages/BlogContentEngine";
 
 const navIcons = {
     analytics: AnalyticsIcon,
@@ -46,6 +49,12 @@ const salesIconMap = {
     campaign: <CampaignIcon />,
 };
 
+// Marketing icon map - update when you have actual icons
+const marketingIconMap = {
+    // seo: <SEOIcon />,
+    // template: <TemplateIcon />,
+};
+
 const Icon = ({ name, className = "", isActive = false }) => {
     const IconComponent = navIcons[name];
     const activeFilter = isActive ? "brightness-0 invert" : "";
@@ -56,8 +65,6 @@ const Icon = ({ name, className = "", isActive = false }) => {
         </span>
     ) : null;
 };
-
-
 
 // Main Navigation Item - With circular background
 const NavItem = ({ item, isActive, onClick, isExpanded }) => (
@@ -85,8 +92,6 @@ const NavItem = ({ item, isActive, onClick, isExpanded }) => (
         )}
     </button>
 );
-
-
 
 // Sales Agent Navigation Item
 const SalesNavItem = ({ item, isActive, onClick, isExpanded }) => {
@@ -130,6 +135,61 @@ const SalesNavItem = ({ item, isActive, onClick, isExpanded }) => {
     );
 };
 
+// Marketing Agent Navigation Item
+const MarketingNavItem = ({ item, isActive, onClick, isExpanded }) => {
+    const hasShortName = item.shortName;
+    const hasIcon = item.icon && marketingIconMap[item.icon];
+
+    return (
+        <button
+            onClick={onClick}
+            className="flex items-center gap-3 px-2 py-1.5 text-left transition-all duration-200 ease-in-out w-full group"
+        >
+            {hasShortName ? (
+                <span
+                    className={`flex-shrink-0 text-xs font-bold w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${isActive
+                        ? "bg-gray-900 text-white shadow-md"
+                        : "bg-white text-gray-600 border border-gray-200 group-hover:border-gray-300 group-hover:bg-gray-100"
+                        }`}
+                >
+                    {item.shortName}
+                </span>
+            ) : hasIcon ? (
+                <span
+                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${isActive
+                        ? "bg-gray-900 text-white shadow-md"
+                        : "bg-white text-gray-500 border border-gray-200 group-hover:border-gray-300 group-hover:bg-gray-100"
+                        }`}
+                >
+                    {marketingIconMap[item.icon]}
+                </span>
+            ) : (
+                <span
+                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${isActive
+                        ? "bg-gray-900 text-white shadow-md"
+                        : "bg-white text-gray-500 border border-gray-200 group-hover:border-gray-300 group-hover:bg-gray-100"
+                        }`}
+                >
+                    {/* Placeholder icon - replace with actual icon */}
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="2" />
+                    </svg>
+                </span>
+            )}
+            {isExpanded && (
+                <span
+                    className={`text-sm font-medium whitespace-nowrap px-3 py-1.5 rounded-full transition-all duration-200 ease-in-out ${isActive
+                        ? "bg-gray-900 text-white shadow-md"
+                        : "bg-white text-gray-700 border border-gray-200 group-hover:border-gray-300 group-hover:bg-gray-100"
+                        }`}
+                >
+                    {item.name}
+                </span>
+            )}
+        </button>
+    );
+};
+
 export default function Layout({ children, activePage, setActivePage, credits }) {
     const [sidebarExpanded, setSidebarExpanded] = useState(false);
     const [previousPage, setPreviousPage] = useState(null);
@@ -150,13 +210,22 @@ export default function Layout({ children, activePage, setActivePage, credits })
     const displayCredits = credits ?? 0;
 
     // Check if we're in a sales agent view (B2C, B2B, or Organic)
-    const isInSalesAgent = activePage === "b2c" || activePage === "b2b" || activePage === "organic";
+    const isInSalesAgent = activePage === "b2c" || activePage === "b2b" || activePage === "organic" || activePage === "campaign";
+
+    // Check if we're in marketing agent view
+    const isInMarketingAgent = activePage === "seo" || activePage === "template";
 
     // Check if we're on credits page
     const isOnCreditsPage = activePage === "credits";
 
     // Check if we're on organic lead builder page
     const isOnOrganicPage = activePage === "organic";
+
+    // Check if we're on SEO/Blog page
+    const isOnSEOPage = activePage === "seo";
+
+    // Add this check for Campaign Manager page
+    const isOnCampaignPage = activePage === "campaign";
 
     const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -177,16 +246,26 @@ export default function Layout({ children, activePage, setActivePage, credits })
     // Get sidebar title based on active page
     const getSidebarTitle = () => {
         if (isOnCreditsPage) return "Credits";
+        if (isInMarketingAgent) return "Marketing Agent";
         if (isOnOrganicPage) return "Sales Agent";
         if (activePage === "b2b") return "Sales Agent";
         return "Sales Agent";
     };
 
+    // Handle back navigation
+    const handleBackClick = () => {
+        if (isOnCreditsPage) {
+            handleBackFromCredits();
+        } else {
+            setActivePage("analytics");
+        }
+    };
+
     // Handle logout function
     const handleLogout = async () => {
         setIsProfileOpen(false);
-        await logout(); // Clears auth state and localStorage
-        navigate('/login'); // Redirects to login page
+        await logout();
+        navigate('/login');
     };
 
     return (
@@ -213,16 +292,10 @@ export default function Layout({ children, activePage, setActivePage, credits })
                     onMouseLeave={() => setSidebarExpanded(false)}
                     style={{ width: sidebarExpanded ? "280px" : "72px" }}
                 >
-                    {/* Back Button - Show when in sales agent pages OR credits page */}
-                    {(isInSalesAgent || isOnCreditsPage) && (
+                    {/* Back Button - Show when in sales agent, marketing agent, or credits page */}
+                    {(isInSalesAgent || isInMarketingAgent || isOnCreditsPage) && (
                         <button
-                            onClick={() => {
-                                if (isOnCreditsPage) {
-                                    handleBackFromCredits();
-                                } else {
-                                    setActivePage("analytics");
-                                }
-                            }}
+                            onClick={handleBackClick}
                             className="flex items-center px-2 py-1.5 transition-all duration-200 ease-in-out w-full group"
                         >
                             <span className="flex-shrink-0 w-[24px] h-[24px] rounded-full flex items-center justify-center text-gray-400 group-hover:transition-all duration-200">
@@ -290,19 +363,29 @@ export default function Layout({ children, activePage, setActivePage, credits })
                                     onClick={() => setActivePage("organic")}
                                     isExpanded={sidebarExpanded}
                                 />
+                            </>
+                        ) : isInMarketingAgent ? (
+                            // Marketing Agent Navigation
+                            <>
+                                <div className="my-1.5 mx-2">
+                                    <div className="h-px bg-gray-300"></div>
+                                </div>
 
-                                {/* Other Sales Nav Items */}
-                                {/* {salesAgentNavItems
-                                    .filter((item) => item.key !== "b2c" && item.key !== "b2b" && item.key !== "organic")
-                                    .map((item) => (
-                                        <SalesNavItem
-                                            key={item.key}
-                                            item={item}
-                                            isActive={false}
-                                            onClick={() => {}}
-                                            isExpanded={sidebarExpanded}
-                                        />
-                                    ))} */}
+                                {/* SEO - Blog & Content Engine */}
+                                <MarketingNavItem
+                                    item={{ key: "seo", name: "Blog & Content Engine", shortName: "SEO" }}
+                                    isActive={activePage === "seo"}
+                                    onClick={() => setActivePage("seo")}
+                                    isExpanded={sidebarExpanded}
+                                />
+
+                                {/* Template/Brochure Agent */}
+                                <MarketingNavItem
+                                    item={{ key: "template", name: "Template/ Brochure Agent", icon: "template" }}
+                                    isActive={activePage === "template"}
+                                    onClick={() => setActivePage("template")}
+                                    isExpanded={sidebarExpanded}
+                                />
                             </>
                         ) : isInSalesAgent ? (
                             // Sales Agent Navigation (B2C/B2B/Organic)
@@ -360,7 +443,7 @@ export default function Layout({ children, activePage, setActivePage, credits })
                                     )}
                                 </button>
 
-                                {/* Organic Lead Builder - NOW CLICKABLE */}
+                                {/* Organic Lead Builder */}
                                 <SalesNavItem
                                     item={{ key: "organic", name: "Organic Lead Builder Agent", icon: "organic" }}
                                     isActive={activePage === "organic"}
@@ -372,22 +455,9 @@ export default function Layout({ children, activePage, setActivePage, credits })
                                 <SalesNavItem
                                     item={{ key: "campaign", name: "Campaign Manager", icon: "campaign" }}
                                     isActive={activePage === "campaign"}
-                                    onClick={() => { }}
+                                    onClick={() => setActivePage("campaign")}
                                     isExpanded={sidebarExpanded}
                                 />
-
-                                {/* Other Sales Nav Items */}
-                                {/* {salesAgentNavItems
-                                    .filter((item) => !["b2c", "b2b", "organic", "campaign"].includes(item.key))
-                                    .map((item) => (
-                                        <SalesNavItem
-                                            key={item.key}
-                                            item={item}
-                                            isActive={false}
-                                            onClick={() => {}}
-                                            isExpanded={sidebarExpanded}
-                                        />
-                                    ))} */}
                             </>
                         ) : (
                             // Main Navigation
@@ -400,6 +470,8 @@ export default function Layout({ children, activePage, setActivePage, credits })
                                             onClick={() => {
                                                 if (item.key === "sales") {
                                                     setActivePage("b2c");
+                                                } else if (item.key === "marketing") {
+                                                    setActivePage("seo");
                                                 } else {
                                                     setActivePage(item.key);
                                                 }
@@ -414,12 +486,25 @@ export default function Layout({ children, activePage, setActivePage, credits })
                 </div>
 
                 {/* Main Content */}
+                {/* Main Content */}
                 <div className="flex-1 transition-all duration-300 ease-in-out py-0">
                     <div className="rounded-3xl h-full shadow-sm">
                         {isOnCreditsPage ? (
                             <CreditsPage userName={userData.name || "Max"} />
                         ) : isOnOrganicPage ? (
                             <OrganicLeadBuilder />
+                        ) : isOnCampaignPage ? (
+                            <CampaignManager />
+                        ) : isOnSEOPage ? (
+                            <BlogContentEngine />
+                        ) : activePage === "template" ? (
+                            // Placeholder for Template/Brochure Agent
+                            <div className="flex items-center justify-center h-full bg-white/50">
+                                <div className="text-center">
+                                    <h2 className="text-2xl font-semibold text-gray-700">Template/ Brochure Agent</h2>
+                                    <p className="text-gray-500 mt-2">Coming Soon</p>
+                                </div>
+                            </div>
                         ) : (
                             children
                         )}

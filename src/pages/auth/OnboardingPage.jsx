@@ -315,17 +315,32 @@ const OnboardingPage = () => {
     });
   };
 
-  // Handle Next
-  const handleNext = () => {
-    if (currentStep < stepsConfig.length - 1) {
-      setCurrentStep(prev => prev + 1);
-    } else {
-      // Submit and navigate to integration hub
-      console.log('Onboarding data:', formData);
-      // TODO: Send formData to backend
-      navigate('/welcome');
+const handleNext = () => {
+  if (currentStep < stepsConfig.length - 1) {
+    setCurrentStep(prev => prev + 1);
+  } else {
+    // Final step - save onboarding data
+    console.log('Onboarding data:', formData);
+    
+    // Get user ID from token or localStorage
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        // Decode JWT to get user_id
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userId = payload.user_id;
+        
+        // Store onboarding complete per user
+        localStorage.setItem(`onboarding_${userId}`, 'true');
+      } catch (e) {
+        console.error('Error decoding token:', e);
+      }
     }
-  };
+    
+    // Navigate to dashboard
+    navigate('/dashboard');
+  }
+};
 
   // Handle Back
   const handleBack = () => {
@@ -335,6 +350,9 @@ const OnboardingPage = () => {
   };
 
   const currentStepConfig = stepsConfig[currentStep];
+
+  // localStorage.setItem('onboarding_complete', 'true');
+  // navigate('/dashboard');
 
   return (
     <div className="min-h-screen bg-white">

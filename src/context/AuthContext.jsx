@@ -21,26 +21,29 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await authService.login(email, password);
-      if (response.success) {
-        setUser(response.user);
-        setIsAuthenticated(true);
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
-        return { success: true };
-      }
-      return response;
-    } catch (err) {
-      setError(err.message || 'Login failed');
-      return { success: false, error: err.message };
-    } finally {
-      setLoading(false);
+  // After successful login, check user status and redirect accordingly
+const login = async (email, password) => {
+  const result = await authService.login(email, password);
+  
+  if (result.success) {
+    localStorage.setItem('token', result.token);
+    setUser(result.user);
+    setIsAuthenticated(true);
+    
+    // Check onboarding status
+    const onboardingComplete = result.user?.onboarding_complete || localStorage.getItem('onboarding_complete');
+    
+    if (!onboardingComplete) {
+      // New user - go through onboarding flow
+      return { ...result, redirectTo: '/integration-hub' };
+    } else {
+      // Existing user - go to dashboard
+      return { ...result, redirectTo: '/dashboard' };
     }
-  };
+  }
+  
+  return result;
+};
 
   const signUp = async (userData) => {
     setLoading(true);
@@ -60,27 +63,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
-    setLoading(true);
-    try {
-      await authService.logout();
-      setUser(null);
-      setIsAuthenticated(false);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      return { success: true };
-    } catch (err) {
-      console.error('Logout error:', err);
-      // Still clear local state even if API fails
-      setUser(null);
-      setIsAuthenticated(false);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      return { success: true };
-    } finally {
-      setLoading(false);
-    }
-  };
+const logout = async () => {
+  try {
+    await authService.logout();
+  } catch (error) {
+    console.error('Logout error:', error);
+  } finally {
+    // Clear all user data
+    localStorage.removeItem('token');
+    localStorage.removeItem('plan_selected');
+    localStorage.removeItem('onboarding_complete');
+    
+    setUser(null);
+    setIsAuthenticated(false);
+  }
+};
 
   const clearError = () => setError(null);
 

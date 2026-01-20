@@ -14,6 +14,7 @@ const SuccessIcon = () => (
 );
 
 // Profile Created Success Screen
+// Profile Created Success Screen (fallback)
 const ProfileCreatedScreen = ({ onContinue }) => (
   <AuthLayout>
     <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
@@ -28,14 +29,14 @@ const ProfileCreatedScreen = ({ onContinue }) => (
         className="text-gray-600 mb-8"
         style={{ fontFamily: 'DM Sans, sans-serif' }}
       >
-        Now you have to pick a plan so that we can setup your account.
+        Please login to continue with plan selection.
       </p>
       <button
         onClick={onContinue}
         className="w-full max-w-[400px] h-12 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-medium rounded-full transition-all duration-200"
         style={{ fontFamily: 'DM Sans, sans-serif' }}
       >
-        Pick a Plan
+        Continue to Login
       </button>
     </div>
   </AuthLayout>
@@ -115,7 +116,7 @@ const locations = [
 
 const SignUpPage = () => {
   const navigate = useNavigate();
-  const { signUp, loading } = useAuth();
+  const { signUp, login, loading } = useAuth();
   const [showSuccess, setShowSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -193,39 +194,48 @@ const SignUpPage = () => {
     setShowCountryDropdown(false);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    // Validate all fields
-    const newErrors = {};
-    Object.keys(formData).forEach((key) => {
-      if (key !== 'countryCode') {
-        const error = validateField(key, formData[key]);
-        if (error) newErrors[key] = error;
-      }
-    });
-
-    setErrors(newErrors);
-    setTouched(Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
-
-    if (Object.keys(newErrors).length > 0) return;
-
-    try {
-      setSubmitError(''); // Clear any previous errors
-      const result = await signUp(formData);
-      console.log('SignUp result:', result); // Debug log
-      if (result.success) {
-        console.log('Setting showSuccess to true'); // Debug log
-        setShowSuccess(true); // Show success screen instead of navigating
-      } else {
-        setSubmitError(result.error || 'Sign up failed. Please try again.');
-      }
-    } catch (err) {
-      console.error('SignUp error:', err); // Debug log
-      setSubmitError('An unexpected error occurred. Please try again.');
+  // Validate all fields
+  const newErrors = {};
+  Object.keys(formData).forEach((key) => {
+    if (key !== 'countryCode') {
+      const error = validateField(key, formData[key]);
+      if (error) newErrors[key] = error;
     }
-  };
+  });
 
+  setErrors(newErrors);
+  setTouched(Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+
+  if (Object.keys(newErrors).length > 0) return;
+
+  try {
+    setSubmitError('');
+    
+    const result = await signUp(formData);
+    console.log('SignUp result:', result);
+    
+    if (result.success) {
+      // Auto-login after signup
+      const loginResult = await login(formData.email, formData.password);
+      
+      if (loginResult.success) {
+        // New user - backend returns service_ids: null
+        // So hasSubscription will be false → go to choose plan
+        navigate('/choose-plan');
+      } else {
+        setShowSuccess(true);
+      }
+    } else {
+      setSubmitError(result.error || 'Sign up failed. Please try again.');
+    }
+  } catch (err) {
+    console.error('SignUp error:', err);
+    setSubmitError('An unexpected error occurred. Please try again.');
+  }
+};
   const getInputClassName = (fieldName) => {
     const hasError = touched[fieldName] && errors[fieldName];
     return `w-full h-12 px-4 border rounded-lg outline-none transition-all duration-200
@@ -235,14 +245,13 @@ const SignUpPage = () => {
       }`;
   };
 
-  // If signup successful, show success screen
-  if (showSuccess) {
-    return (
-      <ProfileCreatedScreen 
-        onContinue={() => navigate('/choose-plan')} 
-      />
-    );
-  }
+ if (showSuccess) {
+  return (
+    <ProfileCreatedScreen 
+      onContinue={() => navigate('/choose')} 
+    />
+  );
+}
 
   return (
     <AuthLayout>

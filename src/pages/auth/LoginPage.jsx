@@ -83,30 +83,49 @@ const LoginPage = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    // Validate all fields
-    const emailError = validateEmail(formData.email);
-    const passwordError = validatePassword(formData.password);
+  const emailError = validateEmail(formData.email);
+  const passwordError = validatePassword(formData.password);
 
-    setErrors({ email: emailError, password: passwordError });
-    setTouched({ email: true, password: true });
+  setErrors({ email: emailError, password: passwordError });
+  setTouched({ email: true, password: true });
 
-    if (emailError || passwordError) return;
+  if (emailError || passwordError) return;
 
-    try {
-      const result = await login(formData.email, formData.password);
-      if (result.success) {
-        navigate('/dashboard'); // Redirects to main app
+  try {
+    const result = await login(formData.email, formData.password);
+    
+    if (result.success) {
+      console.log('Login success:', {
+        hasSubscription: result.hasSubscription,
+        serviceIds: result.serviceIds,
+        seatId: result.seatId
+      });
+      
+      // Check if user has subscription (service_ids is not null/empty)
+      if (result.hasSubscription) {
+        // User has paid - check if onboarding is complete
+        // For now, check localStorage for onboarding (or add backend field later)
+        const onboardingComplete = localStorage.getItem(`onboarding_${result.user.id}`);
+        
+        if (onboardingComplete === 'true') {
+          navigate('/dashboard');
+        } else {
+          navigate('/integration-hub');
+        }
       } else {
-        setSubmitError(result.error || 'Login failed. Please try again.');
+        // User has no subscription - go to choose plan
+        navigate('/choose-plan');
       }
-    } catch (err) {
-      setSubmitError('An unexpected error occurred. Please try again.');
+    } else {
+      setSubmitError(result.error || 'Login failed. Please try again.');
     }
-  };
-
+  } catch (err) {
+    setSubmitError('An unexpected error occurred. Please try again.');
+  }
+};
   const getInputClassName = (fieldName) => {
     const hasError = touched[fieldName] && errors[fieldName];
     return `w-full h-12 px-4 border rounded-lg outline-none transition-all duration-200

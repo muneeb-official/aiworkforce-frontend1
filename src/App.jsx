@@ -147,12 +147,12 @@
 
 // App.jsx
 // App.jsx - Updated with Authentication
-// App.jsx - Updated with Authentication
 import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { SearchProvider } from "./context/SearchContext";
 import { B2BSearchProvider } from "./context/B2BSearchContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { SubscriptionProvider } from "./services/SubscriptionContext";
 import Layout from "./components/layout/Layout";
 import DashboardContent from "./pages/DashboardContent";
 import SalesAgentContent from "./pages/SalesAgentContent";
@@ -160,13 +160,15 @@ import LoginPage from "./pages/auth/LoginPage";
 import SignUpPage from "./pages/auth/SignUpPage";
 import ChoosePlanPage from "./pages/auth/ChoosePlanPage";
 import CartPage from "./pages/auth/CartPage";
+import PaymentSuccessPage from "./pages/auth/PaymentSuccessPage";
+import PaymentCancelPage from "./pages/auth/PaymentCancelPage";
 import { useSearch } from "./context/SearchContext";
 import { useB2BSearch } from "./context/B2BSearchContext";
 import IntegrationHubPage from "./pages/auth/IntegrationHubPage";
 import WelcomePage from "./pages/auth/WelcomePage";
 import OnboardingPage from "./pages/auth/OnboardingPage";
 
-// Protected Route - Requires authentication
+// Protected Route - Requires authentication only
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -188,24 +190,24 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Public Route - Redirects to app if already authenticated
+// Public Route - Only for login/signup pages
+// Public Route - Only for login/signup pages
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
-  // Don't show loading spinner for public routes - just render children
-  // This prevents flickering and unwanted redirects during signup flow
   if (loading) {
-    return children; // Show the page while checking auth
+    return children;
   }
 
   if (isAuthenticated) {
+    // Just redirect to dashboard - LoginPage handles the proper routing
     return <Navigate to="/dashboard" replace />;
   }
 
   return children;
 };
 
-// Main App Content (Your existing app wrapped in Layout)
+// Main App Content
 function AppContent() {
   const [activePage, setActivePage] = useState("analytics");
 
@@ -237,84 +239,95 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public Routes - Auth Pages */}
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <LoginPage />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/signup"
-            element={
-              <PublicRoute>
-                <SignUpPage />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/choose-plan"
-            element={
-              <PublicRoute>
-                <ChoosePlanPage />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/cart"
-            element={
-              <PublicRoute>
-                <CartPage />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/integration-hub"
-            element={
-              <PublicRoute>
-                <IntegrationHubPage />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/onboarding"
-            element={
-              <PublicRoute>
-                <OnboardingPage />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/welcome"
-            element={
-              <PublicRoute>
-                <WelcomePage />
-              </PublicRoute>
-            }
-          />
-          {/* Protected Routes - Main App */}
-          <Route
-            path="/dashboard/*"
-            element={
-              <ProtectedRoute>
-                <SearchProvider>
-                  <B2BSearchProvider>
-                    <AppContent />
-                  </B2BSearchProvider>
-                </SearchProvider>
-              </ProtectedRoute>
-            }
-          />
+      <SubscriptionProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes - Login & Signup Only */}
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <LoginPage />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                <PublicRoute>
+                  <SignUpPage />
+                </PublicRoute>
+              }
+            />
 
-          {/* Default Redirects */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Router>
+            {/* Payment Routes - No ProtectedRoute wrapper */}
+            <Route path="/payment/success" element={<PaymentSuccessPage />} />
+            <Route path="/payment/cancel" element={<PaymentCancelPage />} />
+
+            {/* Protected Routes - Subscription Flow */}
+            <Route
+              path="/choose-plan"
+              element={
+                <ProtectedRoute>
+                  <ChoosePlanPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cart"
+              element={
+                <ProtectedRoute>
+                  <CartPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Protected Routes - Onboarding Flow */}
+            <Route
+              path="/integration-hub"
+              element={
+                <ProtectedRoute>
+                  <IntegrationHubPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <OnboardingPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/welcome"
+              element={
+                <ProtectedRoute>
+                  <WelcomePage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Protected Routes - Main App */}
+            <Route
+              path="/dashboard/*"
+              element={
+                <ProtectedRoute>
+                  <SearchProvider>
+                    <B2BSearchProvider>
+                      <AppContent />
+                    </B2BSearchProvider>
+                  </SearchProvider>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Default Redirects */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </Router>
+      </SubscriptionProvider>
     </AuthProvider>
   );
 }
