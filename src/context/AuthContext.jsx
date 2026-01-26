@@ -10,40 +10,39 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Check for existing session on mount
+  // Check for existing session on mount (handles page refresh/Stripe redirect)
   useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
+    
     if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch (e) {
+        console.error('Failed to parse saved user:', e);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
     }
     setLoading(false);
   }, []);
 
-  // After successful login, check user status and redirect accordingly
-const login = async (email, password) => {
-  const result = await authService.login(email, password);
-  
-  if (result.success) {
-    localStorage.setItem('token', result.token);
-    setUser(result.user);
-    setIsAuthenticated(true);
+  const login = async (email, password) => {
+    const result = await authService.login(email, password);
     
-    // Check onboarding status
-    const onboardingComplete = result.user?.onboarding_complete || localStorage.getItem('onboarding_complete');
-    
-    if (!onboardingComplete) {
-      // New user - go through onboarding flow
-      return { ...result, redirectTo: '/integration-hub' };
-    } else {
-      // Existing user - go to dashboard
-      return { ...result, redirectTo: '/dashboard' };
+    if (result.success) {
+      // Save BOTH token AND user to localStorage
+      localStorage.setItem('token', result.token);
+      localStorage.setItem('user', JSON.stringify(result.user));
+      
+      setUser(result.user);
+      setIsAuthenticated(true);
     }
-  }
-  
-  return result;
-};
+    
+    return result;
+  };
 
   const signUp = async (userData) => {
     setLoading(true);
@@ -51,7 +50,6 @@ const login = async (email, password) => {
     try {
       const response = await authService.signUp(userData);
       if (response.success) {
-        // Don't set isAuthenticated here - user needs to complete plan selection first
         return { success: true, message: response.message };
       }
       return response;
@@ -63,21 +61,20 @@ const login = async (email, password) => {
     }
   };
 
-const logout = async () => {
-  try {
-    await authService.logout();
-  } catch (error) {
-    console.error('Logout error:', error);
-  } finally {
-    // Clear all user data
-    localStorage.removeItem('token');
-    localStorage.removeItem('plan_selected');
-    localStorage.removeItem('onboarding_complete');
-    
-    setUser(null);
-    setIsAuthenticated(false);
-  }
-};
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear ALL user data from localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      setUser(null);
+      setIsAuthenticated(false);
+    }
+  };
 
   const clearError = () => setError(null);
 

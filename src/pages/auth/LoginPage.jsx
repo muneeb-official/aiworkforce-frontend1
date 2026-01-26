@@ -83,9 +83,12 @@ const LoginPage = () => {
     }
   };
 
+// In LoginPage.jsx, replace your handleSubmit function with this:
+
 const handleSubmit = async (e) => {
   e.preventDefault();
 
+  // Validate all fields
   const emailError = validateEmail(formData.email);
   const passwordError = validatePassword(formData.password);
 
@@ -101,28 +104,33 @@ const handleSubmit = async (e) => {
       console.log('Login success:', {
         hasSubscription: result.hasSubscription,
         serviceIds: result.serviceIds,
-        seatId: result.seatId
+        userId: result.user?.id
       });
       
-      // Check if user has subscription (service_ids is not null/empty)
-      if (result.hasSubscription) {
-        // User has paid - check if onboarding is complete
-        // For now, check localStorage for onboarding (or add backend field later)
-        const onboardingComplete = localStorage.getItem(`onboarding_${result.user.id}`);
-        
-        if (onboardingComplete === 'true') {
-          navigate('/dashboard');
-        } else {
-          navigate('/integration-hub');
-        }
-      } else {
-        // User has no subscription - go to choose plan
+      // Step 1: Check if user has subscription
+      if (!result.hasSubscription) {
+        // No subscription - go to choose plan
         navigate('/choose-plan');
+        return;
+      }
+      
+      // Step 2: User has subscription - check if onboarding is complete
+      const userId = result.user?.id;
+      // Match the key used in OnboardingPage.jsx: `onboarding_${userId}`
+      const onboardingComplete = localStorage.getItem(`onboarding_${userId}`);
+      
+      if (onboardingComplete === 'true') {
+        // Fully onboarded user - go to dashboard
+        navigate('/dashboard');
+      } else {
+        // Has subscription but hasn't completed onboarding - go to integration hub
+        navigate('/integration-hub');
       }
     } else {
       setSubmitError(result.error || 'Login failed. Please try again.');
     }
   } catch (err) {
+    console.error('Login error:', err);
     setSubmitError('An unexpected error occurred. Please try again.');
   }
 };

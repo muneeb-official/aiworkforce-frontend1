@@ -1,48 +1,24 @@
 // src/pages/auth/OnboardingPage.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/layout/Header';
 import step1Image from '../../assets/step-1.png';
 import step2Image from '../../assets/step-2.png';
 import step3Image from '../../assets/step-3.png';
 
-// Logo Component
-// const Logo = () => (
-//   <div className="flex items-center gap-3">
-//     <img 
-//       src="/images/logo.png" 
-//       alt="AI Workforce" 
-//       className="h-10"
-//       onError={(e) => {
-//         e.target.onerror = null;
-//         e.target.parentElement.innerHTML = `
-//           <div class="flex items-center gap-2">
-//             <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-//               <span class="text-indigo-600 font-bold text-sm">AI</span>
-//             </div>
-//             <div>
-//               <p class="text-sm font-semibold text-gray-900">AI workforce</p>
-//               <p class="text-xs text-gray-500">Create an AI employee</p>
-//             </div>
-//           </div>
-//         `;
-//       }}
-//     />
-//   </div>
-// );
-
-// Step images configuration - Add your images to public/images/
+// Step images configuration
 const stepImages = {
-  0: step1Image,  // Pond, Fish, Catch
-  1: step2Image,  // Elevator Pitch
-  2: step3Image,  // Objections
+  0: step1Image,
+  1: step2Image,
+  2: step3Image,
 };
 
 // Step background colors
 const stepBgColors = {
-  0: 'bg-[#E8E4F3]', // Light purple
-  1: 'bg-[#FDF4E7]', // Light peach/cream
-  2: 'bg-[#FBC847]', // Yellow/gold
+  0: 'bg-[#E8E4F3]',
+  1: 'bg-[#FDF4E7]',
+  2: 'bg-[#FBC847]',
 };
 
 // Steps configuration
@@ -118,7 +94,7 @@ const stepsConfig = [
   {
     id: 'objections',
     title: 'Objections',
-    isDynamic: true, // Can add more objection sets
+    isDynamic: true,
     fields: [
       {
         id: 'objection',
@@ -144,7 +120,6 @@ const ProgressIndicator = ({ currentStep, totalSteps, steps }) => {
     <div className="flex items-center justify-center gap-2 mb-8">
       {steps.map((step, index) => (
         <React.Fragment key={step.id}>
-          {/* Step Label */}
           <button
             className={`text-sm font-medium transition-colors ${
               index === currentStep
@@ -157,7 +132,6 @@ const ProgressIndicator = ({ currentStep, totalSteps, steps }) => {
             {step.title}
           </button>
           
-          {/* Connector Line */}
           {index < steps.length - 1 && (
             <div className="flex items-center gap-1">
               <div 
@@ -198,7 +172,7 @@ const FormField = ({ field, value, onChange, index }) => {
   );
 };
 
-// Objection Card Component (for dynamic objections)
+// Objection Card Component
 const ObjectionCard = ({ index, data, onChange, onRemove, canRemove }) => {
   return (
     <div className="border border-gray-200 rounded-xl p-5 mb-4 bg-white">
@@ -252,30 +226,25 @@ const ObjectionCard = ({ index, data, onChange, onRemove, canRemove }) => {
 // Main Onboarding Page
 const OnboardingPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   
-  // Form data state
   const [formData, setFormData] = useState({
-    // Step 1: Pond, Fish, Catch
     pond: '',
     fish: '',
     catch: '',
-    // Step 2: Elevator Pitch
     who: '',
     specialise: '',
     workWith: '',
     backstory: '',
     different: '',
-    // Step 3: Objections (dynamic array)
     objections: [{ objection: '', handle: '' }],
   });
 
-  // Handle field change for regular fields
   const handleFieldChange = (fieldId, value) => {
     setFormData(prev => ({ ...prev, [fieldId]: value }));
   };
 
-  // Handle objection change
   const handleObjectionChange = (index, field, value) => {
     setFormData(prev => {
       const newObjections = [...prev.objections];
@@ -284,7 +253,6 @@ const OnboardingPage = () => {
     });
   };
 
-  // Add new objection
   const handleAddObjection = () => {
     setFormData(prev => ({
       ...prev,
@@ -292,7 +260,6 @@ const OnboardingPage = () => {
     }));
   };
 
-  // Remove objection
   const handleRemoveObjection = (index) => {
     setFormData(prev => ({
       ...prev,
@@ -300,12 +267,10 @@ const OnboardingPage = () => {
     }));
   };
 
-  // Check if current step is valid
   const isStepValid = () => {
     const step = stepsConfig[currentStep];
     
     if (step.isDynamic) {
-      // Check objections
       return formData.objections.every(obj => obj.objection && obj.handle);
     }
     
@@ -315,34 +280,39 @@ const OnboardingPage = () => {
     });
   };
 
-const handleNext = () => {
-  if (currentStep < stepsConfig.length - 1) {
-    setCurrentStep(prev => prev + 1);
-  } else {
-    // Final step - save onboarding data
-    console.log('Onboarding data:', formData);
-    
-    // Get user ID from token or localStorage
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        // Decode JWT to get user_id
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const userId = payload.user_id;
-        
-        // Store onboarding complete per user
-        localStorage.setItem(`onboarding_${userId}`, 'true');
-      } catch (e) {
-        console.error('Error decoding token:', e);
+  const handleNext = () => {
+    if (currentStep < stepsConfig.length - 1) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      // Final step - save onboarding complete
+      console.log('Onboarding data:', formData);
+      
+      // Get user ID - try from context first, then from token
+      let userId = user?.id;
+      
+      if (!userId) {
+        const token = localStorage.getItem('token');
+        if (token) {
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            userId = payload.user_id;
+          } catch (e) {
+            console.error('Error decoding token:', e);
+          }
+        }
       }
+      
+      if (userId) {
+        // Store onboarding complete with consistent key
+        localStorage.setItem(`onboarding_${userId}`, 'true');
+        console.log('Onboarding complete saved for user:', userId);
+      }
+      
+      // Navigate to dashboard
+      navigate('/dashboard');
     }
-    
-    // Navigate to dashboard
-    navigate('/dashboard');
-  }
-};
+  };
 
-  // Handle Back
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(prev => prev - 1);
@@ -351,15 +321,10 @@ const handleNext = () => {
 
   const currentStepConfig = stepsConfig[currentStep];
 
-  // localStorage.setItem('onboarding_complete', 'true');
-  // navigate('/dashboard');
-
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <Header variant="simple" />
 
-      {/* Main Content */}
       <main className="flex min-h-[calc(100vh-73px)] p-5">
         {/* Left Side - Form */}
         <div className="w-full lg:w-[50%] px-6 lg:px-12 py-8 overflow-hidden">
@@ -370,16 +335,13 @@ const handleNext = () => {
             Onboarding to AI-Workforce
           </h1>
 
-          {/* Progress Indicator */}
           <ProgressIndicator 
             currentStep={currentStep} 
             totalSteps={stepsConfig.length}
             steps={stepsConfig}
           />
 
-          {/* Form Content */}
           <div className="max-w-xl">
-            {/* Regular Steps (Pond/Fish/Catch & Elevator Pitch) */}
             {!currentStepConfig.isDynamic && (
               <div>
                 {currentStepConfig.fields.map((field) => (
@@ -393,7 +355,6 @@ const handleNext = () => {
               </div>
             )}
 
-            {/* Dynamic Step (Objections) */}
             {currentStepConfig.isDynamic && (
               <div>
                 {formData.objections.map((objData, index) => (
@@ -417,7 +378,6 @@ const handleNext = () => {
             )}
           </div>
 
-          {/* Navigation Buttons */}
           <div className="flex items-center gap-4 mt-8">
             {currentStep > 0 && (
               <button
@@ -439,7 +399,7 @@ const handleNext = () => {
               }`}
               style={{ fontFamily: 'DM Sans, sans-serif' }}
             >
-              Next
+              {currentStep === stepsConfig.length - 1 ? 'Complete' : 'Next'}
             </button>
           </div>
         </div>
@@ -452,7 +412,7 @@ const handleNext = () => {
             className="w-full h-auto object-contain"
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><rect fill="%23E5E7EB" width="400" height="400" rx="20"/><text x="200" y="190" text-anchor="middle" fill="%236B7280" font-size="14">Add image:</text><text x="200" y="210" text-anchor="middle" fill="%236B7280" font-size="12">${stepImages[currentStep]}</text></svg>`;
+              e.target.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><rect fill="%23E5E7EB" width="400" height="400" rx="20"/><text x="200" y="200" text-anchor="middle" fill="%236B7280" font-size="14">Step ${currentStep + 1}</text></svg>`;
             }}
           />
         </div>

@@ -168,7 +168,7 @@ import IntegrationHubPage from "./pages/auth/IntegrationHubPage";
 import WelcomePage from "./pages/auth/WelcomePage";
 import OnboardingPage from "./pages/auth/OnboardingPage";
 
-// App.jsx - Updated with Authentication
+// App.jsx
 // import { useState } from "react";
 // import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 // import { SearchProvider } from "./context/SearchContext";
@@ -212,7 +212,7 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Public Route - For login page only (redirects authenticated users to dashboard)
+// Public Route - For login page only
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -276,7 +276,7 @@ function App() {
               }
             />
             
-            {/* SignUp - No wrapper (allows redirect to choose-plan after auto-login) */}
+            {/* SignUp - No wrapper to allow redirect to choose-plan after auto-login */}
             <Route path="/signup" element={<SignUpPage />} />
 
             {/* ==================== */}
