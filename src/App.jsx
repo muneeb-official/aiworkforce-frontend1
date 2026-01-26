@@ -168,7 +168,29 @@ import IntegrationHubPage from "./pages/auth/IntegrationHubPage";
 import WelcomePage from "./pages/auth/WelcomePage";
 import OnboardingPage from "./pages/auth/OnboardingPage";
 
-// Protected Route - Requires authentication only
+// App.jsx - Updated with Authentication
+// import { useState } from "react";
+// import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+// import { SearchProvider } from "./context/SearchContext";
+// import { B2BSearchProvider } from "./context/B2BSearchContext";
+// import { AuthProvider, useAuth } from "./context/AuthContext";
+// import { SubscriptionProvider } from "./services/SubscriptionContext";
+// import Layout from "./components/layout/Layout";
+// import DashboardContent from "./pages/DashboardContent";
+// import SalesAgentContent from "./pages/salesAgent/SalesAgentContent";
+// import LoginPage from "./pages/auth/LoginPage";
+// import SignUpPage from "./pages/auth/SignUpPage";
+// import ChoosePlanPage from "./pages/auth/ChoosePlanPage";
+// import CartPage from "./pages/auth/CartPage";
+// import PaymentSuccessPage from "./pages/auth/PaymentSuccessPage";
+// import PaymentCancelPage from "./pages/auth/PaymentCancelPage";
+// import { useSearch } from "./context/SearchContext";
+// import { useB2BSearch } from "./context/B2BSearchContext";
+// import IntegrationHubPage from "./pages/auth/IntegrationHubPage";
+// import WelcomePage from "./pages/auth/WelcomePage";
+// import OnboardingPage from "./pages/auth/OnboardingPage";
+
+// Protected Route - Requires authentication
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -190,8 +212,7 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Public Route - Only for login/signup pages
-// Public Route - Only for login/signup pages
+// Public Route - For login page only (redirects authenticated users to dashboard)
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -200,7 +221,6 @@ const PublicRoute = ({ children }) => {
   }
 
   if (isAuthenticated) {
-    // Just redirect to dashboard - LoginPage handles the proper routing
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -242,7 +262,11 @@ function App() {
       <SubscriptionProvider>
         <Router>
           <Routes>
-            {/* Public Routes - Login & Signup Only */}
+            {/* ==================== */}
+            {/* PUBLIC ROUTES        */}
+            {/* ==================== */}
+            
+            {/* Login - Redirects to dashboard if already authenticated */}
             <Route
               path="/login"
               element={
@@ -251,20 +275,15 @@ function App() {
                 </PublicRoute>
               }
             />
-            <Route
-              path="/signup"
-              element={
-                <PublicRoute>
-                  <SignUpPage />
-                </PublicRoute>
-              }
-            />
+            
+            {/* SignUp - No wrapper (allows redirect to choose-plan after auto-login) */}
+            <Route path="/signup" element={<SignUpPage />} />
 
-            {/* Payment Routes - No ProtectedRoute wrapper */}
-            <Route path="/payment/success" element={<PaymentSuccessPage />} />
-            <Route path="/payment/cancel" element={<PaymentCancelPage />} />
-
-            {/* Protected Routes - Subscription Flow */}
+            {/* ==================== */}
+            {/* SUBSCRIPTION FLOW    */}
+            {/* SignUp → ChoosePlan → Cart → PaymentSuccess */}
+            {/* ==================== */}
+            
             <Route
               path="/choose-plan"
               element={
@@ -281,8 +300,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            
+            {/* Payment callbacks - No protection (Stripe redirects here) */}
+            <Route path="/payment/success" element={<PaymentSuccessPage />} />
+            <Route path="/payment/cancel" element={<PaymentCancelPage />} />
 
-            {/* Protected Routes - Onboarding Flow */}
+            {/* ==================== */}
+            {/* ONBOARDING FLOW      */}
+            {/* PaymentSuccess → IntegrationHub → Onboarding → Dashboard */}
+            {/* ==================== */}
+            
             <Route
               path="/integration-hub"
               element={
@@ -308,7 +335,10 @@ function App() {
               }
             />
 
-            {/* Protected Routes - Main App */}
+            {/* ==================== */}
+            {/* MAIN APP             */}
+            {/* ==================== */}
+            
             <Route
               path="/dashboard/*"
               element={
@@ -322,7 +352,10 @@ function App() {
               }
             />
 
-            {/* Default Redirects */}
+            {/* ==================== */}
+            {/* DEFAULT REDIRECTS    */}
+            {/* ==================== */}
+            
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>

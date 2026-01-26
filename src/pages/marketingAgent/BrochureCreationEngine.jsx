@@ -24,9 +24,10 @@ import {
   Sparkles,
   Check,
 } from "lucide-react";
+import TemplatePicker from "./TemplatePicker";
+import PresentationEditor from "./PresentationEditor";
+import { TemplateLoadingModal } from "../../components/modals/Modals";
 
-
-// Sample template data
 // Sample template data
 const sampleTemplates = [
   { id: 1, title: "Company pitch deck", image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=300&fit=crop" },
@@ -45,6 +46,8 @@ const languageOptions = ["English", "Spanish", "French", "German", "Portuguese",
 const toneOptions = ["Default", "Casual", "Professional", "Funny", "Educational", "Sales Pitch"];
 const verbosityOptions = ["Concise", "Standard", "Text Heavy"];
 const sortOptions = ["Most Recent Edited", "Alphabetic A-Z", "Last Seen"];
+
+
 
 // Advanced Settings Modal
 const AdvancedSettingsModal = ({ isOpen, onClose, settings, setSettings }) => {
@@ -222,6 +225,8 @@ const GeneratingModal = ({ isOpen }) => {
   );
 };
 
+
+
 // Slide Editor Component
 const SlideEditor = ({ onBack, slides, setSlides }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -241,6 +246,34 @@ const SlideEditor = ({ onBack, slides, setSlides }) => {
     setShowConfirmation(true);
   };
 
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [showTemplateLoading, setShowTemplateLoading] = useState(false);
+  const [showPresentationEditor, setShowPresentationEditor] = useState(false);
+
+  // Add at the start of your BrochureCreationEngine component return
+if (showPresentationEditor) {
+  return <PresentationEditor onBack={() => setShowPresentationEditor(false)} />;
+}
+
+if (showTemplatePicker) {
+  return (
+    <>
+      <TemplatePicker 
+        onBack={() => setShowTemplatePicker(false)}
+        onGenerate={(templateId) => {
+          setShowTemplatePicker(false);
+          setShowTemplateLoading(true);
+          setTimeout(() => {
+            setShowTemplateLoading(false);
+            setShowPresentationEditor(true);
+          }, 2500);
+        }}
+      />
+      <TemplateLoadingModal isOpen={showTemplateLoading} />
+    </>
+  );
+}
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -256,9 +289,12 @@ const SlideEditor = ({ onBack, slides, setSlides }) => {
             </button>
             <h1 className="text-xl text-gray-700">You can edit the content here.</h1>
           </div>
-          <button className="px-6 py-2.5 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800">
-            Continue Choosing a Template
-          </button>
+          <button 
+  onClick={() => setShowTemplatePicker(true)}
+  className="px-6 py-2.5 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800"
+>
+  Continue Choosing a Template
+</button>
         </div>
       </div>
 
@@ -294,7 +330,7 @@ const SlideEditor = ({ onBack, slides, setSlides }) => {
             {/* Slide Content */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">Slide Content</label>
-              
+
               {/* Editor Toolbar */}
               <div className="flex items-center gap-1 p-2 border border-gray-200 border-b-0 rounded-t-lg bg-gray-50">
                 <button className="p-2 hover:bg-gray-200 rounded"><Undo size={16} /></button>
@@ -382,7 +418,7 @@ const BrochureCreationEngine = () => {
       progress: 0,
       type: file.name.split('.').pop().toUpperCase(),
     }));
-    
+
     // Simulate upload progress
     newFiles.forEach((file, index) => {
       let progress = 0;
@@ -394,7 +430,7 @@ const BrochureCreationEngine = () => {
         if (progress >= 100) clearInterval(interval);
       }, 200);
     });
-    
+
     setUploadedFiles((prev) => [...prev, ...newFiles]);
   };
 
@@ -447,9 +483,8 @@ const BrochureCreationEngine = () => {
             <div className="flex gap-6">
               <button
                 onClick={() => setActiveTab("presentation")}
-                className={`pb-2 font-medium transition-colors relative ${
-                  activeTab === "presentation" ? "text-gray-900" : "text-gray-500"
-                }`}
+                className={`pb-2 font-medium transition-colors relative ${activeTab === "presentation" ? "text-gray-900" : "text-gray-500"
+                  }`}
               >
                 Create Presentation
                 {activeTab === "presentation" && (
@@ -458,9 +493,8 @@ const BrochureCreationEngine = () => {
               </button>
               <button
                 onClick={() => setActiveTab("template")}
-                className={`pb-2 font-medium transition-colors relative ${
-                  activeTab === "template" ? "text-gray-900" : "text-gray-500"
-                }`}
+                className={`pb-2 font-medium transition-colors relative ${activeTab === "template" ? "text-gray-900" : "text-gray-500"
+                  }`}
               >
                 Create Custom Template
                 {activeTab === "template" && (
@@ -547,7 +581,7 @@ const BrochureCreationEngine = () => {
                   placeholder="Start writing your content here..."
                   className="w-full px-4 py-4 border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px] resize-none pr-12"
                 />
-                <button 
+                <button
                   onClick={handleGenerate}
                   className="absolute bottom-4 right-4 w-10 h-10 bg-[#E8EAFF] rounded-full flex items-center justify-center hover:bg-[#d8dbff]"
                 >
@@ -690,9 +724,8 @@ const BrochureCreationEngine = () => {
                           setSelectedSort(opt);
                           setShowSortDropdown(false);
                         }}
-                        className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${
-                          selectedSort === opt ? "text-blue-600 font-medium" : ""
-                        }`}
+                        className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${selectedSort === opt ? "text-blue-600 font-medium" : ""
+                          }`}
                       >
                         {opt}
                       </button>

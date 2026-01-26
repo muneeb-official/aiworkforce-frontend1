@@ -149,7 +149,7 @@ useEffect(() => {
               onClick={() => navigate('/integration-hub')}
               className="px-6 py-3 bg-[#4F46E5] text-white font-medium rounded-xl hover:bg-[#4338CA] transition-colors"
             >
-              Continue to Setup
+              Continue to Next Step
             </button>
           </div>
         </div>

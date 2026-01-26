@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useSearch } from "../../context/SearchContext";
 import { Modal, LoadingSpinner, SuccessIcon } from "../common/CommonComponents";
 import { savedSearches, projects } from "../../data/profilesData";
-
+import { X, Check, Sparkles } from "lucide-react";
 // Save Search Modal
 export const SaveSearchModal = ({ isOpen, onClose, onSave }) => {
   const [searchName, setSearchName] = useState("");
@@ -1061,6 +1061,84 @@ export const OAuthConnectModal = ({
             {isConnecting ? 'Connecting...' : 'Connect'}
           </button>
         </div>
+      </div>
+    </div>
+  );
+};
+// Add these exports to your Modals.jsx file
+
+// Template Loading Modal (full screen with gradient background)
+export const TemplateLoadingModal = ({ isOpen }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl p-10 max-w-md w-full mx-4 shadow-xl text-center">
+        <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+          Please wait for a moment.
+        </h3>
+        <p className="text-gray-600 mb-8">We are generating your pitch Deck</p>
+        <div className="flex justify-center gap-2">
+          <div className="w-2 h-2 bg-gray-800 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "450ms" }} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Template Success Modal
+export const TemplateSuccessModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center shadow-xl">
+        <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Check className="w-8 h-8 text-indigo-600" />
+        </div>
+        <h3 className="text-2xl font-semibold text-gray-900 mb-2">Template successfully saved</h3>
+        <p className="text-gray-600 mb-6">Your template is saved,</p>
+        <button onClick={onClose} className="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">
+          Close
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// AI Prompt Modal for slide editing
+export const AIPromptModal = ({ isOpen, onClose, onSubmit }) => {
+  const [prompt, setPrompt] = useState("");
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-start justify-center z-50 pt-20">
+      <div className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 shadow-xl">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-indigo-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">Write your prompt here.</h3>
+          <button onClick={onClose} className="ml-auto text-gray-400 hover:text-gray-600">
+            <X size={20} />
+          </button>
+        </div>
+        <textarea
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder="Enter your prompt here... (e.g., Change the title coor to blue', 'Add a border to the image', etc...)"
+          className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[100px] resize-none mb-4"
+        />
+        <button
+          onClick={() => { onSubmit?.(prompt); setPrompt(""); onClose(); }}
+          className="px-8 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700"
+        >
+          Update
+        </button>
       </div>
     </div>
   );
