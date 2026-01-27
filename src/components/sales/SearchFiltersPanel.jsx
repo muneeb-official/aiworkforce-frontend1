@@ -554,29 +554,23 @@ export default function SearchFiltersPanel({
 
       {/* Fixed Buttons */}
       <div className="sticky bottom-0 bg-white p-4 space-y-3">
-        {hasSearched ? (
-          <>
-            <button
-              onClick={onSaveSearch}
-              className="w-full bg-blue-600 text-white py-2 rounded-full font-medium hover:bg-blue-700"
-            >
-              Save This Search
-            </button>
-            <button
-              onClick={onLoadSearch}
-              className="w-full bg-white text-blue-700 py-1.5 rounded-full font-medium border-2 border-blue-700 hover:border-blue-800"
-            >
-              Load Past Search
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={onLoadSearch}
-            className="w-full bg-blue-600 text-white py-2 rounded-full font-medium hover:bg-blue-700"
-          >
-            Load Past Search
-          </button>
-        )}
+        <button
+          onClick={onSaveSearch}
+          disabled={activeFilters.length === 0}
+          className={`w-full py-2 rounded-full font-medium ${
+            activeFilters.length > 0
+              ? "bg-blue-600 text-white hover:bg-blue-700"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          }`}
+        >
+          Save This Search
+        </button>
+        <button
+          onClick={onLoadSearch}
+          className="w-full bg-white text-blue-700 py-1.5 rounded-full font-medium border-2 border-blue-700 hover:border-blue-800"
+        >
+          Load Past Search
+        </button>
       </div>
     </div>
   );
