@@ -660,7 +660,7 @@ export default function Layout({ children, activePage, setActivePage, credits })
                                             "train"
                             } />
                         ) : isOnSupportPage ? (
-                            <SupportAgentPage activeSettingsTab={
+                            <SupportAgentPage activeSupportTab={
                                 activePage === "support-meeting" ? "meeting" : "personal"
                             } />
                         ) : activePage === "template" ? (

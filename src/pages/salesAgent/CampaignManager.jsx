@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { ProfileCard } from "../../components/profiles/ProfileComponents";
 import CampaignManagerModals from "../../components/campaigns/CampaignManagerModals";
+import WorkflowBuilder from "../../components/workflow/WorkflowBuilder";
 
 // Sample campaigns data
 const SAMPLE_CAMPAIGNS = {
@@ -95,13 +96,16 @@ const CampaignManager = () => {
   const [showEngagedTooltip, setShowEngagedTooltip] = useState(false);
   const [showRepliedTooltip, setShowRepliedTooltip] = useState(false);
 
+  // Workflow Builder states
+  const [showWorkflowBuilder, setShowWorkflowBuilder] = useState(false);
+  const [workflowCampaign, setWorkflowCampaign] = useState(null);
+
   const currentCampaigns = campaigns[activeTab] || [];
   const unenrichedCount = leads.filter(l => !l.isEnriched).length;
 
   // Handlers
   const handleCampaignClick = (campaign) => {
     if (campaign.status === "draft") {
-      // For draft, check if all leads are enriched
       const hasUnenriched = leads.some(l => !l.isEnriched);
       if (hasUnenriched) {
         setShowCannotStartModal(true);
@@ -175,6 +179,12 @@ const CampaignManager = () => {
     setLeads(prev => prev.map(l => l.id === id ? { ...l, isEnriched: true } : l));
   };
 
+  // Workflow Builder handler
+  const handleStartWorkflow = (campaign = null) => {
+    setWorkflowCampaign(campaign || viewingCampaign);
+    setShowWorkflowBuilder(true);
+  };
+
   // Campaign Details View
   if (viewingCampaign) {
     const isDraft = viewingCampaign.status === "draft";
@@ -222,7 +232,10 @@ const CampaignManager = () => {
                 Enrich All {unenrichedCount} Leads
               </button>
             )}
-            <button className="bg-[#3C49F7] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#2a35d4]">
+            <button 
+              onClick={() => handleStartWorkflow()}
+              className="bg-[#3C49F7] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#2a35d4]"
+            >
               Start Workflow Builder
             </button>
           </div>
@@ -232,24 +245,7 @@ const CampaignManager = () => {
         <div className="flex items-center gap-3 mb-4">
           <input
             type="checkbox"
-            className="
-    appearance-none
-    w-[18px] h-[18px]
-    rounded-[6px]
-    border border-gray-300
-    bg-white
-    hover:border-blue-600
-    focus:outline-none focus:ring-2 focus:ring-blue-500/30
-    cursor-pointer
-
-    checked:bg-blue-600 checked:border-blue-600
-    checked:after:content-['']
-    checked:after:block
-    checked:after:w-[6px] checked:after:h-[10px]
-    checked:after:border-r-2 checked:after:border-b-2 checked:after:border-white
-    checked:after:rotate-45
-    checked:after:translate-x-[5px] checked:after:translate-y-[1px]
-  "
+            className="appearance-none w-[18px] h-[18px] rounded-[6px] border border-gray-300 bg-white hover:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer checked:bg-blue-600 checked:border-blue-600 checked:after:content-[''] checked:after:block checked:after:w-[6px] checked:after:h-[10px] checked:after:border-r-2 checked:after:border-b-2 checked:after:border-white checked:after:rotate-45 checked:after:translate-x-[5px] checked:after:translate-y-[1px]"
             onChange={(e) => setSelectedLeads(e.target.checked ? leads.map(l => l.id) : [])}
             checked={selectedLeads.length === leads.length && leads.length > 0}
           />
@@ -309,6 +305,19 @@ const CampaignManager = () => {
           onConfirmEnrichAll={handleConfirmEnrichAll}
           leadCount={unenrichedCount}
         />
+
+        {/* Workflow Builder */}
+        {showWorkflowBuilder && (
+          <WorkflowBuilder
+            isOpen={showWorkflowBuilder}
+            onClose={() => {
+              setShowWorkflowBuilder(false);
+              setWorkflowCampaign(null);
+            }}
+            campaignName={workflowCampaign?.name || viewingCampaign?.name || "New Campaign"}
+            entrySource="campaign"
+          />
+        )}
       </div>
     );
   }
@@ -506,6 +515,19 @@ const CampaignManager = () => {
           </div>
         ))}
       </div>
+
+      {/* Workflow Builder */}
+      {showWorkflowBuilder && (
+        <WorkflowBuilder
+          isOpen={showWorkflowBuilder}
+          onClose={() => {
+            setShowWorkflowBuilder(false);
+            setWorkflowCampaign(null);
+          }}
+          campaignName={workflowCampaign?.name || "New Campaign"}
+          entrySource="campaign"
+        />
+      )}
     </div>
   );
 };
