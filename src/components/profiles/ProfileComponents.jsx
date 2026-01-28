@@ -26,11 +26,20 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
 
     setIsEnriching(true);
 
-    // Simulate loading delay (or wait for actual API call)
-    setTimeout(() => {
-      onEnrich(profile.id);
+    try {
+      // Ensure minimum loading time of 1.5 seconds for better UX
+      const minLoadingTime = new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Call the actual API through context
+      const apiCall = onEnrich(profile.id);
+
+      // Wait for both the API call and minimum loading time
+      await Promise.all([apiCall, minLoadingTime]);
+    } catch (error) {
+      console.error("Error enriching profile:", error);
+    } finally {
       setIsEnriching(false);
-    }, 2000);
+    }
   }
   const handleRowClick = (e) => {
     if (e.target.closest('button') || e.target.closest('input[type="checkbox"]')) {
@@ -106,8 +115,13 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
               <div className="flex items-center gap-2">
                 <img src={phonenumbericon} alt="linkedin" className="w-4 h-4" />
                 {profile.isEnriched ? (
-                  <span className="text-gray-800 text-sm">
-                    {profile.phones?.join(" , ") || "+44 - 123 34 123, +44 - 123 34 123, +44 - 123 34 123"}
+                  <span className="text-gray-800 text-sm flex items-center gap-1">
+                    {(profile.phones || []).slice(0, 2).join(" , ")}
+                    {(profile.phones?.length || 0) > 2 && (
+                      <span className="text-[#000000] bg-[#F2F2FF] rounded px-1 py-0.5 text-xs">
+                        + {profile.phones.length - 2} more
+                      </span>
+                    )}
                   </span>
                 ) : (
                   <span className="text-gray-800 text-sm flex items-center gap-1">
@@ -121,12 +135,17 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
               <div className="flex items-center gap-2">
                 <img src={emailicon} alt="linkedin" className="w-4 h-4" />
                 {profile.isEnriched ? (
-                  <div className="flex items-center gap-1">
-                    {(profile.emails || ["radio@helicopter.com,radio@helicopter.com"]).map((email, idx) => (
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {(profile.emails || []).slice(0, 2).map((email, idx, arr) => (
                       <a key={idx} href={`mailto:${email}`} className="text-blue-600 hover:underline text-sm">
-                        {email}{idx < (profile.emails?.length || 1) - 1 ? " ," : ""}
+                        {email}{idx < arr.length - 1 ? "," : ""}
                       </a>
                     ))}
+                    {(profile.emails?.length || 0) > 2 && (
+                      <span className="text-[#000000] bg-[#F2F2FF] rounded px-1 py-0.5 text-xs">
+                        + {profile.emails.length - 2} more
+                      </span>
+                    )}
                   </div>
                 ) : (
                   <span className="text-gray-800 text-sm flex items-center gap-1">
@@ -241,7 +260,7 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
                   { school: "Lauriston Boys' School", years: "2003-2007" }
                 ]).map((edu, idx) => (
                   <p key={idx} className="text-gray-900 text-sm">
-                    • {edu.school}
+                    • {edu.school}{edu.degree ? ` - ${edu.degree}` : ""}{edu.major ? ` (${edu.major})` : ""}
                     <span className="text-gray-500 ml-2 italic">{edu.years}</span>
                   </p>
                 ))}
@@ -256,25 +275,31 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
                   <>
                     {/* Website */}
                     <div className="flex items-center gap-2">
-                      <img src={companyicon} alt="linkedin" className="w-4 h-4" />
-                      <span className="text-gray-800 text-sm">@ {profile.website || "chchelicopter.com"}</span>
+                      <img src={companyicon} alt="company" className="w-4 h-4" />
+                      <span className="text-gray-800 text-sm">@ {profile.website || "N/A"}</span>
                     </div>
                     {/* Phone */}
                     <div className="flex items-center gap-2">
-                      <img src={phonenumbericon} alt="linkedin" className="w-4 h-4" />
+                      <img src={phonenumbericon} alt="phone" className="w-4 h-4" />
                       <span className="text-gray-800 text-sm">
-                        {profile.phones?.join(" , ") || "+44 - 123 34 123 , +44 - 123 34 123 , +44 - 123 34 123 , +44 - 123 34 123"}
+                        {(profile.phones || []).length > 0
+                          ? profile.phones.join(" , ")
+                          : "No phone numbers available"}
                       </span>
                     </div>
                     {/* Email */}
-                    <div className="flex items-center gap-2">
-                      <img src={emailicon} alt="linkedin" className="w-4 h-4" />
-                      <div className="flex items-center gap-2">
-                        {(profile.emails || ["radio@helicopter.com", "radio@helicopter.com"]).map((email, idx) => (
-                          <a key={idx} href={`mailto:${email}`} className="text-blue-600 hover:underline text-sm">
-                            {email}{idx < (profile.emails?.length || 2) - 1 ? " ," : ""}
-                          </a>
-                        ))}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <img src={emailicon} alt="email" className="w-4 h-4" />
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {(profile.emails || []).length > 0 ? (
+                          profile.emails.map((email, idx) => (
+                            <a key={idx} href={`mailto:${email}`} className="text-blue-600 hover:underline text-sm">
+                              {email}{idx < profile.emails.length - 1 ? " ," : ""}
+                            </a>
+                          ))
+                        ) : (
+                          <span className="text-gray-500 text-sm">No emails available</span>
+                        )}
                       </div>
                     </div>
                   </>
@@ -282,12 +307,12 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
                   <>
                     {/* Hidden Website */}
                     <div className="flex items-center gap-2">
-                      <img src={companyicon} alt="linkedin" className="w-4 h-4" />
+                      <img src={companyicon} alt="company" className="w-4 h-4" />
                       <span className="text-gray-800 text-sm">@ chchelicopter.com</span>
                     </div>
                     {/* Hidden Phone */}
                     <div className="flex items-center gap-2">
-                      <img src={phonenumbericon} alt="linkedin" className="w-4 h-4" />
+                      <img src={phonenumbericon} alt="phone" className="w-4 h-4" />
                       <span className="text-gray-800 text-sm">
                         +44 - 123 <span className="text-gray-400 italic">XX XXX</span>
                         <span className="text-gray-500 ml-2 text-xs">+ 3 more</span>
@@ -295,7 +320,7 @@ export const ProfileCard = ({ profile, isSelected, onSelect, onEnrich, onAddToPr
                     </div>
                     {/* Hidden Email */}
                     <div className="flex items-center gap-2">
-                      <img src={emailicon} alt="linkedin" className="w-4 h-4" />
+                      <img src={emailicon} alt="email" className="w-4 h-4" />
                       <span className="text-gray-800 text-sm">
                         xxxxx<span className="text-gray-800">@helicopter.com</span>
                         <span className="text-gray-500 ml-2 text-xs">+ 2 personal emails</span>

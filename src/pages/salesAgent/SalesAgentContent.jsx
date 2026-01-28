@@ -45,6 +45,8 @@ export default function SalesAgentContent({ mode = "b2c", setActivePage, credits
     setHasSearched,
     showOutOfCreditsModal,
     setShowOutOfCreditsModal,
+    saveCurrentSearch,
+    fetchSavedSearches,
   } = context;
 
   // Search type state - uses first option from config
@@ -54,6 +56,9 @@ export default function SalesAgentContent({ mode = "b2c", setActivePage, credits
   const searchType = mode === "b2b" ? (b2bContext.searchType || localSearchType) : localSearchType;
   const setSearchType = mode === "b2b" ? b2bContext.setSearchType : setLocalSearchType;
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Saved searches state
+  const [savedSearches, setSavedSearches] = useState([]);
 
   // Reset search type when mode changes
   useEffect(() => {
@@ -70,12 +75,17 @@ export default function SalesAgentContent({ mode = "b2c", setActivePage, credits
   const [showLoadingModal, setShowLoadingModal] = useState(false);
   const [showLoadSearchModal, setShowLoadSearchModal] = useState(false);
 
-  const handleSaveSearch = (searchName) => {
-    if (context.saveCurrentSearch) {
-      context.saveCurrentSearch(searchName);
+  const handleSaveSearch = async (searchName) => {
+    try {
+      if (saveCurrentSearch) {
+        await saveCurrentSearch(searchName);
+      }
+      setSaveSearchModal(false);
+      setSearchSavedModal(true);
+    } catch (error) {
+      console.error("Error saving search:", error);
+      // You might want to show an error modal here
     }
-    setSaveSearchModal(false);
-    setSearchSavedModal(true);
   };
 
 //   const handleLoadSearch = (selectedSearch) => {
@@ -93,29 +103,52 @@ export default function SalesAgentContent({ mode = "b2c", setActivePage, credits
 //     }, 2000);
 //   };
 
-const handleLoadSearch = (selectedSearch) => {
-  setShowLoadSearchModal(false);
-  setShowLoadingModal(true);
-
-  setTimeout(() => {
-    setShowLoadingModal(false);
-    
-    // For B2B, set searchType BEFORE loading the search
-    if (mode === "b2b" && selectedSearch.searchType) {
-      b2bContext.setSearchType(selectedSearch.searchType);
+  // Fetch saved searches when load modal opens
+  const handleOpenLoadSearchModal = async () => {
+    setShowLoadSearchModal(true);
+    if (mode === "b2c" && fetchSavedSearches) {
+      try {
+        const searches = await fetchSavedSearches();
+        setSavedSearches(searches);
+      } catch (error) {
+        console.error("Error fetching saved searches:", error);
+      }
     }
-    
-    loadSavedSearch(selectedSearch);
-  }, 2000);
-};
+  };
+
+  const handleLoadSearch = (selectedSearch) => {
+    setShowLoadSearchModal(false);
+    setShowLoadingModal(true);
+
+    setTimeout(() => {
+      setShowLoadingModal(false);
+
+      // For B2B, set searchType BEFORE loading the search
+      if (mode === "b2b" && selectedSearch.searchType) {
+        b2bContext.setSearchType(selectedSearch.searchType);
+      }
+
+      loadSavedSearch(selectedSearch);
+    }, 2000);
+  };
 
   const handleSearch = () => {
     if (searchQuery.trim() || activeFilters.length > 0) {
-      setShowLoadingModal(true);
-      setTimeout(() => {
-        setShowLoadingModal(false);
-        setHasSearched(true);
-      }, 1500);
+      // For B2C mode, trigger the API search
+      if (mode === "b2c") {
+        setShowLoadingModal(true);
+        setTimeout(() => {
+          setShowLoadingModal(false);
+          setHasSearched(true);
+        }, 1500);
+      } else {
+        // B2B mode uses existing logic
+        setShowLoadingModal(true);
+        setTimeout(() => {
+          setShowLoadingModal(false);
+          setHasSearched(true);
+        }, 1500);
+      }
     }
   };
 
@@ -187,7 +220,7 @@ const handleLoadSearch = (selectedSearch) => {
             onRemoveFilter={removeFilter}
             onClearFilters={clearFilters}
             onSaveSearch={() => setSaveSearchModal(true)}
-            onLoadSearch={() => setShowLoadSearchModal(true)}
+            onLoadSearch={handleOpenLoadSearchModal}
             context={context}
           />
         </div>
@@ -272,7 +305,7 @@ const handleLoadSearch = (selectedSearch) => {
         isOpen={showLoadSearchModal}
         onClose={() => setShowLoadSearchModal(false)}
         onLoadSearch={handleLoadSearch}
-        savedSearches={config.savedSearches}
+        savedSearches={mode === "b2c" ? savedSearches : config.savedSearches}
       />
 
       <SearchSavedModal
