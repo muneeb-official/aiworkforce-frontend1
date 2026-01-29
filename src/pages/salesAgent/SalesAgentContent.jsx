@@ -200,7 +200,12 @@ export default function SalesAgentContent({ mode = "b2c", setActivePage, credits
               {config.searchTypes.map((type) => (
                 <button
                   key={type.key}
-                  onClick={() => setSearchType(type.key)}
+                  onClick={() => {
+                    if (searchType !== type.key) {
+                      clearFilters();
+                      setSearchType(type.key);
+                    }
+                  }}
                   className={`px-5 py-2 text-sm font-medium rounded-full transition-all duration-200 ${
                     searchType === type.key
                       ? "bg-gray-900 text-white shadow-sm"

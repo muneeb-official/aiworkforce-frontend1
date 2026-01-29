@@ -5,6 +5,7 @@ import {
   useState,
   useCallback,
   useEffect,
+  useRef,
 } from "react";
 import { profilesData } from "../data/profilesData";
 import api from "../services/api";
@@ -41,6 +42,15 @@ export const SearchProvider = ({ children }) => {
   const [hasSearched, setHasSearched] = useState(false);
   const [excludeInProject, setExcludeInProject] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Refs to track latest values and avoid stale closures
+  const isSearchingRef = useRef(false);
+  const excludeInProjectRef = useRef(false);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    excludeInProjectRef.current = excludeInProject;
+  }, [excludeInProject]);
 
   // Projects state
   const [projects, setProjects] = useState([]);
@@ -162,14 +172,15 @@ export const SearchProvider = ({ children }) => {
 
   // Search API function
   const searchPeople = useCallback(async () => {
-    console.log("🎬 searchPeople called - isSearching:", isSearching);
+    console.log("🎬 searchPeople called - isSearching:", isSearchingRef.current);
 
-    if (isSearching) {
+    if (isSearchingRef.current) {
       console.log("⏸️ Already searching, skipping...");
       return;
     }
 
     console.log("⚡ Starting search...");
+    isSearchingRef.current = true;
     setIsSearching(true);
 
     try {
@@ -182,10 +193,12 @@ export const SearchProvider = ({ children }) => {
         size: itemsPerPage,
       };
 
+      // Use ref to get latest excludeInProject value
+      const shouldExclude = excludeInProjectRef.current;
       console.log("🔍 API Request Body:", JSON.stringify(requestBody, null, 2));
-      console.log("🔍 Exclude existing:", excludeInProject);
+      console.log("🔍 Exclude existing:", shouldExclude);
 
-      const config = excludeInProject
+      const config = shouldExclude
         ? { params: { exclude_existing: true } }
         : {};
       const response = await api.post(
@@ -253,15 +266,10 @@ export const SearchProvider = ({ children }) => {
       console.error("Error details:", error.response?.data || error.message);
       // Keep existing profiles on error
     } finally {
+      isSearchingRef.current = false;
       setIsSearching(false);
     }
-  }, [
-    isSearching,
-    currentPage,
-    itemsPerPage,
-    transformFiltersToAPIQuery,
-    excludeInProject,
-  ]);
+  }, [currentPage, itemsPerPage, transformFiltersToAPIQuery]);
 
   // Save current search to API
   const saveCurrentSearch = useCallback(
@@ -384,13 +392,7 @@ export const SearchProvider = ({ children }) => {
       searchPeople();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    activeFilters,
-    currentPage,
-    itemsPerPage,
-    excludeInProject,
-    searchPeople,
-  ]);
+  }, [activeFilters, currentPage, itemsPerPage, excludeInProject]);
 
   // Add filter
   const addFilter = useCallback((filter) => {

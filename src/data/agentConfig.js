@@ -1,6 +1,12 @@
 // data/agentConfig.js
 import { locationData } from "./salesAgentData";
-import { basicSearchFilters, advancedSearchFilters, b2bCompaniesData, b2bSavedSearches, b2bProjects } from "./b2bData";
+import {
+  basicSearchFilters,
+  advancedSearchFilters,
+  b2bCompaniesData,
+  b2bSavedSearches,
+  b2bProjects,
+} from "./b2bData";
 import { profilesData, savedSearches, projects } from "./profilesData";
 
 // B2C Configuration
@@ -31,14 +37,14 @@ export const b2cConfig = {
         hasModifier: true,
         options: locationData,
       },
-      {
-        key: "description",
-        title: "Description",
-        type: "text",
-        placeholder: "Enter LinkedIn Url or Keyword here..",
-        icon: "description",
-        hasModifier: true,
-      },
+      // {
+      //   key: "description",
+      //   title: "Description",
+      //   type: "text",
+      //   placeholder: "Enter LinkedIn Url or Keyword here..",
+      //   icon: "description",
+      //   hasModifier: true,
+      // },
     ],
     bulk: [
       {
@@ -74,7 +80,18 @@ export const b2cConfig = {
         placeholder: "Enter Job Title...",
         icon: "briefcase",
         hasModifier: true,
-        suggestions: ["Software Engineer", "Product Manager", "Data Analyst", "Marketing Manager", "Sales Representative", "UX Designer", "Project Manager", "Business Analyst", "Accountant", "HR Manager"],
+        suggestions: [
+          "Software Engineer",
+          "Product Manager",
+          "Data Analyst",
+          "Marketing Manager",
+          "Sales Representative",
+          "UX Designer",
+          "Project Manager",
+          "Business Analyst",
+          "Accountant",
+          "HR Manager",
+        ],
       },
       {
         key: "role",
@@ -88,7 +105,18 @@ export const b2cConfig = {
             type: "text-with-checkbox",
             placeholder: "Enter Job Title...",
             hasModifier: true,
-            suggestions: ["Abogada", "Abogado", "Able Seaman", "Data Abstractor", "NED Abrantix Ag", "Software Engineer", "Product Manager", "CEO", "CTO", "Director"],
+            suggestions: [
+              "Abogada",
+              "Abogado",
+              "Able Seaman",
+              "Data Abstractor",
+              "NED Abrantix Ag",
+              "Software Engineer",
+              "Product Manager",
+              "CEO",
+              "CTO",
+              "Director",
+            ],
           },
           department: {
             label: "Department",
@@ -97,7 +125,12 @@ export const b2cConfig = {
             hasModifier: true,
             options: [
               { id: 1, label: "C-Suite", count: 23, hasChildren: true },
-              { id: 2, label: "Product & Engineering", count: 23, hasChildren: true },
+              {
+                id: 2,
+                label: "Product & Engineering",
+                count: 23,
+                hasChildren: true,
+              },
               { id: 3, label: "Finance", count: 23, hasChildren: true },
               { id: 4, label: "HR", count: 23, hasChildren: true },
               { id: 5, label: "Legal", count: 23, hasChildren: true },
@@ -148,7 +181,18 @@ export const b2cConfig = {
         placeholder: "Enter Skills...",
         icon: "skills",
         hasModifier: true,
-        suggestions: ["JavaScript", "Python", "React", "Node.js", "SQL", "Project Management", "Data Analysis", "Machine Learning", "AWS", "Communication"],
+        suggestions: [
+          "JavaScript",
+          "Python",
+          "React",
+          "Node.js",
+          "SQL",
+          "Project Management",
+          "Data Analysis",
+          "Machine Learning",
+          "AWS",
+          "Communication",
+        ],
       },
       {
         key: "experience",
@@ -172,7 +216,18 @@ export const b2cConfig = {
         placeholder: "Enter Company Name and Domain...",
         icon: "building",
         hasModifier: true,
-        suggestions: ["Google", "Microsoft", "Amazon", "Apple", "Meta", "Netflix", "Tesla", "IBM", "Oracle", "Salesforce"],
+        suggestions: [
+          "Google",
+          "Microsoft",
+          "Amazon",
+          "Apple",
+          "Meta",
+          "Netflix",
+          "Tesla",
+          "IBM",
+          "Oracle",
+          "Salesforce",
+        ],
       },
       {
         key: "education",
@@ -186,7 +241,15 @@ export const b2cConfig = {
             type: "text-with-checkboxes",
             placeholder: "Enter Major...",
             hasModifier: true,
-            suggestions: ["Computer Science", "Business Administration", "Management", "Marketing", "Accounting", "Engineering", "Economics"],
+            suggestions: [
+              "Computer Science",
+              "Business Administration",
+              "Management",
+              "Marketing",
+              "Accounting",
+              "Engineering",
+              "Economics",
+            ],
             options: [
               { id: 1, label: "Computer Science" },
               { id: 2, label: "Business Administration" },
@@ -200,14 +263,29 @@ export const b2cConfig = {
             type: "text-with-suggestions",
             placeholder: "Enter School...",
             hasModifier: true,
-            suggestions: ["Australia University", "University of Alabama", "Maharashtra Amity University", "Athenes University", "Harvard University", "Stanford University", "MIT", "Oxford University"],
+            suggestions: [
+              "Australia University",
+              "University of Alabama",
+              "Maharashtra Amity University",
+              "Athenes University",
+              "Harvard University",
+              "Stanford University",
+              "MIT",
+              "Oxford University",
+            ],
           },
           degree: {
             label: "Degree",
             type: "text-with-checkboxes",
             placeholder: "Enter Degree...",
             hasModifier: true,
-            suggestions: ["Master of Business Administration", "Competition of Business", "Associate in Computer Science", "Bachelor of Science", "Master of Science"],
+            suggestions: [
+              "Master of Business Administration",
+              "Competition of Business",
+              "Associate in Computer Science",
+              "Bachelor of Science",
+              "Master of Science",
+            ],
             options: [
               { id: 1, label: "Bachelors" },
               { id: 2, label: "Masters" },
@@ -265,12 +343,21 @@ export const b2bConfig = {
         hasRadius: false,
         hasModifier: true,
         options: [
-          { name: "United Kingdom", count: 12500, children: ["London", "Manchester", "Birmingham"] },
-          { name: "United States", count: 28000, children: ["New York", "Los Angeles", "Chicago"] },
+          {
+            name: "United Kingdom",
+            count: 12500,
+            children: ["London", "Manchester", "Birmingham"],
+          },
+          {
+            name: "United States",
+            count: 28000,
+            children: ["New York", "Los Angeles", "Chicago"],
+          },
         ],
       },
     ],
-    advance: [  // Changed from "advanced" to "advance"
+    advance: [
+      // Changed from "advanced" to "advance"
       {
         key: "sicCode",
         title: "SIC Code",
@@ -289,8 +376,16 @@ export const b2bConfig = {
         hasRadius: false,
         hasModifier: true,
         options: [
-          { name: "United Kingdom", count: 12500, children: ["London", "Manchester", "Birmingham"] },
-          { name: "United States", count: 28000, children: ["New York", "Los Angeles", "Chicago"] },
+          {
+            name: "United Kingdom",
+            count: 12500,
+            children: ["London", "Manchester", "Birmingham"],
+          },
+          {
+            name: "United States",
+            count: 28000,
+            children: ["New York", "Los Angeles", "Chicago"],
+          },
         ],
       },
       {
@@ -344,13 +439,15 @@ export const getAgentConfig = (mode, countriesData = null) => {
   if (countriesData && countriesData.length > 0) {
     const updatedFilters = {};
 
-    Object.keys(baseConfig.filters).forEach(searchType => {
-      updatedFilters[searchType] = baseConfig.filters[searchType].map(filter => {
-        if (filter.key === "location") {
-          return { ...filter, options: countriesData };
-        }
-        return filter;
-      });
+    Object.keys(baseConfig.filters).forEach((searchType) => {
+      updatedFilters[searchType] = baseConfig.filters[searchType].map(
+        (filter) => {
+          if (filter.key === "location") {
+            return { ...filter, options: countriesData };
+          }
+          return filter;
+        },
+      );
     });
 
     return { ...baseConfig, filters: updatedFilters };
