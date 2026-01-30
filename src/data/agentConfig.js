@@ -391,11 +391,10 @@ export const b2bConfig = {
       {
         key: "companyName",
         title: "Company Name (*includes)",
-        type: "searchable-select",
-        placeholder: "Enter Company Name",
+        type: "text-with-checkbox",
+        placeholder: "Enter Company Name and press Enter...",
         icon: "company",
         hasModifier: true,
-        options: advancedSearchFilters.companyName.options,
       },
       {
         key: "companyStatus",
@@ -432,18 +431,21 @@ export const b2bConfig = {
   data: b2bCompaniesData,
 };
 
-export const getAgentConfig = (mode, countriesData = null) => {
+export const getAgentConfig = (mode, countriesData = null, sicCodesData = null) => {
   const baseConfig = mode === "b2b" ? b2bConfig : b2cConfig;
 
-  // If countriesData is provided, update location options dynamically
-  if (countriesData && countriesData.length > 0) {
+  // If countriesData or sicCodesData is provided, update options dynamically
+  if ((countriesData && countriesData.length > 0) || (sicCodesData && sicCodesData.length > 0)) {
     const updatedFilters = {};
 
     Object.keys(baseConfig.filters).forEach((searchType) => {
       updatedFilters[searchType] = baseConfig.filters[searchType].map(
         (filter) => {
-          if (filter.key === "location") {
+          if (filter.key === "location" && countriesData && countriesData.length > 0) {
             return { ...filter, options: countriesData };
+          }
+          if (filter.key === "sicCode" && sicCodesData && sicCodesData.length > 0) {
+            return { ...filter, options: sicCodesData };
           }
           return filter;
         },

@@ -17,6 +17,7 @@ import logo from "../../assets/Logo -.png";
 import logofooter from "../../assets/Logo-footer.svg";
 import { useSearch } from "../../context/SearchContext";
 import { useCountries } from "../../hooks/useCountries";
+import { useSicCodes } from "../../hooks/useSicCodes";
 
 const SearchIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -32,9 +33,10 @@ export default function SalesAgentContent({ mode = "b2c", setActivePage, credits
   const context = mode === "b2b" ? b2bContext : b2cContext;
   const { hasSearched } = context;
 
-  // Fetch countries data from API
+  // Fetch countries and SIC codes data from API
   const { countries, loading: countriesLoading } = useCountries();
-  const config = getAgentConfig(mode, countries);
+  const { sicCodes, loading: sicCodesLoading } = useSicCodes();
+  const config = getAgentConfig(mode, countries, sicCodes);
 
   const {
     activeFilters,
@@ -108,7 +110,7 @@ export default function SalesAgentContent({ mode = "b2c", setActivePage, credits
   // Fetch saved searches when load modal opens
   const handleOpenLoadSearchModal = async () => {
     setShowLoadSearchModal(true);
-    if (mode === "b2c" && fetchSavedSearches) {
+    if (fetchSavedSearches) {
       try {
         const searches = await fetchSavedSearches();
         setSavedSearches(searches);
@@ -314,7 +316,7 @@ export default function SalesAgentContent({ mode = "b2c", setActivePage, credits
         isOpen={showLoadSearchModal}
         onClose={() => setShowLoadSearchModal(false)}
         onLoadSearch={handleLoadSearch}
-        savedSearches={mode === "b2c" ? savedSearches : config.savedSearches}
+        savedSearches={savedSearches}
       />
 
       <SearchSavedModal
