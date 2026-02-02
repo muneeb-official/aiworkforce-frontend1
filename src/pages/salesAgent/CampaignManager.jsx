@@ -180,9 +180,16 @@ const CampaignManager = () => {
 
   // Workflow Builder handler
   const handleStartWorkflow = (campaign = null) => {
-    setWorkflowCampaign(campaign || viewingCampaign);
-    setShowWorkflowBuilder(true);
-  };
+  // Check if there are unenriched leads
+  const hasUnenriched = leads.some(l => !l.isEnriched);
+  if (hasUnenriched) {
+    setShowCannotStartModal(true);
+    return;
+  }
+  
+  setWorkflowCampaign(campaign || viewingCampaign);
+  setShowWorkflowBuilder(true);
+};
 
   // Campaign Details View (Only for completed campaigns)
   if (viewingCampaign) {
