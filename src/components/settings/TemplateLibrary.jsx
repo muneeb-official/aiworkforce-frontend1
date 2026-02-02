@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Plus, Edit, Trash2, Mail, Phone, MessageSquare, Share2 } from 'lucide-react';
-import CreateTemplateModal from '../../pages/settings/CreateTemplateModal';
+import CreateTemplateModal from './CreateTemplateModal';
 
 const TemplateLibrary = ({ onEditTemplate }) => {
     const [activeTab, setActiveTab] = useState('email');
