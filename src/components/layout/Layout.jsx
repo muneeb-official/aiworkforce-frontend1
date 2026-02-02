@@ -29,6 +29,7 @@ import BlogContentEngine from "../../pages/marketingAgent/BlogContentEngine";
 import SettingsPage from "../../pages/settings/SettingsPage";
 import InboxPage from "../../pages/inbox/InboxPage";
 import CallLogsPage from "../../pages/call-logs/CallLogsPage";
+import CalendarPage from "../../pages/calendar/CalendarPage";
 import BrochureCreationEngine from "../../pages/marketingAgent/BrochureCreationEngine";
 import SupportAgentPage from "../../pages/supportAgent/SupportAgentPage";
 
@@ -642,12 +643,7 @@ export default function Layout({ children, activePage, setActivePage, credits })
                         ) : isOnSEOPage ? (
                             <BlogContentEngine />
                         ) : isOnCalendarPage ? (
-                            <div className="flex items-center justify-center h-full bg-white/50">
-                                <div className="text-center">
-                                    <h2 className="text-2xl font-semibold text-gray-700">Calendar</h2>
-                                    <p className="text-gray-500 mt-2">Coming Soon</p>
-                                </div>
-                            </div>
+                            <CalendarPage />
                         ) : isOnInboxPage ? (
                             <InboxPage />
                         ) : isOnCallLogsPage ? (
