@@ -220,7 +220,8 @@ const TreeNode = ({
     onDeleteStep,
     onUpdateDelay,
     isLastInBranch,
-    renderChildren
+    renderChildren,
+    isInBranch = false
 }) => {
     const [showMenu, setShowMenu] = useState(false);
     const [showAddAboveDropdown, setShowAddAboveDropdown] = useState(false);
@@ -301,8 +302,8 @@ const TreeNode = ({
                 </div>
             )}
 
-            {/* Delay connector and next content (only for non-condition steps) */}
-            {step.type !== "condition" && !isLastInBranch && (
+            {/* Delay connector - show for non-condition steps (both in main flow and branches) */}
+            {step.type !== "condition" && (
                 <>
                     <div className="w-px h-3 border-l border-dashed border-gray-300" />
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full">
@@ -408,6 +409,7 @@ export const TreeView = ({
                     onDeleteStep={onDeleteStep}
                     onUpdateDelay={onUpdateDelay}
                     isLastInBranch={isLast}
+                    isInBranch={isInBranch}
                     renderChildren={(branch, parentId) => {
                         const branchSteps = getBranchSteps(branch, parentId);
                         if (branchSteps.length === 0) return null;
@@ -439,18 +441,9 @@ export const TreeView = ({
 
             {/* Add New button at the end of main flow (only if last step is not a condition) */}
             {mainSteps.length > 0 && mainSteps[mainSteps.length - 1].type !== "condition" && (
-                <>
-                    <div className="w-px h-3 border-l border-dashed border-gray-300" />
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full">
-                        <Clock className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-sm text-gray-700">3</span>
-                        <span className="text-sm text-gray-500">days</span>
-                    </div>
-                    <div className="w-px h-3 border-l border-dashed border-gray-300" />
-                    <AddNewButton
-                        onSelect={(type, subAction) => onAddStep(type, subAction, "end", null, null)}
-                    />
-                </>
+                <AddNewButton
+                    onSelect={(type, subAction) => onAddStep(type, subAction, "end", null, null)}
+                />
             )}
         </div>
     );
