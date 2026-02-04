@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import KnowledgeTab from "../../components/settings/KnowledgeTab";
 import PromptsTab from "../../components/settings/PromptsTab";
+import TemplateLibrary from "../../components/settings/TemplateLibrary";
+import TemplateContentEditor from "../../components/settings/TemplateContentEditor";
 import {
     ConnectingModal,
     IntegrationSuccessModal,
@@ -80,8 +82,7 @@ const IntegrationItem = ({ icon, name, status, onConnect, onRetry, disabled = fa
                     <button
                         onClick={onConnect}
                         disabled={disabled}
-                        className={`font-medium text-sm transition-colors ${disabled ? 'text-gray-400 cursor-not-allowed' : 'text-[#3C49F7] hover:text-[#2a35d4]'
-                            }`}
+                        className={`font-medium text-sm transition-colors ${disabled ? 'text-gray-400 cursor-not-allowed' : 'text-[#3C49F7] hover:text-[#2a35d4]'}`}
                     >
                         Connect
                     </button>
@@ -90,8 +91,7 @@ const IntegrationItem = ({ icon, name, status, onConnect, onRetry, disabled = fa
     };
 
     return (
-        <div className={`flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl ${disabled ? 'opacity-50' : ''
-            }`}>
+        <div className={`flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl ${disabled ? 'opacity-50' : ''}`}>
             <div className="flex items-center gap-3">
                 {icon}
                 <span className={`font-medium text-sm ${disabled ? 'text-gray-400' : 'text-gray-900'}`}>{name}</span>
@@ -143,9 +143,7 @@ const AddWebsiteModal = ({ isOpen, onClose, onAdd }) => {
             <div className="absolute inset-0 bg-black/50" onClick={onClose} />
             <div className="relative bg-white rounded-2xl w-full max-w-[450px] p-6 mx-4 shadow-xl">
                 <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">×</button>
-
                 <h2 className="text-xl font-semibold text-[#1a1a1a] mb-6">Add a Website</h2>
-
                 <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Website URL</label>
                     <div className="flex items-center">
@@ -159,12 +157,10 @@ const AddWebsiteModal = ({ isOpen, onClose, onAdd }) => {
                         />
                     </div>
                 </div>
-
                 <button
                     onClick={handleAdd}
                     disabled={!url.trim()}
-                    className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${url.trim() ? "bg-[#3C49F7] text-white hover:bg-[#2a35d4]" : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        }`}
+                    className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${url.trim() ? "bg-[#3C49F7] text-white hover:bg-[#2a35d4]" : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
                 >
                     Add Website
                 </button>
@@ -241,7 +237,6 @@ const ObjectionItem = ({ index, objection, onUpdate }) => (
                     rows={3}
                     className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-700 focus:outline-none focus:border-[#3C49F7] resize-none bg-[#F8F9FC] mb-4"
                 />
-
                 <label className="block text-base font-medium text-[#1a1a1a] mb-1">
                     How do you usually handle these objections? <span className="text-red-500">*</span>
                 </label>
@@ -406,46 +401,11 @@ const IntegrationHubContent = () => {
                 <section className="mb-8">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Connect your CRM</h2>
                     <div className="space-y-2">
-                        <IntegrationItem
-                            icon={<SalesforceIcon />}
-                            name="Connect your Salesforce account"
-                            status={integrations.salesforce}
-                            onConnect={() => handleConnect('salesforce', 'Salesforce')}
-                            onRetry={() => handleRetry('salesforce', 'Salesforce')}
-                            disabled={connectedCRM && connectedCRM[0] !== 'salesforce'}
-                        />
-                        <IntegrationItem
-                            icon={<PipedriveIcon />}
-                            name="Connect your Pipedrive account"
-                            status={integrations.pipedrive}
-                            onConnect={() => handleConnect('pipedrive', 'Pipedrive')}
-                            onRetry={() => handleRetry('pipedrive', 'Pipedrive')}
-                            disabled={connectedCRM && connectedCRM[0] !== 'pipedrive'}
-                        />
-                        <IntegrationItem
-                            icon={<HubspotIcon />}
-                            name="Connect your Hubspot account"
-                            status={integrations.hubspot}
-                            onConnect={() => handleConnect('hubspot', 'Hubspot')}
-                            onRetry={() => handleRetry('hubspot', 'Hubspot')}
-                            disabled={connectedCRM && connectedCRM[0] !== 'hubspot'}
-                        />
-                        <IntegrationItem
-                            icon={<ZohoIcon />}
-                            name="Connect your Zoho account"
-                            status={integrations.zoho}
-                            onConnect={() => handleConnect('zoho', 'Zoho')}
-                            onRetry={() => handleRetry('zoho', 'Zoho')}
-                            disabled={connectedCRM && connectedCRM[0] !== 'zoho'}
-                        />
-                        <IntegrationItem
-                            icon={<OdooIcon />}
-                            name="Connect your Odoo account"
-                            status={integrations.odoo}
-                            onConnect={() => handleConnect('odoo', 'Odoo')}
-                            onRetry={() => handleRetry('odoo', 'Odoo')}
-                            disabled={connectedCRM && connectedCRM[0] !== 'odoo'}
-                        />
+                        <IntegrationItem icon={<SalesforceIcon />} name="Connect your Salesforce account" status={integrations.salesforce} onConnect={() => handleConnect('salesforce', 'Salesforce')} onRetry={() => handleRetry('salesforce', 'Salesforce')} disabled={connectedCRM && connectedCRM[0] !== 'salesforce'} />
+                        <IntegrationItem icon={<PipedriveIcon />} name="Connect your Pipedrive account" status={integrations.pipedrive} onConnect={() => handleConnect('pipedrive', 'Pipedrive')} onRetry={() => handleRetry('pipedrive', 'Pipedrive')} disabled={connectedCRM && connectedCRM[0] !== 'pipedrive'} />
+                        <IntegrationItem icon={<HubspotIcon />} name="Connect your Hubspot account" status={integrations.hubspot} onConnect={() => handleConnect('hubspot', 'Hubspot')} onRetry={() => handleRetry('hubspot', 'Hubspot')} disabled={connectedCRM && connectedCRM[0] !== 'hubspot'} />
+                        <IntegrationItem icon={<ZohoIcon />} name="Connect your Zoho account" status={integrations.zoho} onConnect={() => handleConnect('zoho', 'Zoho')} onRetry={() => handleRetry('zoho', 'Zoho')} disabled={connectedCRM && connectedCRM[0] !== 'zoho'} />
+                        <IntegrationItem icon={<OdooIcon />} name="Connect your Odoo account" status={integrations.odoo} onConnect={() => handleConnect('odoo', 'Odoo')} onRetry={() => handleRetry('odoo', 'Odoo')} disabled={connectedCRM && connectedCRM[0] !== 'odoo'} />
                     </div>
                 </section>
 
@@ -453,27 +413,9 @@ const IntegrationHubContent = () => {
                 <section className="mb-8">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Connect your Email & Calendar</h2>
                     <div className="space-y-2">
-                        <IntegrationItem
-                            icon={<OutlookIcon />}
-                            name="Connect your Outlook account"
-                            status={integrations.outlook}
-                            onConnect={() => handleConnect('outlook', 'Outlook')}
-                            onRetry={() => handleRetry('outlook', 'Outlook')}
-                        />
-                        <IntegrationItem
-                            icon={<GoogleIcon />}
-                            name="Connect your Google account"
-                            status={integrations.gmail}
-                            onConnect={() => handleConnect('gmail', 'Gmail')}
-                            onRetry={() => handleRetry('gmail', 'Gmail')}
-                        />
-                        <IntegrationItem
-                            icon={<CalendlyIcon />}
-                            name="Connect your Calendly"
-                            status={integrations.calendly}
-                            onConnect={() => handleConnect('calendly', 'Calendly')}
-                            onRetry={() => handleRetry('calendly', 'Calendly')}
-                        />
+                        <IntegrationItem icon={<OutlookIcon />} name="Connect your Outlook account" status={integrations.outlook} onConnect={() => handleConnect('outlook', 'Outlook')} onRetry={() => handleRetry('outlook', 'Outlook')} />
+                        <IntegrationItem icon={<GoogleIcon />} name="Connect your Google account" status={integrations.gmail} onConnect={() => handleConnect('gmail', 'Gmail')} onRetry={() => handleRetry('gmail', 'Gmail')} />
+                        <IntegrationItem icon={<CalendlyIcon />} name="Connect your Calendly" status={integrations.calendly} onConnect={() => handleConnect('calendly', 'Calendly')} onRetry={() => handleRetry('calendly', 'Calendly')} />
                     </div>
                 </section>
 
@@ -481,27 +423,9 @@ const IntegrationHubContent = () => {
                 <section className="mb-8">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Connect your Social Media Account</h2>
                     <div className="space-y-2">
-                        <IntegrationItem
-                            icon={<LinkedInIcon />}
-                            name="Connect your LinkedIn account"
-                            status={integrations.linkedin}
-                            onConnect={() => handleConnect('linkedin', 'LinkedIn')}
-                            onRetry={() => handleRetry('linkedin', 'LinkedIn')}
-                        />
-                        <IntegrationItem
-                            icon={<WhatsAppIcon />}
-                            name="Connect your WhatsApp account"
-                            status={integrations.whatsapp}
-                            onConnect={() => handleConnect('whatsapp', 'WhatsApp')}
-                            onRetry={() => handleRetry('whatsapp', 'WhatsApp')}
-                        />
-                        <IntegrationItem
-                            icon={<TelegramIcon />}
-                            name="Connect your Telegram account"
-                            status={integrations.telegram}
-                            onConnect={() => handleConnect('telegram', 'Telegram')}
-                            onRetry={() => handleRetry('telegram', 'Telegram')}
-                        />
+                        <IntegrationItem icon={<LinkedInIcon />} name="Connect your LinkedIn account" status={integrations.linkedin} onConnect={() => handleConnect('linkedin', 'LinkedIn')} onRetry={() => handleRetry('linkedin', 'LinkedIn')} />
+                        <IntegrationItem icon={<WhatsAppIcon />} name="Connect your WhatsApp account" status={integrations.whatsapp} onConnect={() => handleConnect('whatsapp', 'WhatsApp')} onRetry={() => handleRetry('whatsapp', 'WhatsApp')} />
+                        <IntegrationItem icon={<TelegramIcon />} name="Connect your Telegram account" status={integrations.telegram} onConnect={() => handleConnect('telegram', 'Telegram')} onRetry={() => handleRetry('telegram', 'Telegram')} />
                     </div>
                 </section>
 
@@ -509,63 +433,18 @@ const IntegrationHubContent = () => {
                 <section className="mb-8">
                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Add your Phone number</h2>
                     <div className="space-y-2">
-                        <IntegrationItem
-                            icon={<TwilioIcon />}
-                            name="Add your Twilio Number"
-                            status={integrations.twilio}
-                            onConnect={() => setShowTwilioModal(true)}
-                            onRetry={() => handleRetry('twilio', 'Twilio')}
-                        />
-                        <IntegrationItem
-                            icon={<VonageIcon />}
-                            name="Add your Vonage Number"
-                            status={integrations.vonage}
-                            onConnect={() => setShowVonageModal(true)}
-                            onRetry={() => handleRetry('vonage', 'Vonage')}
-                        />
+                        <IntegrationItem icon={<TwilioIcon />} name="Add your Twilio Number" status={integrations.twilio} onConnect={() => setShowTwilioModal(true)} onRetry={() => handleRetry('twilio', 'Twilio')} />
+                        <IntegrationItem icon={<VonageIcon />} name="Add your Vonage Number" status={integrations.vonage} onConnect={() => setShowVonageModal(true)} onRetry={() => handleRetry('vonage', 'Vonage')} />
                     </div>
                 </section>
             </div>
 
             {/* Modals */}
-            <ConnectingModal
-                isOpen={showConnecting}
-                onClose={() => {
-                    setShowConnecting(false);
-                    integrationService.closePopup();
-                }}
-                title="Connecting and importing..."
-                message="We are connecting your account. Please complete the authorization in the popup window."
-            />
-
-            <IntegrationSuccessModal
-                isOpen={showSuccess}
-                onClose={handleSuccessClose}
-                title="Successfully Connected!"
-                message={successMessage}
-                buttonText="Done"
-            />
-
-            <IntegrationErrorModal
-                isOpen={showError}
-                onClose={handleErrorClose}
-                title="Failed to connect"
-                message={errorMessage}
-                buttonText="Retry Connecting"
-                onRetry={handleErrorRetry}
-            />
-
-            <TwilioNumberModal
-                isOpen={showTwilioModal}
-                onClose={() => setShowTwilioModal(false)}
-                onImport={handleTwilioImport}
-            />
-
-            <VonageNumberModal
-                isOpen={showVonageModal}
-                onClose={() => setShowVonageModal(false)}
-                onImport={handleVonageImport}
-            />
+            <ConnectingModal isOpen={showConnecting} onClose={() => { setShowConnecting(false); integrationService.closePopup(); }} title="Connecting and importing..." message="We are connecting your account. Please complete the authorization in the popup window." />
+            <IntegrationSuccessModal isOpen={showSuccess} onClose={handleSuccessClose} title="Successfully Connected!" message={successMessage} buttonText="Done" />
+            <IntegrationErrorModal isOpen={showError} onClose={handleErrorClose} title="Failed to connect" message={errorMessage} buttonText="Retry Connecting" onRetry={handleErrorRetry} />
+            <TwilioNumberModal isOpen={showTwilioModal} onClose={() => setShowTwilioModal(false)} onImport={handleTwilioImport} />
+            <VonageNumberModal isOpen={showVonageModal} onClose={() => setShowVonageModal(false)} onImport={handleVonageImport} />
         </div>
     );
 };
@@ -619,9 +498,7 @@ const TrainYourAI = () => {
         <div className="flex-1 overflow-y-auto">
             <div className="p-8">
                 <h1 className="text-[32px] font-normal text-[#1a1a1a] mb-2 font-['DM_Sans']">Train Your AI</h1>
-                <p className="text-gray-600 mb-6">
-                    Katei will craft your value proposition and ideal customer profile (ICP) based on your unique selling point.
-                </p>
+                <p className="text-gray-600 mb-6">Katei will craft your value proposition and ideal customer profile (ICP) based on your unique selling point.</p>
 
                 {/* Connected Website Section */}
                 <div className="bg-white rounded-xl p-4 mb-6 flex items-center justify-between border border-gray-100">
@@ -653,10 +530,7 @@ const TrainYourAI = () => {
                         <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
-                            className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === tab.key
-                                ? "bg-[#1a1a1a] text-white"
-                                : "bg-white text-[#1a1a1a] border border-gray-200 hover:bg-gray-50"
-                                }`}
+                            className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === tab.key ? "bg-[#1a1a1a] text-white" : "bg-white text-[#1a1a1a] border border-gray-200 hover:bg-gray-50"}`}
                         >
                             {tab.label}
                         </button>
@@ -708,12 +582,43 @@ const TrainYourAI = () => {
 // Main Settings Page Component
 const SettingsPage = ({ activeSettingsTab = "train" }) => {
     const [activeSection, setActiveSection] = useState(activeSettingsTab);
+    const [showContentEditor, setShowContentEditor] = useState(false);
+    const [editorData, setEditorData] = useState(null);
 
     // Sync with prop when it changes
     useEffect(() => {
         setActiveSection(activeSettingsTab);
+        // Reset editor state when tab changes
+        if (activeSettingsTab !== 'template') {
+            setShowContentEditor(false);
+            setEditorData(null);
+        }
     }, [activeSettingsTab]);
 
+    // Handle edit template from TemplateLibrary
+    const handleEditTemplate = (templateType, templateName, isNew, templateData) => {
+        setEditorData({ templateType, templateName, isNew, templateData });
+        setShowContentEditor(true);
+    };
+
+    // Handle back from editor
+    const handleBackFromEditor = () => {
+        setShowContentEditor(false);
+        setEditorData(null);
+    };
+
+    // If showing content editor for template
+    if (activeSection === "template" && showContentEditor && editorData) {
+        return (
+            <TemplateContentEditor
+                onBack={handleBackFromEditor}
+                templateType={editorData.templateType}
+                templateName={editorData.templateName}
+                isNew={editorData.isNew}
+                templateData={editorData.templateData}
+            />
+        );
+    }
 
     return (
         <div className="flex h-full overflow-hidden">
@@ -722,7 +627,7 @@ const SettingsPage = ({ activeSettingsTab = "train" }) => {
                 {activeSection === "integration" && <IntegrationHubContent />}
                 {activeSection === "callAgent" && <CallAgentSettings />}
                 {activeSection === "template" && (
-                    <div className="flex items-center justify-center h-full"><div className="text-center"><h2 className="text-2xl font-semibold text-gray-700">Template Library</h2><p className="text-gray-500 mt-2">Coming Soon</p></div></div>
+                    <TemplateLibrary onEditTemplate={handleEditTemplate} />
                 )}
             </div>
         </div>

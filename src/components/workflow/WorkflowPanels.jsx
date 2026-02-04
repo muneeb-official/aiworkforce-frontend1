@@ -1220,10 +1220,28 @@ export const TelegramPanel = ({ config, onChange, workflowName, workflowDate }) 
     };
 
     const handleSaveMessage = (messageName) => {
-        console.log("Saving message:", messageName, config);
-        setShowSaveModal(false);
-        setShowSavedModal(true);
+    const templateData = {
+        name: messageName,
+        content: config.message || config.body || config.callPrompt,
+        type: 'email', // or 'linkedin', 'whatsapp', etc.
+        createdAt: new Date().toISOString()
     };
+    
+    // Save to localStorage or backend
+    const existingTemplates = JSON.parse(localStorage.getItem('templates') || '{}');
+    const templateType = 'email'; // determine based on panel type
+    
+    if (!existingTemplates[templateType]) {
+        existingTemplates[templateType] = [];
+    }
+    
+    existingTemplates[templateType].push(templateData);
+    localStorage.setItem('templates', JSON.stringify(existingTemplates));
+    
+    console.log("Saving template:", messageName, config);
+    setShowSaveModal(false);
+    setShowSavedModal(true);
+};
 
     const handleAttachment = (file) => {
         setAttachments([...attachments, file]);
