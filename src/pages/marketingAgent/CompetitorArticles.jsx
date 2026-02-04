@@ -10,6 +10,11 @@ export default function CompetitorArticles({ onBack, searchParams }) {
   const [competitorArticles, setCompetitorArticles] = useState([]);
   const [error, setError] = useState(null);
   const [scrapedArticleIds, setScrapedArticleIds] = useState(new Set());
+  const [postId, setPostId] = useState(null);
+  const [isContinueLoading, setIsContinueLoading] = useState(false);
+  const [optimizationGuide, setOptimizationGuide] = useState(null);
+  const [competitorScores, setCompetitorScores] = useState(null);
+  const [targetKeyword, setTargetKeyword] = useState("");
   const isFetchingRef = useRef(false);
 
   useEffect(() => {
@@ -66,8 +71,9 @@ export default function CompetitorArticles({ onBack, searchParams }) {
       });
 
       console.log("Search response:", response.data);
-      const postId = response.data?.post_id;
-      console.log("Post ID:", postId);
+      const searchPostId = response.data?.post_id;
+      console.log("Post ID:", searchPostId);
+      setPostId(searchPostId);
       const organicResults =
         response.data?.search_result?.organic_results || [];
 
@@ -83,7 +89,7 @@ export default function CompetitorArticles({ onBack, searchParams }) {
 
       // Get all article links and scrape them
       const allLinks = formattedArticles.map((article) => article.url).filter(Boolean);
-      const scrapedLinks = await scrapeArticlesSequentially(postId, allLinks);
+      const scrapedLinks = await scrapeArticlesSequentially(searchPostId, allLinks);
 
       // Create a set of successfully scraped URLs
       const scrapedUrlSet = new Set(scrapedLinks);
@@ -123,6 +129,41 @@ export default function CompetitorArticles({ onBack, searchParams }) {
 
   const [showContentEditor, setShowContentEditor] = useState(false);
 
+  const handleContinue = async () => {
+    if (!postId || selectedArticles.length === 0) return;
+
+    try {
+      setIsContinueLoading(true);
+
+      // Call both APIs in parallel
+      const [optimizeResponse, scoresResponse] = await Promise.all([
+        api.get(`/seo/optimize/${postId}`),
+        api.get(`/seo/competitor-scores/${postId}`),
+      ]);
+
+      console.log("Optimize response:", optimizeResponse.data);
+      console.log("Competitor scores response:", scoresResponse.data);
+
+      // Store optimization guide data
+      if (optimizeResponse.data?.status === "success") {
+        setOptimizationGuide(optimizeResponse.data.optimization_guide);
+        setTargetKeyword(optimizeResponse.data.target_keyword);
+      }
+
+      // Store competitor scores data
+      if (scoresResponse.data?.status === "success") {
+        setCompetitorScores(scoresResponse.data.scores);
+      }
+
+      setShowContentEditor(true);
+    } catch (err) {
+      console.error("Error fetching optimization data:", err);
+      setError(err.response?.data?.error || "Failed to fetch optimization data");
+    } finally {
+      setIsContinueLoading(false);
+    }
+  };
+
   const calculateAverageWordCount = () => {
     if (selectedArticles.length === 0 || competitorArticles.length === 0)
       return 0;
@@ -142,6 +183,10 @@ export default function CompetitorArticles({ onBack, searchParams }) {
       <ContentEditor
         onBack={() => setShowContentEditor(false)}
         selectedArticles={selectedArticles}
+        optimizationGuide={optimizationGuide}
+        competitorScores={competitorScores}
+        targetKeyword={targetKeyword}
+        postId={postId}
       />
     );
   }
@@ -176,15 +221,15 @@ export default function CompetitorArticles({ onBack, searchParams }) {
             {/* Continue Button */}
             <div className="flex justify-end mb-6">
               <button
-                onClick={() => setShowContentEditor(true)}
-                disabled={selectedArticles.length === 0}
+                onClick={handleContinue}
+                disabled={selectedArticles.length === 0 || isContinueLoading}
                 className={`px-6 py-2 rounded-full text-sm ${
-                  selectedArticles.length > 0
+                  selectedArticles.length > 0 && !isContinueLoading
                     ? "bg-blue-700 text-white hover:bg-blue-800"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
               >
-                Continue with {selectedArticles.length} Articles
+                {isContinueLoading ? "Loading..." : `Continue with ${selectedArticles.length} Articles`}
               </button>
             </div>
           </div>
