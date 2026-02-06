@@ -218,10 +218,26 @@ const handleSubmit = async (e) => {
     console.log('SignUp result:', result);
     
     if (result.success) {
+      // Store organization_id and user_id from signup response
+      if (result.organization_id) {
+        localStorage.setItem('organization_id', result.organization_id);
+      }
+      if (result.user_id) {
+        localStorage.setItem('user_id', result.user_id);
+      }
+      
       // Auto-login after signup
       const loginResult = await login(formData.email, formData.password);
       
       if (loginResult.success) {
+        // Also store from login result if available
+        if (loginResult.organization_id) {
+          localStorage.setItem('organization_id', loginResult.organization_id);
+        }
+        if (loginResult.user_id) {
+          localStorage.setItem('user_id', loginResult.user_id);
+        }
+        
         // New user - backend returns service_ids: null
         // So hasSubscription will be false → go to choose plan
         navigate('/choose-plan');
