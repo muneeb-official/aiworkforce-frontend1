@@ -179,7 +179,7 @@ const SEOAddonCard = ({ addon, selectedPlanId, selectedSEOId, onSelectSEO, isPre
         onClick={() => onSelectSEO(addon)}
         className="flex items-center gap-1 text-[#4F46E5] font-semibold text-sm hover:text-[#4338CA] transition-colors"
       >
-        {hasSelectedSEO ? 'Switch Plan' : 'Buy This Plan'} <ArrowIcon />
+        {hasSelectedSEO ? 'Buy This Plan' : 'Switch Plan'} <ArrowIcon />
       </button>
     );
   };
