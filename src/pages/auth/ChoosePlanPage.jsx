@@ -98,7 +98,7 @@ const PlanCard = ({ plan, selectedAgent, onAgentChange, selectedPlanId, onSelect
         onClick={() => onSelectPlan(plan)}
         className="flex items-center gap-2 text-[#4F46E5] font-semibold hover:text-[#4338CA] transition-colors"
       >
-        {hasSelectedPlan ? 'Switch Plan' : 'Get This Plan'} <ArrowIcon />
+        {hasSelectedPlan ? 'Get this Plan' : 'Get This Plan'} <ArrowIcon />
       </button>
     );
   };
@@ -297,7 +297,7 @@ const ChoosePlanPage = () => {
           ))}
         </div>
 
-        <div className="mb-8">
+        {/* <div className="mb-8">
           <p className="text-gray-500 text-sm mb-1">Add-ons</p>
           <div className="flex flex-col md:flex-row md:items-start gap-6">
             <div className="md:min-w-[180px]">
@@ -319,7 +319,7 @@ const ChoosePlanPage = () => {
               ))}
             </div>
           </div>
-        </div>
+        </div> */}
       </main>
     </div>
   );
