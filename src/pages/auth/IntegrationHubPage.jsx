@@ -466,20 +466,14 @@ const IntegrationHubPage = () => {
 
   // Handle WhatsApp connection
   const handleWhatsAppConnect = async (action, data) => {
-    if (action === 'create') {
-      const result = await integrationService.createWhatsAppSession(data);
-      return result;
-    } else if (action === 'qrcode') {
-      const result = await integrationService.getWhatsAppQRCode(data.session_id);
-      return result;
-    } else if (action === 'status') {
-      const result = await integrationService.getWhatsAppSessionStatus(data.session_id);
-      if (result.status === 'connected' || result.status === 'ready') {
-        setIntegrations(prev => ({ ...prev, whatsapp: 'connected' }));
-      }
-      return result;
-    }
-  };
+  if (action === 'create') {
+    const result = await integrationService.createWhatsAppSession(data);
+    return result; // Should return { success, session_id, qr_code, qr_code_image, status, message }
+  } else if (action === 'qrcode') {
+    const result = await integrationService.getWhatsAppQRCode(data.session_id);
+    return result;
+  }
+};
 
   // Handle Twilio import
   const handleTwilioImport = async (formData) => {

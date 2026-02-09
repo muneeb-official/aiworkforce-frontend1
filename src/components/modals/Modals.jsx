@@ -1474,99 +1474,69 @@ export const OdooIntegrationModal = ({
 // TELEGRAM LOGIN MODAL
 // ============================================
 
-export const TelegramLoginModal = ({
-  isOpen,
-  onClose,
-  onConnect,
-  isLoading = false
-}) => {
-  const [step, setStep] = useState(1);
+// Telegram Login Modal - Two-step: Phone Number → Verification Code
+export const TelegramLoginModal = ({ isOpen, onClose, onConnect }) => {
+  const [step, setStep] = useState('phone'); // 'phone' or 'verify'
   const [phoneNumber, setPhoneNumber] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
-  const [password, setPassword] = useState('');
-  const [sessionData, setSessionData] = useState(null);
-  const [requires2FA, setRequires2FA] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleRequestCode = async () => {
-    if (!phoneNumber.trim()) return;
+  const handlePhoneSubmit = async () => {
+    if (!phoneNumber.trim()) {
+      setError('Please enter your phone number');
+      return;
+    }
 
-    setIsSubmitting(true);
+    setIsLoading(true);
     setError('');
 
     try {
       const result = await onConnect('request', { phone_number: phoneNumber });
-      setSessionData({
-        phone_code_hash: result.phone_code_hash,
-        session_string: result.session_string
-      });
-      setStep(2);
+      if (result.success) {
+        setStep('verify');
+      } else {
+        setError(result.error || 'Failed to send verification code');
+      }
     } catch (err) {
       setError(err.message || 'Failed to send verification code');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const handleVerifyCode = async () => {
-    if (!verificationCode.trim()) return;
+  const handleVerifySubmit = async () => {
+    if (!verificationCode.trim()) {
+      setError('Please enter the verification code');
+      return;
+    }
 
-    setIsSubmitting(true);
+    setIsLoading(true);
     setError('');
 
     try {
-      const result = await onConnect('verify', {
+      const result = await onConnect('verify', { 
         phone_number: phoneNumber,
-        code: verificationCode,
-        phone_code_hash: sessionData.phone_code_hash,
-        session_string: sessionData.session_string,
-        password: password || undefined
+        code: verificationCode 
       });
-
-      if (result.requires_2fa) {
-        setRequires2FA(true);
-        setStep(3);
-      } else {
+      if (result.success) {
         handleClose();
+      } else {
+        setError(result.error || 'Invalid verification code');
       }
     } catch (err) {
       setError(err.message || 'Failed to verify code');
     } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleVerify2FA = async () => {
-    if (!password.trim()) return;
-
-    setIsSubmitting(true);
-    setError('');
-
-    try {
-      await onConnect('verify', {
-        phone_number: phoneNumber,
-        code: verificationCode,
-        phone_code_hash: sessionData.phone_code_hash,
-        session_string: sessionData.session_string,
-        password: password
-      });
-      handleClose();
-    } catch (err) {
-      setError(err.message || 'Failed to verify 2FA password');
-    } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   const handleClose = () => {
-    setStep(1);
+    setStep('phone');
     setPhoneNumber('');
     setVerificationCode('');
-    setPassword('');
-    setSessionData(null);
-    setRequires2FA(false);
     setError('');
+    setIsLoading(false);
     onClose();
   };
 
@@ -1574,153 +1544,95 @@ export const TelegramLoginModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
-        <div className="flex items-start justify-between mb-1">
-          <h2 className="text-2xl font-bold text-gray-900">Connect Telegram</h2>
-          <button
-            onClick={handleClose}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+      <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 relative">
+        <button
+          onClick={handleClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
 
-        {/* Step Indicator */}
-        <div className="flex items-center gap-2 mb-6">
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`h-1 flex-1 rounded-full ${
-                s <= step ? 'bg-[#4F46E5]' : 'bg-gray-200'
-              }`}
-            />
-          ))}
-        </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
-
-        {/* Step 1: Phone Number */}
-        {step === 1 && (
+        {step === 'phone' ? (
           <>
-            <p className="text-gray-500 text-sm mb-6">
-              Enter your phone number to receive a verification code.
-            </p>
-            <div className="mb-6">
-              <label className="block text-base font-medium text-gray-900 mb-2">
-                Phone Number <span className="text-[#4F46E5]">*</span>
-              </label>
-              <input
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+1234567890"
-                className="w-full h-12 px-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-all"
-              />
-              <p className="text-xs text-gray-500 mt-2">Include country code (e.g., +1 for US)</p>
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-[#0088CC]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-[#0088CC]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Connect Telegram</h2>
+              <p className="text-gray-500 text-sm">Enter your phone number to receive a verification code</p>
             </div>
-            <button
-              onClick={handleRequestCode}
-              disabled={!phoneNumber.trim() || isSubmitting}
-              className={`w-full py-3 rounded-full font-medium transition-colors ${
-                phoneNumber.trim() && !isSubmitting
-                  ? 'bg-[#4F46E5] text-white hover:bg-[#4338CA]'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {isSubmitting ? 'Sending...' : 'Send Code'}
-            </button>
-          </>
-        )}
 
-        {/* Step 2: Verification Code */}
-        {step === 2 && !requires2FA && (
-          <>
-            <p className="text-gray-500 text-sm mb-6">
-              Enter the verification code sent to your Telegram app.
-            </p>
-            <div className="mb-6">
-              <label className="block text-base font-medium text-gray-900 mb-2">
-                Verification Code <span className="text-[#4F46E5]">*</span>
-              </label>
-              <input
-                type="text"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                placeholder="Enter code"
-                maxLength={6}
-                className="w-full h-12 px-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-all text-center text-2xl tracking-widest"
-              />
-            </div>
-            <div className="flex gap-3">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                <input
+                  type="text"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="+1234567890"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent"
+                />
+                <p className="text-xs text-gray-400 mt-1">Include country code (e.g., +1 for US)</p>
+              </div>
+
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+
               <button
-                onClick={() => setStep(1)}
-                className="flex-1 py-3 rounded-full font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={handlePhoneSubmit}
+                disabled={isLoading}
+                className="w-full py-3 bg-[#4F46E5] text-white font-medium rounded-xl hover:bg-[#4338CA] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Back
+                {isLoading ? 'Sending...' : 'Send Verification Code'}
               </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-[#0088CC]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-[#0088CC]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Enter Verification Code</h2>
+              <p className="text-gray-500 text-sm">We sent a code to {phoneNumber}</p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Verification Code</label>
+                <input
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  placeholder="Enter code"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent text-center text-lg tracking-widest"
+                />
+              </div>
+
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+
               <button
-                onClick={handleVerifyCode}
-                disabled={!verificationCode.trim() || isSubmitting}
-                className={`flex-1 py-3 rounded-full font-medium transition-colors ${
-                  verificationCode.trim() && !isSubmitting
-                    ? 'bg-[#4F46E5] text-white hover:bg-[#4338CA]'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                }`}
+                onClick={handleVerifySubmit}
+                disabled={isLoading}
+                className="w-full py-3 bg-[#4F46E5] text-white font-medium rounded-xl hover:bg-[#4338CA] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Verifying...' : 'Verify'}
+                {isLoading ? 'Verifying...' : 'Verify & Connect'}
+              </button>
+
+              <button
+                onClick={() => { setStep('phone'); setVerificationCode(''); setError(''); }}
+                className="w-full py-2 text-[#4F46E5] font-medium hover:text-[#4338CA] transition-colors"
+              >
+                Change Phone Number
               </button>
             </div>
           </>
         )}
-
-        {/* Step 3: 2FA Password */}
-        {step === 3 || requires2FA ? (
-          <>
-            <p className="text-gray-500 text-sm mb-6">
-              Your account has two-factor authentication enabled. Please enter your password.
-            </p>
-            <div className="mb-6">
-              <label className="block text-base font-medium text-gray-900 mb-2">
-                Password <span className="text-[#4F46E5]">*</span>
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your 2FA password"
-                className="w-full h-12 px-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-all"
-              />
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setRequires2FA(false);
-                  setStep(2);
-                }}
-                className="flex-1 py-3 rounded-full font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Back
-              </button>
-              <button
-                onClick={handleVerify2FA}
-                disabled={!password.trim() || isSubmitting}
-                className={`flex-1 py-3 rounded-full font-medium transition-colors ${
-                  password.trim() && !isSubmitting
-                    ? 'bg-[#4F46E5] text-white hover:bg-[#4338CA]'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                {isSubmitting ? 'Verifying...' : 'Connect'}
-              </button>
-            </div>
-          </>
-        ) : null}
       </div>
     </div>
   );
@@ -1730,251 +1642,238 @@ export const TelegramLoginModal = ({
 // WHATSAPP CONNECT MODAL
 // ============================================
 
-export const WhatsAppConnectModal = ({
-  isOpen,
-  onClose,
-  onConnect,
-  isLoading = false
-}) => {
-  const [step, setStep] = useState(1);
-  const [sessionName, setSessionName] = useState('');
+// Replace your WhatsAppConnectModal in Modals.jsx with this:
+
+export const WhatsAppConnectModal = ({ isOpen, onClose, onConnect }) => {
+  const [step, setStep] = useState('phone'); // 'phone' or 'qrcode'
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [qrCodeData, setQrCodeData] = useState(null);
-  const [sessionId, setSessionId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('pending');
-  const pollIntervalRef = useState(null);
+  
+  // QR Code response data
+  const [qrData, setQrData] = useState(null);
+  // { success, session_id, qr_code, qr_code_image, status, message }
 
-  const handleCreateSession = async () => {
-    if (!sessionName.trim()) return;
+  const handlePhoneSubmit = async () => {
+    if (!phoneNumber.trim()) {
+      setError('Please enter your phone number');
+      return;
+    }
 
-    setIsSubmitting(true);
+    setIsLoading(true);
     setError('');
 
     try {
-      const result = await onConnect('create', {
-        name: sessionName,
-        phone_number: phoneNumber || undefined,
-        account_protection: true,
-        log_messages: true,
-        webhook_enabled: false
-      });
-
-      setSessionId(result.id || result.session_id || result.wasender_session_id);
-      setStep(2);
-
-      // Fetch QR code
-      fetchQRCode(result.id || result.session_id || result.wasender_session_id);
-    } catch (err) {
-      setError(err.message || 'Failed to create session');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const fetchQRCode = async (sid) => {
-    try {
-      const qrResult = await onConnect('qrcode', { session_id: sid });
-      setQrCodeData(qrResult);
-
-      // Start polling for connection status
-      startStatusPolling(sid);
-    } catch (err) {
-      setError(err.message || 'Failed to get QR code');
-    }
-  };
-
-  const startStatusPolling = (sid) => {
-    if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current);
-    }
-
-    pollIntervalRef.current = setInterval(async () => {
-      try {
-        const status = await onConnect('status', { session_id: sid });
-        setConnectionStatus(status.status);
-
-        if (status.status === 'connected' || status.status === 'ready') {
-          clearInterval(pollIntervalRef.current);
-          setStep(3);
-        }
-      } catch (err) {
-        console.error('Status poll error:', err);
+      const result = await onConnect('create', { phone_number: phoneNumber });
+      
+      if (result.success || result.qr_code || result.qr_code_image) {
+        setQrData(result);
+        setStep('qrcode');
+      } else {
+        setError(result.error || result.message || 'Failed to connect WhatsApp');
       }
-    }, 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to connect WhatsApp');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRefreshQR = async () => {
+    if (!qrData?.session_id) return;
+    
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const result = await onConnect('qrcode', { session_id: qrData.session_id });
+      if (result.qr_code || result.qr_code_image) {
+        setQrData(prev => ({ ...prev, ...result }));
+      } else {
+        setError(result.error || 'Failed to refresh QR code');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to refresh QR code');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDone = () => {
+    // User confirms they've scanned the QR code
+    handleClose();
   };
 
   const handleClose = () => {
-    if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current);
-    }
-    setStep(1);
-    setSessionName('');
+    setStep('phone');
     setPhoneNumber('');
-    setQrCodeData(null);
-    setSessionId(null);
     setError('');
-    setConnectionStatus('pending');
+    setIsLoading(false);
+    setQrData(null);
     onClose();
   };
-
-  useEffect(() => {
-    return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-      }
-    };
-  }, []);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
-        <div className="flex items-start justify-between mb-1">
-          <h2 className="text-2xl font-bold text-gray-900">Connect WhatsApp</h2>
-          <button
-            onClick={handleClose}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+      <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 relative">
+        {/* Close Button */}
+        <button
+          onClick={handleClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
 
-        {/* Step Indicator */}
-        <div className="flex items-center gap-2 mb-6">
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`h-1 flex-1 rounded-full ${
-                s <= step ? 'bg-[#25D366]' : 'bg-gray-200'
-              }`}
-            />
-          ))}
-        </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
-
-        {/* Step 1: Session Details */}
-        {step === 1 && (
+        {/* Step 1: Phone Number Input */}
+        {step === 'phone' && (
           <>
-            <p className="text-gray-500 text-sm mb-6">
-              Create a new WhatsApp session to connect your account.
-            </p>
-            <div className="space-y-4 mb-6">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-[#25D366]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Connect WhatsApp</h2>
+              <p className="text-gray-500 text-sm">Enter your phone number to connect your WhatsApp account</p>
+            </div>
+
+            <div className="space-y-4">
               <div>
-                <label className="block text-base font-medium text-gray-900 mb-2">
-                  Session Name <span className="text-[#25D366]">*</span>
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                 <input
                   type="text"
-                  value={sessionName}
-                  onChange={(e) => setSessionName(e.target.value)}
-                  placeholder="My WhatsApp"
-                  className="w-full h-12 px-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#25D366] focus:ring-1 focus:ring-[#25D366] outline-none transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-base font-medium text-gray-900 mb-2">
-                  Phone Number <span className="text-gray-400">(optional)</span>
-                </label>
-                <input
-                  type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="+1234567890"
-                  className="w-full h-12 px-4 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:border-[#25D366] focus:ring-1 focus:ring-[#25D366] outline-none transition-all"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:border-transparent"
                 />
+                <p className="text-xs text-gray-400 mt-1">Include country code (e.g., +1 for US)</p>
               </div>
+
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+
+              <button
+                onClick={handlePhoneSubmit}
+                disabled={isLoading || !phoneNumber.trim()}
+                className="w-full py-3 bg-[#25D366] text-white font-medium rounded-xl hover:bg-[#128C7E] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? 'Connecting...' : 'Connect WhatsApp'}
+              </button>
             </div>
-            <button
-              onClick={handleCreateSession}
-              disabled={!sessionName.trim() || isSubmitting}
-              className={`w-full py-3 rounded-full font-medium transition-colors ${
-                sessionName.trim() && !isSubmitting
-                  ? 'bg-[#25D366] text-white hover:bg-[#128C7E]'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {isSubmitting ? 'Creating...' : 'Create Session'}
-            </button>
           </>
         )}
 
-        {/* Step 2: QR Code */}
-        {step === 2 && (
+        {/* Step 2: QR Code Display */}
+        {step === 'qrcode' && qrData && (
           <>
-            <p className="text-gray-500 text-sm mb-6">
-              Scan this QR code with your WhatsApp mobile app.
-            </p>
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-[#25D366]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Scan QR Code</h2>
+              <p className="text-gray-500 text-sm">Open WhatsApp on your phone and scan this QR code to connect</p>
+            </div>
+
+            {/* QR Code Display */}
             <div className="flex flex-col items-center mb-6">
-              {qrCodeData?.qr_code_image ? (
-                <img
-                  src={qrCodeData.qr_code_image}
-                  alt="WhatsApp QR Code"
-                  className="w-64 h-64 border rounded-lg"
-                />
-              ) : qrCodeData?.qr_code ? (
-                <div className="w-64 h-64 border rounded-lg flex items-center justify-center bg-gray-50">
-                  <p className="text-xs text-gray-500 text-center p-4 break-all">
-                    {qrCodeData.qr_code}
+              {qrData.qr_code_image ? (
+                <div className="p-4 bg-white border-2 border-gray-100 rounded-2xl shadow-sm">
+                  <img
+                    src={qrData.qr_code_image.startsWith('data:') ? qrData.qr_code_image : `data:image/png;base64,${qrData.qr_code_image}`}
+                    alt="WhatsApp QR Code"
+                    className="w-56 h-56 object-contain"
+                  />
+                </div>
+              ) : qrData.qr_code ? (
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl w-full">
+                  <p className="text-xs text-gray-600 text-center break-all font-mono">
+                    {qrData.qr_code}
                   </p>
                 </div>
               ) : (
-                <div className="w-64 h-64 border rounded-lg flex items-center justify-center bg-gray-50">
+                <div className="w-56 h-56 bg-gray-100 rounded-2xl flex items-center justify-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#25D366]"></div>
                 </div>
               )}
 
-              <div className="mt-4 flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  connectionStatus === 'connected' || connectionStatus === 'ready'
-                    ? 'bg-green-500'
-                    : connectionStatus === 'pending'
-                    ? 'bg-yellow-500 animate-pulse'
-                    : 'bg-gray-400'
-                }`} />
-                <span className="text-sm text-gray-600 capitalize">
-                  {connectionStatus === 'pending' ? 'Waiting for scan...' : connectionStatus}
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => fetchQRCode(sessionId)}
-              className="w-full py-3 rounded-full font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Refresh QR Code
-            </button>
-          </>
-        )}
+              {/* Status Badge */}
+              {qrData.status && (
+                <div className="mt-4 flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    qrData.status === 'connected' || qrData.status === 'ready' 
+                      ? 'bg-green-500' 
+                      : 'bg-yellow-500 animate-pulse'
+                  }`} />
+                  <span className="text-sm text-gray-600 capitalize">{qrData.status}</span>
+                </div>
+              )}
 
-        {/* Step 3: Success */}
-        {step === 3 && (
-          <>
-            <div className="flex flex-col items-center py-6">
-              <div className="w-20 h-20 bg-[#25D366]/10 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-10 h-10 text-[#25D366]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Connected!</h3>
-              <p className="text-gray-500 text-center">
-                Your WhatsApp account has been successfully connected.
-              </p>
+              {/* Message */}
+              {qrData.message && (
+                <p className="mt-2 text-sm text-gray-500 text-center">{qrData.message}</p>
+              )}
+
+              {/* Session ID */}
+              {qrData.session_id && (
+                <p className="mt-2 text-xs text-gray-400">Session ID: {qrData.session_id}</p>
+              )}
             </div>
-            <button
-              onClick={handleClose}
-              className="w-full py-3 rounded-full font-medium bg-[#25D366] text-white hover:bg-[#128C7E] transition-colors"
-            >
-              Done
-            </button>
+
+            {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={handleDone}
+                className="w-full py-3 bg-[#25D366] text-white font-medium rounded-xl hover:bg-[#128C7E] transition-colors"
+              >
+                Done
+              </button>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setStep('phone');
+                    setQrData(null);
+                    setError('');
+                  }}
+                  className="flex-1 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleRefreshQR}
+                  disabled={isLoading}
+                  className="flex-1 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  )}
+                  Refresh QR
+                </button>
+              </div>
+            </div>
+
+            {/* Instructions */}
+            <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+              <p className="text-xs text-gray-600 font-medium mb-2">How to scan:</p>
+              <ol className="text-xs text-gray-500 space-y-1">
+                <li>1. Open WhatsApp on your phone</li>
+                <li>2. Tap Menu or Settings → Linked Devices</li>
+                <li>3. Tap "Link a Device"</li>
+                <li>4. Point your phone at this screen to scan the QR code</li>
+              </ol>
+            </div>
           </>
         )}
       </div>

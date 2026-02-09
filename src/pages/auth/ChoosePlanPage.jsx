@@ -297,7 +297,7 @@ const ChoosePlanPage = () => {
           ))}
         </div>
 
-        {/* <div className="mb-8">
+        <div className="mb-8">
           <p className="text-gray-500 text-sm mb-1">Add-ons</p>
           <div className="flex flex-col md:flex-row md:items-start gap-6">
             <div className="md:min-w-[180px]">
@@ -319,7 +319,7 @@ const ChoosePlanPage = () => {
               ))}
             </div>
           </div>
-        </div> */}
+        </div>
       </main>
     </div>
   );

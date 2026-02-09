@@ -9,7 +9,9 @@ import {
     IntegrationSuccessModal,
     IntegrationErrorModal,
     TwilioNumberModal,
-    VonageNumberModal
+    VonageNumberModal,
+    TelegramLoginModal,      // ADD THIS
+    WhatsAppConnectModal,    
 } from '../../components/modals/Modals';
 import { integrationService } from '../../services/IntegrationService';
 import CallAgentSettings from "../../components/settings/CallAgentSettings";
@@ -275,6 +277,8 @@ const IntegrationHubContent = () => {
     const [showError, setShowError] = useState(false);
     const [showTwilioModal, setShowTwilioModal] = useState(false);
     const [showVonageModal, setShowVonageModal] = useState(false);
+    const [showTelegramModal, setShowTelegramModal] = useState(false);
+    const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
     const [currentIntegration, setCurrentIntegration] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -292,6 +296,23 @@ const IntegrationHubContent = () => {
         } catch (error) {
             console.log('Could not fetch integration statuses:', error);
         }
+
+        // Check messaging integrations
+        try {
+            const [telegramSessions, whatsappSessions] = await Promise.allSettled([
+                integrationService.getTelegramSessions(),
+                integrationService.getWhatsAppSessions()
+            ]);
+
+            if (telegramSessions.status === 'fulfilled' && telegramSessions.value?.length > 0) {
+                setIntegrations(prev => ({ ...prev, telegram: 'connected' }));
+            }
+            if (whatsappSessions.status === 'fulfilled' && whatsappSessions.value?.sessions?.length > 0) {
+                setIntegrations(prev => ({ ...prev, whatsapp: 'connected' }));
+            }
+        } catch (error) {
+            console.log('Could not fetch messaging statuses:', error);
+        }
     };
 
     const connectedCRM = Object.entries(integrations).find(
@@ -300,13 +321,24 @@ const IntegrationHubContent = () => {
     );
 
     const handleConnect = async (integrationKey, integrationName) => {
+        // Handle Telegram
+        if (integrationKey === 'telegram') {
+            setShowTelegramModal(true);
+            return;
+        }
+
+        // Handle WhatsApp
+        if (integrationKey === 'whatsapp') {
+            setShowWhatsAppModal(true);
+            return;
+        }
+
         setCurrentIntegration({ key: integrationKey, name: integrationName });
         setShowConnecting(true);
 
         try {
             let result;
 
-            // Use dedicated methods for Gmail and Outlook
             if (integrationKey === 'gmail') {
                 result = await integrationService.connectGmail();
             } else if (integrationKey === 'outlook') {
@@ -331,6 +363,40 @@ const IntegrationHubContent = () => {
             setIntegrations(prev => ({ ...prev, [integrationKey]: 'failed' }));
             setErrorMessage(error.message || 'Failed to connect. Please try again.');
             setShowError(true);
+        }
+    };
+
+    // Handle Telegram connection
+    const handleTelegramConnect = async (action, data) => {
+        if (action === 'request') {
+            const result = await integrationService.requestTelegramLogin(data.phone_number);
+            return result;
+        } else if (action === 'verify') {
+            const result = await integrationService.verifyTelegramLogin(data);
+            if (result.success && !result.requires_2fa) {
+                setShowTelegramModal(false);
+                setIntegrations(prev => ({ ...prev, telegram: 'connected' }));
+                setSuccessMessage('We have successfully connected your Telegram account.');
+                setShowSuccess(true);
+            }
+            return result;
+        }
+    };
+
+    // Handle WhatsApp connection
+    const handleWhatsAppConnect = async (action, data) => {
+        if (action === 'create') {
+            const result = await integrationService.createWhatsAppSession(data);
+            return result;
+        } else if (action === 'qrcode') {
+            const result = await integrationService.getWhatsAppQRCode(data.session_id);
+            return result;
+        } else if (action === 'status') {
+            const result = await integrationService.getWhatsAppSessionStatus(data.session_id);
+            if (result.status === 'connected' || result.status === 'ready') {
+                setIntegrations(prev => ({ ...prev, whatsapp: 'connected' }));
+            }
+            return result;
         }
     };
 
@@ -378,6 +444,10 @@ const IntegrationHubContent = () => {
             setShowTwilioModal(true);
         } else if (integrationKey === 'vonage') {
             setShowVonageModal(true);
+        } else if (integrationKey === 'telegram') {
+            setShowTelegramModal(true);
+        } else if (integrationKey === 'whatsapp') {
+            setShowWhatsAppModal(true);
         } else {
             handleConnect(integrationKey, integrationName);
         }
@@ -455,6 +525,8 @@ const IntegrationHubContent = () => {
             <IntegrationErrorModal isOpen={showError} onClose={handleErrorClose} title="Failed to connect" message={errorMessage} buttonText="Retry Connecting" onRetry={handleErrorRetry} />
             <TwilioNumberModal isOpen={showTwilioModal} onClose={() => setShowTwilioModal(false)} onImport={handleTwilioImport} />
             <VonageNumberModal isOpen={showVonageModal} onClose={() => setShowVonageModal(false)} onImport={handleVonageImport} />
+            <TelegramLoginModal isOpen={showTelegramModal} onClose={() => setShowTelegramModal(false)} onConnect={handleTelegramConnect} />
+            <WhatsAppConnectModal isOpen={showWhatsAppModal} onClose={() => setShowWhatsAppModal(false)} onConnect={handleWhatsAppConnect} />
         </div>
     );
 };
