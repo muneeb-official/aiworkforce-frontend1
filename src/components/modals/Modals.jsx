@@ -763,30 +763,58 @@ export const IntegrationSuccessModal = ({
 };
 
 // Generic Error/Failed Modal (Reusable)
-export const IntegrationErrorModal = ({ 
-  isOpen, 
-  onClose, 
-  title = "Failed to import",
-  message = "Please ensure that you have filled correct info.",
-  buttonText = "Retry Importing",
+// FIND AND REPLACE your IntegrationErrorModal in Modals.jsx with this EXACT code:
+
+export const IntegrationErrorModal = ({
+  isOpen,
+  onClose,
+  title = "Failed to connect",
+  message = "Please ensure that you have authorized the connection correctly.",
+  buttonText = "Retry Connecting",
   onRetry
 }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center shadow-xl">
-        <BadgeErrorIcon />
+      <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 text-center relative">
         
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">{title}</h2>
-        <p className="text-gray-500 mb-8">{message}</p>
-        
+        {/* ===== X CLOSE BUTTON - THIS IS WHAT WAS MISSING ===== */}
         <button
-          onClick={onRetry || onClose}
-          className="px-12 py-3 bg-[#4F46E5] text-white rounded-full font-medium hover:bg-[#4338CA] transition-colors"
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
         >
-          {buttonText}
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
+        {/* ===== END X CLOSE BUTTON ===== */}
+
+        {/* Error Icon */}
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+
+        <h2 className="text-2xl font-semibold text-gray-900 mb-2">{title}</h2>
+        <p className="text-gray-500 mb-6">{message}</p>
+
+        {/* Two buttons side by side */}
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 rounded-full font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onRetry}
+            className="flex-1 py-3 bg-[#4F46E5] text-white rounded-full font-medium hover:bg-[#4338CA] transition-colors"
+          >
+            {buttonText}
+          </button>
+        </div>
       </div>
     </div>
   );
