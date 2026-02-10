@@ -86,7 +86,7 @@ const SAMPLE_LEADS = [
 const SAMPLE_CAMPAIGNS = {
   inProgress: [],
   completed: [
-     {
+    {
       id: 2,
       name: "New Campaign",
       date: "20 Oct 2025, 12:37 PM",
@@ -456,11 +456,13 @@ const OrganicLeadBuilder = () => {
 
         {/* Pagination */}
         <div className="flex items-center justify-between mt-6">
-          <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white">
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
+          <div className="relative">
+            <select className="appearance-none border border-gray-300 rounded-lg px-3 py-1.5 pr-8 text-sm bg-white cursor-pointer focus:outline-none focus:border-[#3C49F7]">
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
           <div className="flex items-center gap-1">
             <button className="p-2 rounded hover:bg-gray-100">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

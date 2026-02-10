@@ -6,6 +6,7 @@ import CampaignManagerModals from "../../components/campaigns/CampaignManagerMod
 import WorkflowBuilder from "../../components/workflow/WorkflowBuilder";
 import api from "../../services/api";
 
+
 // Sample campaigns data
 const SAMPLE_CAMPAIGNS = {
   active: [
@@ -367,6 +368,8 @@ const CampaignManager = () => {
   // Store project IDs that have been converted to campaigns
   const [campaignProjectIds, setCampaignProjectIds] = useState(new Set());
 
+  // const [openProfileMenuId, setOpenProfileMenuId] = useState(null);
+
   // Fetch projects from API
   useEffect(() => {
     const fetchProjects = async () => {
@@ -489,22 +492,22 @@ const CampaignManager = () => {
               const progress =
                 campaign.total_leads > 0
                   ? Math.round(
-                      (campaign.leads_completed / campaign.total_leads) * 100,
-                    )
+                    (campaign.leads_completed / campaign.total_leads) * 100,
+                  )
                   : null;
 
               // Calculate engaged and replied percentages
               const engaged =
                 campaign.total_leads > 0
                   ? Math.round(
-                      (campaign.leads_in_progress / campaign.total_leads) * 100,
-                    )
+                    (campaign.leads_in_progress / campaign.total_leads) * 100,
+                  )
                   : null;
               const replied =
                 campaign.total_leads > 0
                   ? Math.round(
-                      (campaign.leads_responded / campaign.total_leads) * 100,
-                    )
+                    (campaign.leads_responded / campaign.total_leads) * 100,
+                  )
                   : null;
 
               return {
@@ -600,8 +603,8 @@ const CampaignManager = () => {
                 name: company.name || "Unknown",
                 email_domain: company.website
                   ? company.website
-                      .replace(/^https?:\/\//, "")
-                      .replace(/^www\./, "")
+                    .replace(/^https?:\/\//, "")
+                    .replace(/^www\./, "")
                   : "",
                 ticker_symbol: "",
                 industry_str:
@@ -826,22 +829,22 @@ const CampaignManager = () => {
           prev.map((l) =>
             l.id === id
               ? {
-                  ...l,
-                  isEnriched: true,
-                  phones:
-                    enrichedData.phones?.length > 0
-                      ? enrichedData.phones
-                      : l.phones,
-                  emails:
-                    enrichedData.emails?.length > 0
-                      ? enrichedData.emails
-                      : l.emails,
-                  website: enrichedData.website || l.website,
-                  past: enrichedData.pastPositions || l.past || [],
-                  education: enrichedData.education || l.education || [],
-                  avatar: enrichedData.avatar || l.avatar,
-                  linkedin: enrichedData.linkedin || l.linkedin,
-                }
+                ...l,
+                isEnriched: true,
+                phones:
+                  enrichedData.phones?.length > 0
+                    ? enrichedData.phones
+                    : l.phones,
+                emails:
+                  enrichedData.emails?.length > 0
+                    ? enrichedData.emails
+                    : l.emails,
+                website: enrichedData.website || l.website,
+                past: enrichedData.pastPositions || l.past || [],
+                education: enrichedData.education || l.education || [],
+                avatar: enrichedData.avatar || l.avatar,
+                linkedin: enrichedData.linkedin || l.linkedin,
+              }
               : l,
           ),
         );
@@ -876,7 +879,7 @@ const CampaignManager = () => {
     const totalLeads = isLoadingResults
       ? "..."
       : viewingCampaign.leadsGenerated ||
-        (isB2BProject ? b2bCompanies.length : leads.length);
+      (isB2BProject ? b2bCompanies.length : leads.length);
 
     return (
       <div className="flex-1 min-h-full p-8 overflow-y-auto bg-[#F8F9FC]">
@@ -958,38 +961,38 @@ const CampaignManager = () => {
               ).toLowerCase() === "b2b"
                 ? b2bCompanies.length > 0
                 : leads.length > 0) && (
-                <>
-                  <button className="text-[#3C49F7] text-sm font-medium hover:underline">
-                    Export{" "}
+                  <>
+                    <button className="text-[#3C49F7] text-sm font-medium hover:underline">
+                      Export{" "}
+                      {(
+                        viewingCampaign?.sourceType ||
+                        viewingCampaign?.source ||
+                        ""
+                      ).toLowerCase() === "b2b"
+                        ? "Companies"
+                        : "Leads"}
+                    </button>
                     {(
                       viewingCampaign?.sourceType ||
                       viewingCampaign?.source ||
                       ""
-                    ).toLowerCase() === "b2b"
-                      ? "Companies"
-                      : "Leads"}
-                  </button>
-                  {(
-                    viewingCampaign?.sourceType ||
-                    viewingCampaign?.source ||
-                    ""
-                  ).toLowerCase() !== "b2b" &&
-                    unenrichedCount > 0 && (
-                      <button
-                        onClick={handleEnrichAll}
-                        className="border border-[#3C49F7] text-[#3C49F7] px-4 py-2 rounded-full text-sm font-medium hover:bg-[#F2F2FF]"
-                      >
-                        Enrich All {unenrichedCount} Leads
-                      </button>
-                    )}
-                  <button
-                    onClick={() => handleStartWorkflow()}
-                    className="bg-[#3C49F7] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#2a35d4]"
-                  >
-                    Start Workflow Builder
-                  </button>
-                </>
-              )}
+                    ).toLowerCase() !== "b2b" &&
+                      unenrichedCount > 0 && (
+                        <button
+                          onClick={handleEnrichAll}
+                          className="border border-[#3C49F7] text-[#3C49F7] px-4 py-2 rounded-full text-sm font-medium hover:bg-[#F2F2FF]"
+                        >
+                          Enrich All {unenrichedCount} Leads
+                        </button>
+                      )}
+                    <button
+                      onClick={() => handleStartWorkflow()}
+                      className="bg-[#3C49F7] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#2a35d4]"
+                    >
+                      Start Workflow Builder
+                    </button>
+                  </>
+                )}
             </div>
           </div>
         )}
@@ -1024,7 +1027,7 @@ const CampaignManager = () => {
                   ""
                 ).toLowerCase() === "b2b"
                   ? selectedCompanies.length === b2bCompanies.length &&
-                    b2bCompanies.length > 0
+                  b2bCompanies.length > 0
                   : selectedLeads.length === leads.length && leads.length > 0
               }
             />
@@ -1042,10 +1045,10 @@ const CampaignManager = () => {
               </div>
             </div>
           ) : (
-              viewingCampaign?.sourceType ||
-              viewingCampaign?.source ||
-              ""
-            ).toLowerCase() === "b2b" ? (
+            viewingCampaign?.sourceType ||
+            viewingCampaign?.source ||
+            ""
+          ).toLowerCase() === "b2b" ? (
             // B2B Projects - Show CompanyCard with View Active Directors (exactly like B2B advanced search)
             b2bCompanies.length === 0 ? (
               <div className="flex items-center justify-center py-12">
@@ -1093,16 +1096,16 @@ const CampaignManager = () => {
                         ).map((director, index) => {
                           const address = director.address
                             ? [
-                                director.address.premises,
-                                director.address.address_line_1,
-                                director.address.address_line_2,
-                                director.address.locality,
-                                director.address.region,
-                                director.address.postal_code,
-                                director.address.country,
-                              ]
-                                .filter(Boolean)
-                                .join(", ")
+                              director.address.premises,
+                              director.address.address_line_1,
+                              director.address.address_line_2,
+                              director.address.locality,
+                              director.address.region,
+                              director.address.postal_code,
+                              director.address.country,
+                            ]
+                              .filter(Boolean)
+                              .join(", ")
                             : "N/A";
 
                           return {
@@ -1190,7 +1193,7 @@ const CampaignManager = () => {
                         if (
                           rocketReachResponse.data?.profile &&
                           Object.keys(rocketReachResponse.data.profile).length >
-                            0 &&
+                          0 &&
                           rocketReachResponse.data.profile.id
                         ) {
                           enrichedData = rocketReachResponse.data.profile;
@@ -1283,20 +1286,20 @@ const CampaignManager = () => {
                               directors: c.directors.map((d) =>
                                 d.id === directorId
                                   ? {
-                                      ...d,
-                                      isEnriched: true,
-                                      name:
-                                        enrichedData.name ||
-                                        enrichedData.full_name ||
-                                        d.name,
-                                      title: title,
-                                      email: emails[0] || d.email,
-                                      secondaryEmail: emails[1] || null,
-                                      phones:
-                                        phones.length > 0 ? phones : d.phones,
-                                      linkedin_url: linkedin_url,
-                                      enrichmentSource: dataSource,
-                                    }
+                                    ...d,
+                                    isEnriched: true,
+                                    name:
+                                      enrichedData.name ||
+                                      enrichedData.full_name ||
+                                      d.name,
+                                    title: title,
+                                    email: emails[0] || d.email,
+                                    secondaryEmail: emails[1] || null,
+                                    phones:
+                                      phones.length > 0 ? phones : d.phones,
+                                    linkedin_url: linkedin_url,
+                                    enrichmentSource: dataSource,
+                                  }
                                   : d,
                               ),
                             };
@@ -1315,33 +1318,36 @@ const CampaignManager = () => {
               ))
             )
           ) : // Non-B2B Projects - Show ProfileCard for leads
-          leads.length === 0 ? (
-            <div className="flex items-center justify-center py-12">
-              <p className="text-sm text-gray-500">No results found</p>
-            </div>
-          ) : (
-            leads.map((lead) => (
-              <ProfileCard
-                key={lead.id}
-                profile={lead}
-                isSelected={selectedLeads.includes(lead.id)}
-                onSelect={handleSelectLead}
-                onEnrich={handleEnrichLead}
-                onAddToProject={() => handleRemoveLead(lead)}
-              />
-            ))
-          )}
+            leads.length === 0 ? (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-sm text-gray-500">No results found</p>
+              </div>
+            ) : (
+              leads.map((lead) => (
+                <ProfileCard
+                  key={lead.id}
+                  profile={lead}
+                  isSelected={selectedLeads.includes(lead.id)}
+                  onSelect={handleSelectLead}
+                  onEnrich={handleEnrichLead}
+                  onRemoveFromCampaign={() => handleRemoveLead(lead)}
+                  context="campaign"
+                />
+              ))
+            )}
         </div>
 
         {/* Pagination */}
         {!isLoadingResults &&
           (isB2BProject ? b2bCompanies.length > 0 : leads.length > 0) && (
             <div className="flex items-center justify-between mt-6">
-              <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white">
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-              </select>
+              <div className="relative">
+                <select className="appearance-none border border-gray-300 rounded-lg px-3 py-1.5 pr-8 text-sm bg-white cursor-pointer focus:outline-none focus:border-[#3C49F7]">
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
               <div className="flex items-center gap-1">
                 <button className="p-2 rounded hover:bg-gray-100">
                   <svg
@@ -1430,21 +1436,19 @@ const CampaignManager = () => {
       <div className="flex items-center gap-2 mb-6">
         <button
           onClick={() => setActiveTab("active")}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            activeTab === "active"
-              ? "bg-[#1a1a1a] text-white"
-              : "bg-white text-[#1a1a1a] border border-gray-200"
-          }`}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === "active"
+            ? "bg-[#1a1a1a] text-white"
+            : "bg-white text-[#1a1a1a] border border-gray-200"
+            }`}
         >
           Active ({campaigns.active.length})
         </button>
         <button
           onClick={() => setActiveTab("completed")}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            activeTab === "completed"
-              ? "bg-[#1a1a1a] text-white"
-              : "bg-white text-[#1a1a1a] border border-gray-200"
-          }`}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === "completed"
+            ? "bg-[#1a1a1a] text-white"
+            : "bg-white text-[#1a1a1a] border border-gray-200"
+            }`}
         >
           Completed ({campaigns.completed.length})
         </button>
@@ -1604,11 +1608,10 @@ const CampaignManager = () => {
           currentCampaigns.map((campaign) => (
             <div
               key={campaign.id}
-              className={`grid grid-cols-12 gap-4 px-4 py-4 border-b border-gray-50 items-center ${
-                campaign.status === "done" || campaign.status === "draft"
-                  ? "hover:bg-gray-50 cursor-pointer"
-                  : ""
-              }`}
+              className={`grid grid-cols-12 gap-4 px-4 py-4 border-b border-gray-50 items-center ${campaign.status === "done" || campaign.status === "draft"
+                ? "hover:bg-gray-50 cursor-pointer"
+                : ""
+                }`}
               onClick={() => handleCampaignClick(campaign)}
             >
               <div className="col-span-1" onClick={(e) => e.stopPropagation()}>
@@ -1676,15 +1679,15 @@ const CampaignManager = () => {
                 <StatusBadge status={campaign.status} />
                 {(campaign.status === "done" ||
                   campaign.status === "draft") && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setViewingCampaign(campaign);
-                      setSelectedLeads([]);
-                    }}
-                    className="text-[#3C49F7] text-xs font-medium hover:underline"
-                  ></button>
-                )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewingCampaign(campaign);
+                        setSelectedLeads([]);
+                      }}
+                      className="text-[#3C49F7] text-xs font-medium hover:underline"
+                    ></button>
+                  )}
               </div>
               <div className="col-span-1">
                 <SourceBadge source={campaign.source} />

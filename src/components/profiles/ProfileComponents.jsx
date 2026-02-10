@@ -32,10 +32,12 @@ export const ProfileCard = ({
   onSelect,
   onEnrich,
   onAddToProject,
+  onRemoveFromCampaign,
+  context = "default", // "default" or "campaign"
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEnriching, setIsEnriching] = useState(false);
-
+  const [showMenu, setShowMenu] = useState(false);
   const handleEnrich = async () => {
     if (isEnriching || profile.isEnriched) return;
 
@@ -244,15 +246,47 @@ export const ProfileCard = ({
               </button>
             )} */}
 
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddToProject(profile);
-              }}
-              className="px-4 py-1.5 border-2 border-[#3C49F7] text-[#3C49F7] text-[14px] font-medium rounded-full"
-            >
-              Add to Project
-            </button>
+            {/* Add to Project OR 3-dot menu based on context */}
+            {context === "campaign" ? (
+              <div className="relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(!showMenu);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                  </svg>
+                </button>
+                
+                {showMenu && (
+                  <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20 min-w-[180px]">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                        onRemoveFromCampaign && onRemoveFromCampaign(profile);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      Remove from campaign
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddToProject(profile);
+                }}
+                className="px-4 py-1.5 border-2 border-[#3C49F7] text-[#3C49F7] text-[14px] font-medium rounded-full"
+              >
+                Add to Project
+              </button>
+            )}
           </div>
         </div>
       </div>
