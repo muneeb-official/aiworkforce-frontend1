@@ -1,5 +1,5 @@
 // components/workflow/WorkflowEditor.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, MoreVertical } from "lucide-react";
 import { TreeView } from "./WorkflowTreeView";
 import { ListView } from "./WorkflowListView";
@@ -22,11 +22,27 @@ const WorkflowEditor = ({
     onSave,
     onSaveAndContinue,
     initialSteps = [],
-    projectId
+    projectId,
+    showSettingsExternal = false,
+    onSettingsClose,
 }) => {
     // View state
     const [view, setView] = useState("list");
     const [showSettings, setShowSettings] = useState(false);
+
+    // Handle external settings trigger
+    useEffect(() => {
+        if (showSettingsExternal) {
+            setShowSettings(true);
+        }
+    }, [showSettingsExternal]);
+
+    // Notify parent when settings closes
+    useEffect(() => {
+        if (!showSettings && onSettingsClose) {
+            onSettingsClose();
+        }
+    }, [showSettings, onSettingsClose]);
 
     // Steps state
     const [steps, setSteps] = useState(initialSteps);
@@ -370,12 +386,12 @@ const WorkflowEditor = ({
                     </div>
 
                     {/* Save & Continue Button */}
-                    <button
+                    {/* <button
                         onClick={() => setShowSettings(true)}
                         className="px-5 py-2 bg-[#3C49F7] text-white rounded-lg text-sm font-medium hover:bg-[#2a35d4]"
                     >
                         Save & Continue
-                    </button>
+                    </button> */}
 
                     {/* More Options */}
                     <button className="p-2 hover:bg-gray-100 rounded-lg">

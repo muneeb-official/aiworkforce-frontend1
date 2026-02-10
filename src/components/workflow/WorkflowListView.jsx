@@ -67,7 +67,7 @@ const AddNewDropdown = ({ onSelect, onClose, hasCallOrCondition = false, onSwitc
                     </button>
 
                     {showLinkedInSubmenu && (
-                        <div className="absolute left-full top-0 ml-1 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[180px] py-1">
+                        <div className="absolute left-full top-0 ml-0 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[180px] py-1">
                             <button
                                 onClick={() => { onSelect("linkedin", "message"); onClose(); }}
                                 className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"

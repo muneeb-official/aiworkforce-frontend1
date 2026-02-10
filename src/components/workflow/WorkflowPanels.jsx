@@ -579,20 +579,14 @@ Founder, AI Lead`);
         </div>
 
         {/* Body */}
-        <div className="p-4 min-h-[350px]">
-          {config.body ? (
-            <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-              {renderContentWithTags(config.body)}
-            </div>
-          ) : (
-            <textarea
-              value={config.body || ""}
-              onChange={(e) => onChange("body", e.target.value)}
-              placeholder="Type your message content here."
-              className="w-full h-[330px] text-sm text-gray-700 bg-transparent outline-none resize-none placeholder:text-gray-400"
-            />
-          )}
-        </div>
+<div className="p-4 min-h-[350px]">
+  <textarea
+    value={config.body || ""}
+    onChange={(e) => onChange("body", e.target.value)}
+    placeholder="Type your message content here."
+    className="w-full h-[330px] text-sm text-gray-700 bg-transparent outline-none resize-none placeholder:text-gray-400"
+  />
+</div>
 
         {/* Attachments Display */}
         {attachments.length > 0 && (

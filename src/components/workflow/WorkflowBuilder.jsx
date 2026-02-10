@@ -212,6 +212,9 @@ const WorkflowBuilder = ({ isOpen, onClose, campaignName = "New Campaign", entry
     // Template selection state
     const [selectedTemplate, setSelectedTemplate] = useState(null);
 
+    const [triggerSettings, setTriggerSettings] = useState(false);
+    
+
     // Campaign name editing
     const [isEditingName, setIsEditingName] = useState(false);
     const [workflowName, setWorkflowName] = useState(campaignName);
@@ -542,30 +545,30 @@ const WorkflowBuilder = ({ isOpen, onClose, campaignName = "New Campaign", entry
                 ) : (
                     <div className="space-y-3">
                         {campaignsList.map((campaign) => (
-                        <button
-                            key={campaign.id}
-                            onClick={() => handleCampaignSelect(campaign)}
-                            className={`w-full flex items-center gap-3 p-4 rounded-lg border transition-all text-left
+                            <button
+                                key={campaign.id}
+                                onClick={() => handleCampaignSelect(campaign)}
+                                className={`w-full flex items-center gap-3 p-4 rounded-lg border transition-all text-left
                 ${selectedCampaign?.id === campaign.id
-                                    ? "border-[#3C49F7] bg-[#F8F9FC]"
-                                    : "border-gray-200 hover:border-gray-300"}`}
-                        >
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center
+                                        ? "border-[#3C49F7] bg-[#F8F9FC]"
+                                        : "border-gray-200 hover:border-gray-300"}`}
+                            >
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center
                 ${selectedCampaign?.id === campaign.id
-                                    ? "border-[#3C49F7] bg-[#3C49F7]"
-                                    : "border-gray-300"}`}>
-                                {selectedCampaign?.id === campaign.id && (
-                                    <div className="w-2 h-2 bg-white rounded-full" />
-                                )}
-                            </div>
-                            <div>
-                                <span className="font-medium text-[#1a1a1a] block">{campaign.name}</span>
-                                {campaign.createdAt && (
-                                    <span className="text-sm text-gray-500">Created on: {campaign.createdAt}</span>
-                                )}
-                            </div>
-                        </button>
-                    ))}
+                                        ? "border-[#3C49F7] bg-[#3C49F7]"
+                                        : "border-gray-300"}`}>
+                                    {selectedCampaign?.id === campaign.id && (
+                                        <div className="w-2 h-2 bg-white rounded-full" />
+                                    )}
+                                </div>
+                                <div>
+                                    <span className="font-medium text-[#1a1a1a] block">{campaign.name}</span>
+                                    {campaign.createdAt && (
+                                        <span className="text-sm text-gray-500">Created on: {campaign.createdAt}</span>
+                                    )}
+                                </div>
+                            </button>
+                        ))}
                     </div>
                 )}
 
@@ -863,68 +866,85 @@ const WorkflowBuilder = ({ isOpen, onClose, campaignName = "New Campaign", entry
     );
 
     // If on Step 3, render full-screen workflow editor
-    if (currentStep === 3) {
-        return (
-            <div className="fixed inset-0 bg-[#F8F9FC] z-50 overflow-hidden flex flex-col">
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={onClose}
-                            className="text-gray-600 hover:text-gray-900 font-medium"
-                        >
-                            Exit
-                        </button>
-                        <div className="flex items-center gap-2">
-                            {isEditingName ? (
-                                <input
-                                    type="text"
-                                    value={workflowName}
-                                    onChange={(e) => setWorkflowName(e.target.value)}
-                                    onBlur={() => setIsEditingName(false)}
-                                    onKeyDown={(e) => e.key === "Enter" && setIsEditingName(false)}
-                                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-[#1a1a1a] focus:outline-none focus:border-[#3C49F7]"
-                                    autoFocus
-                                />
-                            ) : (
-                                <button
-                                    onClick={() => setIsEditingName(true)}
-                                    className="flex items-center gap-2 text-[#1a1a1a]"
-                                >
-                                    <span>{workflowName} - {workflowDate}</span>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                    </svg>
-                                </button>
-                            )}
+ // If on Step 3, render full-screen workflow editor
+if (currentStep === 3) {
+    return (
+        <div className="fixed inset-0 bg-[#F8F9FC] z-50 overflow-hidden flex flex-col">
+            {/* Workflow Editor - it handles its own header via WorkflowSettings */}
+            <div className="flex-1 overflow-hidden flex flex-col">
+                {/* Header - Only show when NOT in settings */}
+                {!triggerSettings && (
+                    <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 flex-shrink-0">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={onClose}
+                                className="text-gray-600 hover:text-gray-900 font-medium"
+                            >
+                                Exit
+                            </button>
+                            <div className="flex items-center gap-2">
+                                {isEditingName ? (
+                                    <input
+                                        type="text"
+                                        value={workflowName}
+                                        onChange={(e) => setWorkflowName(e.target.value)}
+                                        onBlur={() => setIsEditingName(false)}
+                                        onKeyDown={(e) => e.key === "Enter" && setIsEditingName(false)}
+                                        className="px-3 py-1.5 border border-gray-300 rounded-lg text-[#1a1a1a] focus:outline-none focus:border-[#3C49F7]"
+                                        autoFocus
+                                    />
+                                ) : (
+                                    <button
+                                        onClick={() => setIsEditingName(true)}
+                                        className="flex items-center gap-2 text-[#1a1a1a]"
+                                    >
+                                        <span>{workflowName} - {workflowDate}</span>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Save Buttons */}
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleSave}
+                                className="px-5 py-2 border border-gray-200 rounded-full text-gray-700 font-medium hover:bg-gray-50"
+                            >
+                                Save
+                            </button>
+                            <button
+                                onClick={() => setTriggerSettings(true)}
+                                className="px-5 py-2 bg-[#3C49F7] text-white rounded-full font-medium hover:bg-[#2a35d4]"
+                            >
+                                Save & Continue
+                            </button>
                         </div>
                     </div>
+                )}
 
-                    {/* Save Buttons - No progress indicator */}
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={handleSave}
-                            className="px-5 py-2 border border-gray-200 rounded-full text-gray-700 font-medium hover:bg-gray-50"
-                        >
-                            Save
-                        </button>
-                        <button
-                            onClick={() => setShowSettings(true)}
-                            className="px-5 py-2 bg-[#3C49F7] text-white rounded-full font-medium hover:bg-[#2a35d4]"
-                        >
-                            Save & Continue
-                        </button>
-                    </div>
-                </div>
-
-                {/* Workflow Editor */}
                 <div className="flex-1 overflow-hidden">
-                    {renderWorkflowEditor()}
+                    <WorkflowEditor
+                        onBack={() => setCurrentStep(2)}
+                        workflowName={workflowName}
+                        workflowDate={workflowDate}
+                        onSave={handleSave}
+                        onSaveAndContinue={() => {
+                            console.log("Workflow saved successfully");
+                            onClose();
+                        }}
+                        initialSteps={getInitialSteps()}
+                        projectId={selectedCampaign?.id}
+                        showSettingsExternal={triggerSettings}
+                        onSettingsClose={() => setTriggerSettings(false)}
+                    />
                 </div>
             </div>
-        );
-    }
-
+        </div>
+    );
+}
     return (
         <div className="fixed inset-0 bg-[#F8F9FC] z-50 overflow-hidden flex flex-col">
             {/* Header */}
@@ -969,7 +989,9 @@ const WorkflowBuilder = ({ isOpen, onClose, campaignName = "New Campaign", entry
                         Save
                     </button>
                     <button
-                        onClick={() => setShowSettings(true)}
+                        onClick={() => {
+                            setTriggerSettings(true);
+                        }}
                         className="px-5 py-2 bg-[#3C49F7] text-white rounded-full font-medium hover:bg-[#2a35d4]"
                     >
                         Save & Continue
