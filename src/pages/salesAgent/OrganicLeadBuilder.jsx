@@ -1,5 +1,6 @@
 // pages/OrganicLeadBuilder.jsx
 import { useState } from "react";
+import axios from "axios";
 import SetAccountModal from "../../components/organic/SetAccountModal";
 import RemoveAccountModal from "../../components/organic/RemoveAccountModal";
 import BuildProfileModal from "../../components/organic/BuildProfileModal";
@@ -99,6 +100,41 @@ const SAMPLE_CAMPAIGNS = {
 };
 
 
+// Helper function to decode JWT token
+const decodeJWT = (token) => {
+  console.log('  → Decoding JWT...');
+  try {
+    const parts = token.split('.');
+    console.log('  → JWT has', parts.length, 'parts (expected: 3)');
+
+    if (parts.length !== 3) {
+      console.error('  ❌ Invalid JWT format: expected 3 parts, got', parts.length);
+      return null;
+    }
+
+    const base64Url = parts[1];
+    console.log('  → Base64Url payload (first 50 chars):', base64Url.substring(0, 50) + '...');
+
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+
+    console.log('  → Decoded JSON string (first 100 chars):', jsonPayload.substring(0, 100) + '...');
+
+    const parsed = JSON.parse(jsonPayload);
+    console.log('  ✅ Successfully decoded JWT');
+    return parsed;
+  } catch (error) {
+    console.error('  ❌ Error decoding JWT:', error.message);
+    console.error('  Error details:', error);
+    return null;
+  }
+};
+
 const OrganicLeadBuilder = () => {
   // Account State
   const [isConnected, setIsConnected] = useState(false);
@@ -132,9 +168,122 @@ const OrganicLeadBuilder = () => {
   const [workflowCampaign, setWorkflowCampaign] = useState(null);
 
   // Account Handlers
-  const handleConnectAccount = () => {
-    setIsEditMode(false);
-    setShowSetAccountModal(true);
+  const handleConnectAccount = async () => {
+    console.log('=== LinkedIn Connect Account Process Started ===');
+
+    try {
+      // Get token from localStorage
+      console.log('Step 1: Retrieving token from localStorage...');
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        console.error('❌ No token found in localStorage');
+        alert('Authentication token not found. Please login again.');
+        return;
+      }
+      console.log('✅ Token retrieved successfully');
+      console.log('Token (first 50 chars):', token.substring(0, 50) + '...');
+
+      // Decode JWT to extract user_id
+      console.log('\nStep 2: Decoding JWT token...');
+      const decodedToken = decodeJWT(token);
+      console.log('Decoded token payload:', decodedToken);
+
+      if (!decodedToken || !decodedToken.user_id) {
+        console.error('❌ Invalid token or user_id not found in decoded token');
+        console.log('Decoded token:', decodedToken);
+        alert('Invalid authentication token. Please login again.');
+        return;
+      }
+
+      const userId = decodedToken.user_id;
+      console.log('✅ User ID extracted:', userId);
+
+      // Get the base URL from environment variable
+      const linkedinBaseUrl = import.meta.env.VITE_API_ORGANIC_LEAD_BUILDER_LINKEDIN_URL;
+      console.log('\nStep 3: Environment configuration');
+      console.log('LinkedIn Base URL:', linkedinBaseUrl);
+
+      const fullUrl = `${linkedinBaseUrl}/linkedin/browser-stream/start`;
+      console.log('Full API endpoint:', fullUrl);
+      console.log('Headers to send:', { 'x-user-id': userId });
+
+      // Make POST request to the LinkedIn browser stream endpoint
+      console.log('\nStep 4: Making POST request...');
+      const response = await axios.post(
+        fullUrl,
+        {},
+        {
+          headers: {
+            'x-user-id': userId,
+          },
+        }
+      );
+
+      console.log('✅ Response received');
+      console.log('Response status:', response.status);
+      console.log('Response data:', response.data);
+
+      // Check if the response is successful
+      if (response.data && response.data.success && response.data.streamUrl) {
+        console.log('\nStep 5: Opening popup window...');
+        console.log('Stream URL:', response.data.streamUrl);
+        console.log('Stream Token:', response.data.streamToken);
+        console.log('WebSocket URL:', response.data.wsUrl);
+        console.log('Expires in seconds:', response.data.expiresInSeconds);
+
+        // Open popup window with the streamUrl
+        const popupWidth = 1200;
+        const popupHeight = 800;
+        const left = (window.screen.width - popupWidth) / 2;
+        const top = (window.screen.height - popupHeight) / 2;
+
+        const popup = window.open(
+          response.data.streamUrl,
+          'LinkedInBrowserStream',
+          `width=${popupWidth},height=${popupHeight},left=${left},top=${top},resizable=yes,scrollbars=yes`
+        );
+
+        if (popup) {
+          console.log('✅ Popup window opened successfully');
+          console.log('👀 Monitoring popup window for closure...');
+
+          // Monitor popup window closure
+          const checkPopupClosed = setInterval(() => {
+            if (popup.closed) {
+              console.log('🔄 Popup window closed - Refreshing page...');
+              clearInterval(checkPopupClosed);
+
+              // Refresh the current page
+              window.location.reload();
+            }
+          }, 500); // Check every 500ms
+
+          // Optional: Clean up interval after 1 hour (in case user keeps window open for long time)
+          setTimeout(() => {
+            clearInterval(checkPopupClosed);
+            console.log('⏱️ Stopped monitoring popup window (timeout after 1 hour)');
+          }, 3600000); // 1 hour
+        } else {
+          console.warn('⚠️ Popup may have been blocked by browser');
+        }
+
+        console.log('=== LinkedIn Connect Account Process Completed Successfully ===\n');
+      } else {
+        console.error('❌ Invalid response format');
+        console.log('Expected: { success: true, streamUrl: "..." }');
+        console.log('Received:', response.data);
+        alert('Failed to start LinkedIn browser stream. Invalid response.');
+      }
+    } catch (error) {
+      console.error('\n❌ Error connecting LinkedIn account');
+      console.error('Error type:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Full error object:', error);
+      alert('Failed to connect LinkedIn account. Please try again.');
+    }
   };
 
   const handleSaveAccount = (accountData) => {

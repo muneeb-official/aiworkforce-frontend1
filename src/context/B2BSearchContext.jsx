@@ -691,6 +691,17 @@ export const B2BSearchProvider = ({ children }) => {
     }
   }, [companies, currentPage, itemsPerPage, selectedCompanies]);
 
+  // Helper function to rearrange name (swap first and last name)
+  const rearrangeName = (fullName) => {
+    const parts = fullName.trim().split(' ');
+    if (parts.length < 2) return null; // Can't rearrange single name
+
+    // For "Jason BROMHAM" -> "BROMHAM Jason"
+    const lastName = parts[parts.length - 1];
+    const firstNames = parts.slice(0, -1).join(' ');
+    return `${lastName} ${firstNames}`;
+  };
+
   // Enrich director (costs 1 credit per director)
   const enrichDirector = useCallback(
     async (companyId, directorId) => {
@@ -719,7 +730,9 @@ export const B2BSearchProvider = ({ children }) => {
         // Step 1: Try RocketReach person-lookup first
         let enrichedData = null;
         let dataSource = null;
+        const rearrangedName = rearrangeName(director.name);
 
+        // Try RocketReach with original name
         try {
           const rocketReachBody = {
             query: {
@@ -748,17 +761,58 @@ export const B2BSearchProvider = ({ children }) => {
             console.log("✅ Using RocketReach data");
           } else {
             console.log(
-              "⚠️ RocketReach returned empty profile, trying ContactOut...",
+              "⚠️ RocketReach returned empty profile with original name",
             );
           }
         } catch (rocketReachError) {
           console.log(
-            "⚠️ RocketReach failed, trying ContactOut...",
+            "⚠️ RocketReach failed with original name:",
             rocketReachError.message,
           );
         }
 
-        // Step 2: If RocketReach failed or returned empty, try ContactOut
+        // Step 2: If RocketReach failed with original name, try with rearranged name
+        if (!enrichedData && rearrangedName) {
+          try {
+            const rocketReachBody = {
+              query: {
+                name: [rearrangedName],
+                current_employer: [company.name],
+              },
+            };
+
+            console.log("🔄 Retrying RocketReach API with rearranged name:", rocketReachBody);
+
+            const rocketReachResponse = await api.post(
+              "/b2b/v1/rocketreach/person-lookup",
+              rocketReachBody,
+            );
+
+            console.log("✅ RocketReach API Response (rearranged):", rocketReachResponse.data);
+
+            // Check if profile data exists and is not empty
+            if (
+              rocketReachResponse.data?.profile &&
+              Object.keys(rocketReachResponse.data.profile).length > 0 &&
+              rocketReachResponse.data.profile.id
+            ) {
+              enrichedData = rocketReachResponse.data.profile;
+              dataSource = "rocketreach";
+              console.log("✅ Using RocketReach data with rearranged name");
+            } else {
+              console.log(
+                "⚠️ RocketReach returned empty profile with rearranged name, trying ContactOut...",
+              );
+            }
+          } catch (rocketReachError) {
+            console.log(
+              "⚠️ RocketReach failed with rearranged name, trying ContactOut...",
+              rocketReachError.message,
+            );
+          }
+        }
+
+        // Step 3: If RocketReach failed, try ContactOut with original name
         if (!enrichedData) {
           try {
             const contactOutBody = {
@@ -784,16 +838,58 @@ export const B2BSearchProvider = ({ children }) => {
               dataSource = "contactout";
               console.log("✅ Using ContactOut data");
             } else {
-              console.error("❌ Both APIs returned empty data");
+              console.log("⚠️ ContactOut returned empty profile with original name");
+            }
+          } catch (contactOutError) {
+            console.log(
+              "⚠️ ContactOut failed with original name:",
+              contactOutError.message,
+            );
+          }
+        }
+
+        // Step 4: If ContactOut failed with original name, try with rearranged name
+        if (!enrichedData && rearrangedName) {
+          try {
+            const contactOutBody = {
+              full_name: rearrangedName,
+              company: [company.name],
+            };
+
+            console.log("🔄 Retrying ContactOut API with rearranged name:", contactOutBody);
+
+            const contactOutResponse = await api.post(
+              "/b2b/v1/contactout/enrich",
+              contactOutBody,
+            );
+
+            console.log("✅ ContactOut API Response (rearranged):", contactOutResponse.data);
+
+            // Check if profile data exists
+            if (
+              contactOutResponse.data?.profile &&
+              Object.keys(contactOutResponse.data.profile).length > 0
+            ) {
+              enrichedData = contactOutResponse.data.profile;
+              dataSource = "contactout";
+              console.log("✅ Using ContactOut data with rearranged name");
+            } else {
+              console.error("❌ All API attempts returned empty data");
               return false;
             }
           } catch (contactOutError) {
             console.error(
-              "❌ Both enrichment APIs failed:",
+              "❌ All enrichment API attempts failed:",
               contactOutError.message,
             );
             return false;
           }
+        }
+
+        // If still no data after all attempts
+        if (!enrichedData) {
+          console.error("❌ All enrichment attempts failed");
+          return false;
         }
 
         // Step 3: Transform and update director with enriched data
