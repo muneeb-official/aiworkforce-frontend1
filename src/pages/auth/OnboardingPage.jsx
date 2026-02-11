@@ -53,7 +53,6 @@ const questionnaireApi = {
   },
 
   submitAnswers: async (organizationId, answers) => {
-<<<<<<< HEAD
     console.log('Submitting answers:', {
       organizationId,
       answers,
@@ -73,26 +72,6 @@ const questionnaireApi = {
       const data = error.response?.data;
       throw new Error(data?.detail || data?.message || 'Failed to submit answers');
     }
-=======
-    const token = localStorage.getItem('token');
-    
-    const response = await fetch(`${API_BASE_URL}/platform/questionnaire/organizations/${organizationId}/answers`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ answers })
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.detail || data.message || 'Failed to submit answers');
-    }
-    
-    return data;
->>>>>>> 195100ff9e157893eaaa1ff946bcdc696ed56e11
   }
 };
 
