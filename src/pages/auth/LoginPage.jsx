@@ -83,57 +83,80 @@ const LoginPage = () => {
     }
   };
 
-// In LoginPage.jsx, replace your handleSubmit function with this:
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+    // Validate all fields
+    const emailError = validateEmail(formData.email);
+    const passwordError = validatePassword(formData.password);
 
-  // Validate all fields
-  const emailError = validateEmail(formData.email);
-  const passwordError = validatePassword(formData.password);
+    setErrors({ email: emailError, password: passwordError });
+    setTouched({ email: true, password: true });
 
-  setErrors({ email: emailError, password: passwordError });
-  setTouched({ email: true, password: true });
+    if (emailError || passwordError) return;
 
-  if (emailError || passwordError) return;
-
-  try {
-    const result = await login(formData.email, formData.password);
-    
-    if (result.success) {
-      console.log('Login success:', {
-        hasSubscription: result.hasSubscription,
-        serviceIds: result.serviceIds,
-        userId: result.user?.id
-      });
+    try {
+      const result = await login(formData.email, formData.password);
       
-      // Step 1: Check if user has subscription
-      if (!result.hasSubscription) {
-        // No subscription - go to choose plan
-        navigate('/choose-plan');
-        return;
-      }
-      
-      // Step 2: User has subscription - check if onboarding is complete
-      const userId = result.user?.id;
-      // Match the key used in OnboardingPage.jsx: `onboarding_${userId}`
-      const onboardingComplete = localStorage.getItem(`onboarding_${userId}`);
-      
-      if (onboardingComplete === 'true') {
-        // Fully onboarded user - go to dashboard
-        navigate('/dashboard');
+      if (result.success) {
+        console.log('[LoginPage] Login success:', {
+          hasSubscription: result.hasSubscription,
+          onboarding: result.onboarding,
+        });
+        
+        // Priority 1: Use redirect_to from onboarding response if available
+        if (result.onboarding?.redirect_to) {
+          console.log('[LoginPage] Redirecting to:', result.onboarding.redirect_to);
+          navigate(result.onboarding.redirect_to);
+          return;
+        }
+
+        // Priority 2: Check if onboarding is completed
+        if (result.onboarding?.is_onboarding_completed) {
+          console.log('[LoginPage] Onboarding complete, going to dashboard');
+          navigate('/dashboard');
+          return;
+        }
+
+        // Priority 3: Map current_step to route
+        if (result.onboarding?.current_step) {
+          const stepRouteMap = {
+            payment: '/choose-plan',
+            crm_integration: '/integration-hub',
+            email_integration: '/integration-hub',
+            phone_setup: '/integration-hub',
+            social_media: '/integration-hub',
+            onboarding_1: '/onboarding',
+            onboarding_2: '/onboarding',
+            onboarding_3: '/onboarding',
+            knowledge_base: '/onboarding',
+          };
+          
+          const route = stepRouteMap[result.onboarding.current_step];
+          if (route) {
+            console.log('[LoginPage] Redirecting to step:', result.onboarding.current_step, '→', route);
+            navigate(route);
+            return;
+          }
+        }
+
+        // Priority 4: Fallback based on subscription status
+        if (!result.hasSubscription) {
+          console.log('[LoginPage] No subscription, going to choose-plan');
+          navigate('/choose-plan');
+        } else {
+          console.log('[LoginPage] Has subscription, going to integration-hub');
+          navigate('/integration-hub');
+        }
       } else {
-        // Has subscription but hasn't completed onboarding - go to integration hub
-        navigate('/integration-hub');
+        setSubmitError(result.error || 'Login failed. Please try again.');
       }
-    } else {
-      setSubmitError(result.error || 'Login failed. Please try again.');
+    } catch (err) {
+      console.error('Login error:', err);
+      setSubmitError('An unexpected error occurred. Please try again.');
     }
-  } catch (err) {
-    console.error('Login error:', err);
-    setSubmitError('An unexpected error occurred. Please try again.');
-  }
-};
+  };
+
   const getInputClassName = (fieldName) => {
     const hasError = touched[fieldName] && errors[fieldName];
     return `w-full h-12 px-4 border rounded-lg outline-none transition-all duration-200
@@ -145,7 +168,7 @@ const handleSubmit = async (e) => {
 
   return (
     <AuthLayout>
-      <img src={LOGO} className='w-56 h-16'/>
+      <img src={LOGO} className='w-56 h-16' alt="Logo" />
 
       <h2 
         className="text-[32px] font-medium text-gray-900 mb-8"

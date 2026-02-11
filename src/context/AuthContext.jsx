@@ -11,48 +11,74 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   // Check for existing session on mount (handles page refresh/Stripe redirect)
-useEffect(() => {
-  const token = localStorage.getItem('token');
-  const savedUser = localStorage.getItem('user');
-  
-  if (token && savedUser) {
-    try {
-      const parsedUser = JSON.parse(savedUser);
-      setUser(parsedUser);
-      setIsAuthenticated(true);
-    } catch (e) {
-      console.error('Failed to parse saved user:', e);
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+    
+    if (token && savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch (e) {
+        console.error('Failed to parse saved user:', e);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
     }
-  }
-  setLoading(false);
-}, []);
+    setLoading(false);
+  }, []);
 
-const login = async (email, password) => {
-  const result = await authService.login(email, password);
-  
-  if (result.success) {
-    // Build user object with organization data included
-    const userData = {
-      ...result.user,
-      organization_id: result.organization?.id,
-      organization: result.organization,
-      seat_id: result.seatId,
-      service_ids: result.serviceIds,
-      hasSubscription: result.hasSubscription,
-    };
+  const login = async (email, password) => {
+    setLoading(true);
+    setError(null);
     
-    // Save token and user to localStorage
-    localStorage.setItem('token', result.token);
-    localStorage.setItem('user', JSON.stringify(userData));
-    
-    setUser(userData);
-    setIsAuthenticated(true);
-  }
-  
-  return result;
-};
+    try {
+      const result = await authService.login(email, password);
+      
+      console.log('[AuthContext] Login result:', result);
+      
+      if (result.success) {
+        // Build user object with all data from login response
+        const userData = {
+          ...result.user,
+          organization_id: result.organization?.id,
+          organization: result.organization,
+          seat_id: result.seatId,
+          service_ids: result.serviceIds,
+          hasSubscription: result.hasSubscription,
+        };
+        
+        // Save token and user to localStorage
+        localStorage.setItem('token', result.token);
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        // Also store organization_id separately for easy access
+        if (result.organization?.id) {
+          localStorage.setItem('organization_id', result.organization.id);
+        }
+        
+        setUser(userData);
+        setIsAuthenticated(true);
+        
+        // Return full result INCLUDING onboarding data for redirect logic
+        return {
+          success: true,
+          user: userData,
+          hasSubscription: result.hasSubscription,
+          serviceIds: result.serviceIds,
+          onboarding: result.onboarding, // IMPORTANT: This contains redirect_to, current_step, is_onboarding_completed
+        };
+      }
+      
+      return result;
+    } catch (err) {
+      setError(err.message || 'Login failed');
+      return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const signUp = async (userData) => {
     setLoading(true);
@@ -60,7 +86,14 @@ const login = async (email, password) => {
     try {
       const response = await authService.signUp(userData);
       if (response.success) {
-        return { success: true, message: response.message };
+        // Store organization_id and user_id from signup response
+        if (response.organization_id) {
+          localStorage.setItem('organization_id', response.organization_id);
+        }
+        if (response.user_id) {
+          localStorage.setItem('user_id', response.user_id);
+        }
+        return { success: true, message: response.message, ...response };
       }
       return response;
     } catch (err) {
@@ -80,10 +113,29 @@ const login = async (email, password) => {
       // Clear ALL user data from localStorage
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('organization_id');
+      localStorage.removeItem('user_id');
+      
+      // Clear any onboarding-related data
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith('onboarding_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
       
       setUser(null);
       setIsAuthenticated(false);
     }
+  };
+
+  // Update user data (useful after onboarding steps)
+  const updateUser = (updates) => {
+    const updatedUser = { ...user, ...updates };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
   const clearError = () => setError(null);
@@ -98,6 +150,7 @@ const login = async (email, password) => {
         login,
         signUp,
         logout,
+        updateUser,
         clearError,
       }}
     >

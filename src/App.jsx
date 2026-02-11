@@ -145,14 +145,17 @@
 
 // export default App;
 
-// App.jsx
-// App.jsx - Updated with Authentication
+
+// App.jsx 
 import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { SearchProvider } from "./context/SearchContext";
 import { B2BSearchProvider } from "./context/B2BSearchContext";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AuthProvider } from "./context/AuthContext";
+import { OnboardingProvider } from "./context/OnboardingContext";
 import { SubscriptionProvider } from "./services/SubscriptionContext";
+
+// Layout & Pages
 import Layout from "./components/layout/Layout";
 import DashboardContent from "./pages/DashboardContent";
 import SalesAgentContent from "./pages/salesAgent/SalesAgentContent";
@@ -162,72 +165,25 @@ import ChoosePlanPage from "./pages/auth/ChoosePlanPage";
 import CartPage from "./pages/auth/CartPage";
 import PaymentSuccessPage from "./pages/auth/PaymentSuccessPage";
 import PaymentCancelPage from "./pages/auth/PaymentCancelPage";
-import { useSearch } from "./context/SearchContext";
-import { useB2BSearch } from "./context/B2BSearchContext";
 import IntegrationHubPage from "./pages/auth/IntegrationHubPage";
 import WelcomePage from "./pages/auth/WelcomePage";
 import OnboardingPage from "./pages/auth/OnboardingPage";
 
-// App.jsx
-// import { useState } from "react";
-// import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-// import { SearchProvider } from "./context/SearchContext";
-// import { B2BSearchProvider } from "./context/B2BSearchContext";
-// import { AuthProvider, useAuth } from "./context/AuthContext";
-// import { SubscriptionProvider } from "./services/SubscriptionContext";
-// import Layout from "./components/layout/Layout";
-// import DashboardContent from "./pages/DashboardContent";
-// import SalesAgentContent from "./pages/salesAgent/SalesAgentContent";
-// import LoginPage from "./pages/auth/LoginPage";
-// import SignUpPage from "./pages/auth/SignUpPage";
-// import ChoosePlanPage from "./pages/auth/ChoosePlanPage";
-// import CartPage from "./pages/auth/CartPage";
-// import PaymentSuccessPage from "./pages/auth/PaymentSuccessPage";
-// import PaymentCancelPage from "./pages/auth/PaymentCancelPage";
-// import { useSearch } from "./context/SearchContext";
-// import { useB2BSearch } from "./context/B2BSearchContext";
-// import IntegrationHubPage from "./pages/auth/IntegrationHubPage";
-// import WelcomePage from "./pages/auth/WelcomePage";
-// import OnboardingPage from "./pages/auth/OnboardingPage";
+// Context hooks
+import { useSearch } from "./context/SearchContext";
+import { useB2BSearch } from "./context/B2BSearchContext";
 
-// Protected Route - Requires authentication
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+// Route Guards
+import {
+  PublicRoute,
+  PaymentFlowRoute,
+  IntegrationRoute,
+  OnboardingQuestionsRoute,
+  DashboardRoute,
+  ProtectedRoute,
+} from "./components/auth/OnboardingGuard";
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#4F46E5]"></div>
-          <p className="text-gray-500 text-sm">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
-};
-
-// Public Route - For login page only
-const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return children;
-  }
-
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return children;
-};
-
-// Main App Content
+// Main App Content (Dashboard with internal navigation)
 function AppContent() {
   const [activePage, setActivePage] = useState("analytics");
 
@@ -259,108 +215,133 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <SubscriptionProvider>
-        <Router>
-          <Routes>
-            {/* ==================== */}
-            {/* PUBLIC ROUTES        */}
-            {/* ==================== */}
-            
-            {/* Login - Redirects to dashboard if already authenticated */}
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <LoginPage />
-                </PublicRoute>
-              }
-            />
-            
-            {/* SignUp - No wrapper to allow redirect to choose-plan after auto-login */}
-            <Route path="/signup" element={<SignUpPage />} />
+      <OnboardingProvider>
+        <SubscriptionProvider>
+          <Router>
+            <Routes>
+              {/* ==================== */}
+              {/* PUBLIC ROUTES        */}
+              {/* ==================== */}
+              
+              {/* Login - Redirects to appropriate step if authenticated */}
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <LoginPage />
+                  </PublicRoute>
+                }
+              />
+              
+              {/* SignUp - Public access */}
+              <Route path="/signup" element={<SignUpPage />} />
 
-            {/* ==================== */}
-            {/* SUBSCRIPTION FLOW    */}
-            {/* SignUp → ChoosePlan → Cart → PaymentSuccess */}
-            {/* ==================== */}
-            
-            <Route
-              path="/choose-plan"
-              element={
-                <ProtectedRoute>
-                  <ChoosePlanPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/cart"
-              element={
-                <ProtectedRoute>
-                  <CartPage />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Payment callbacks - No protection (Stripe redirects here) */}
-            <Route path="/payment/success" element={<PaymentSuccessPage />} />
-            <Route path="/payment/cancel" element={<PaymentCancelPage />} />
+              {/* ==================== */}
+              {/* PAYMENT FLOW         */}
+              {/* Step: payment        */}
+              {/* ==================== */}
+              
+              <Route
+                path="/choose-plan"
+                element={
+                  <PaymentFlowRoute>
+                    <ChoosePlanPage />
+                  </PaymentFlowRoute>
+                }
+              />
+              <Route
+                path="/cart"
+                element={
+                  <PaymentFlowRoute>
+                    <CartPage />
+                  </PaymentFlowRoute>
+                }
+              />
+              
+              {/* Payment callbacks - Protected but allow during payment step */}
+              <Route
+                path="/payment/success"
+                element={
+                  <ProtectedRoute>
+                    <PaymentSuccessPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/payment/cancel"
+                element={
+                  <ProtectedRoute>
+                    <PaymentCancelPage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* ==================== */}
-            {/* ONBOARDING FLOW      */}
-            {/* PaymentSuccess → IntegrationHub → Onboarding → Dashboard */}
-            {/* ==================== */}
-            
-            <Route
-              path="/integration-hub"
-              element={
-                <ProtectedRoute>
-                  <IntegrationHubPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/onboarding"
-              element={
-                <ProtectedRoute>
-                  <OnboardingPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/welcome"
-              element={
-                <ProtectedRoute>
-                  <WelcomePage />
-                </ProtectedRoute>
-              }
-            />
+              {/* ==================== */}
+              {/* INTEGRATION HUB      */}
+              {/* Steps: crm_integration, email_integration, phone_setup, social_media */}
+              {/* ==================== */}
+              
+              <Route
+                path="/integration-hub"
+                element={
+                  <IntegrationRoute>
+                    <IntegrationHubPage />
+                  </IntegrationRoute>
+                }
+              />
 
-            {/* ==================== */}
-            {/* MAIN APP             */}
-            {/* ==================== */}
-            
-            <Route
-              path="/dashboard/*"
-              element={
-                <ProtectedRoute>
-                  <SearchProvider>
-                    <B2BSearchProvider>
-                      <AppContent />
-                    </B2BSearchProvider>
-                  </SearchProvider>
-                </ProtectedRoute>
-              }
-            />
+              {/* ==================== */}
+              {/* ONBOARDING QUESTIONS */}
+              {/* Steps: onboarding_1, onboarding_2, onboarding_3, knowledge_base */}
+              {/* ==================== */}
+              
+              <Route
+                path="/onboarding"
+                element={
+                  <OnboardingQuestionsRoute>
+                    <OnboardingPage />
+                  </OnboardingQuestionsRoute>
+                }
+              />
+              
+              {/* Welcome/Thank You Page - After onboarding complete */}
+              <Route
+                path="/welcome"
+                element={
+                  <ProtectedRoute>
+                    <WelcomePage />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* ==================== */}
-            {/* DEFAULT REDIRECTS    */}
-            {/* ==================== */}
-            
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </Router>
-      </SubscriptionProvider>
+              {/* ==================== */}
+              {/* MAIN DASHBOARD       */}
+              {/* Requires: is_onboarding_completed = true */}
+              {/* ==================== */}
+              
+              <Route
+                path="/dashboard/*"
+                element={
+                  <DashboardRoute>
+                    <SearchProvider>
+                      <B2BSearchProvider>
+                        <AppContent />
+                      </B2BSearchProvider>
+                    </SearchProvider>
+                  </DashboardRoute>
+                }
+              />
+
+              {/* ==================== */}
+              {/* DEFAULT REDIRECTS    */}
+              {/* ==================== */}
+              
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </Router>
+        </SubscriptionProvider>
+      </OnboardingProvider>
     </AuthProvider>
   );
 }

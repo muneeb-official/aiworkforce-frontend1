@@ -40,6 +40,10 @@ export const authService = {
         data.service_ids && data.service_ids.length > 0
       );
 
+      // Log the full response for debugging
+      console.log('[AuthService] Login response:', data);
+      console.log('[AuthService] Onboarding data:', data.onboarding);
+
       return {
         success: true,
         user: data.user,
@@ -49,6 +53,8 @@ export const authService = {
         serviceIds: data.service_ids,
         serviceDetails: data.service_details,
         hasSubscription: hasSubscription,
+        // FIX: Include onboarding data from API response
+        onboarding: data.onboarding || null,
       };
     } catch (error) {
       console.error("Login error:", error);

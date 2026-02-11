@@ -13,6 +13,7 @@ import {
 } from '../../components/modals/Modals';
 import Header from '../../components/layout/Header';
 import { integrationService } from '../../services/IntegrationService';
+import { useOnboarding } from '../../context/OnboardingContext';
 import backgroundImage from '../../assets/Background.png';
 import Sales from '../../assets/IntegrationIcons/salesforce.png';
 import pipe from '../../assets/IntegrationIcons/Pipedrive.png';
@@ -103,6 +104,7 @@ const IntegrationItem = ({ icon, name, status, onConnect, onRetry, disabled = fa
 // Main Integration Hub Page
 const IntegrationHubPage = () => {
   const navigate = useNavigate();
+  const { completeStep, skipAllIntegrations } = useOnboarding();
 
   const [integrations, setIntegrations] = useState({
     salesforce: 'not_connected',
@@ -458,6 +460,7 @@ const IntegrationHubPage = () => {
         setShowTelegramModal(false);
         setIntegrations(prev => ({ ...prev, telegram: 'connected' }));
         setSuccessMessage('We have successfully connected your Telegram account.');
+        setCurrentIntegration({ key: 'telegram', name: 'Telegram' });
         setShowSuccess(true);
       }
       return result;
@@ -466,14 +469,14 @@ const IntegrationHubPage = () => {
 
   // Handle WhatsApp connection
   const handleWhatsAppConnect = async (action, data) => {
-  if (action === 'create') {
-    const result = await integrationService.createWhatsAppSession(data);
-    return result; // Should return { success, session_id, qr_code, qr_code_image, status, message }
-  } else if (action === 'qrcode') {
-    const result = await integrationService.getWhatsAppQRCode(data.session_id);
-    return result;
-  }
-};
+    if (action === 'create') {
+      const result = await integrationService.createWhatsAppSession(data);
+      return result;
+    } else if (action === 'qrcode') {
+      const result = await integrationService.getWhatsAppQRCode(data.session_id);
+      return result;
+    }
+  };
 
   // Handle Twilio import
   const handleTwilioImport = async (formData) => {
@@ -542,8 +545,42 @@ const IntegrationHubPage = () => {
     }
   };
 
-  const handleSuccessClose = () => {
+  // Updated: Mark integration step as complete on success
+  const handleSuccessClose = async () => {
     setShowSuccess(false);
+    
+    // Mark the appropriate integration step as complete
+    if (currentIntegration) {
+      const stepMapping = {
+        salesforce: 'crm_integration',
+        pipedrive: 'crm_integration',
+        hubspot: 'crm_integration',
+        zoho: 'crm_integration',
+        odoo: 'crm_integration',
+        gmail: 'email_integration',
+        outlook: 'email_integration',
+        calendly: 'email_integration',
+        linkedin: 'social_media',
+        facebook: 'social_media',
+        whatsapp: 'social_media',
+        telegram: 'social_media',
+        twilio: 'phone_setup',
+        vonage: 'phone_setup',
+      };
+
+      const stepName = stepMapping[currentIntegration.key];
+      if (stepName) {
+        try {
+          await completeStep(stepName, {
+            integration_type: currentIntegration.key,
+            connected_at: new Date().toISOString(),
+          });
+        } catch (err) {
+          console.error('Failed to mark integration step complete:', err);
+        }
+      }
+    }
+    
     setCurrentIntegration(null);
     setSuccessMessage('');
   };
@@ -558,6 +595,25 @@ const IntegrationHubPage = () => {
   const handleErrorClose = () => {
     setShowError(false);
     setErrorMessage('');
+  };
+
+  // Updated: Skip all integrations and continue
+  const handleSkipIntegrations = async () => {
+    try {
+      await skipAllIntegrations();
+      navigate('/onboarding');
+    } catch (err) {
+      console.error('Failed to skip integrations:', err);
+      navigate('/onboarding');
+    }
+  };
+
+  // Updated: Continue to onboarding
+  const handleContinueToOnboarding = async () => {
+    if (!hasAnyConnection) {
+      await skipAllIntegrations();
+    }
+    navigate('/onboarding');
   };
 
   return (
@@ -581,7 +637,7 @@ const IntegrationHubPage = () => {
             </button>
           ) : (
             <button
-              onClick={() => navigate('/onboarding')}
+              onClick={handleSkipIntegrations}
               className="text-[#4F46E5] font-medium hover:text-[#4338CA] transition-colors"
             >
               Skip For Now
@@ -722,7 +778,7 @@ const IntegrationHubPage = () => {
 
         <div className="flex justify-center mt-8">
           <button
-            onClick={() => navigate('/onboarding')}
+            onClick={handleContinueToOnboarding}
             className="px-8 py-3 bg-[#4F46E5] text-white font-medium rounded-xl hover:bg-[#4338CA] transition-colors"
           >
             Continue to Onboarding

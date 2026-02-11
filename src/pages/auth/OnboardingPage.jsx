@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useOnboarding } from '../../context/OnboardingContext';
+import { ONBOARDING_SUBSTEPS } from '../../services/onboardingService';
 import Header from '../../components/layout/Header';
 import { X, Upload, Trash2, Send, Check, Loader2 } from 'lucide-react';
 import step1Image from '../../assets/step-1.png';
@@ -12,7 +14,6 @@ import { knowledgeBaseService } from '../../services/KnowledgeBaseService';
 
 const API_BASE_URL = 'http://localhost:8001';
 
-// Step configuration - maps question_keys to steps
 // Step configuration - maps question_keys to steps
 const STEP_CONFIG = [
   { 
@@ -40,14 +41,6 @@ const STEP_CONFIG = [
 const stepImages = { 0: step1Image, 1: step2Image, 2: step3Image, 3: null };
 const stepBgColors = { 0: 'bg-[#E8E4F3]', 1: 'bg-[#FDF4E7]', 2: 'bg-[#FBC847]', 3: 'bg-[#F8F9FC]' };
 
-// Get questions for objections step
-const getStepQuestionsForObjections = () => {
-  const stepConfig = STEP_CONFIG[2]; // Objections step
-  return questions
-    .filter(q => stepConfig.keys.includes(q.question_key))
-    .sort((a, b) => a.display_order - b.display_order);
-};
-
 // API Service
 const api = {
   getQuestions: async () => {
@@ -66,33 +59,25 @@ const api = {
   },
 
   submitAnswers: async (organizationId, answers) => {
-  const token = localStorage.getItem('token');
-  
-  console.log('Submitting answers:', {
-    organizationId,
-    answers,
-    url: `${API_BASE_URL}/platform/questionnaire/organizations/${organizationId}/answers`
-  });
-  
-  const response = await fetch(`${API_BASE_URL}/platform/questionnaire/organizations/${organizationId}/answers`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({ answers })
-  });
-  
-  const data = await response.json();
-  console.log('API Response:', response.status, data);
-  
-  if (!response.ok) {
-    console.error('Submit failed:', data);
-    throw new Error(data.detail || data.message || 'Failed to submit answers');
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`${API_BASE_URL}/platform/questionnaire/organizations/${organizationId}/answers`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ answers })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.detail || data.message || 'Failed to submit answers');
+    }
+    
+    return data;
   }
-  
-  return data;
-}
 };
 
 // Progress Indicator Component
@@ -133,7 +118,6 @@ const FormField = ({ question, value, onChange }) => (
 
 // Objection Card Component
 const ObjectionCard = ({ index, questions, data, onChange, onRemove, canRemove }) => {
-  // Try to find questions by question_key
   const objectionQ = questions.find(q => 
     q.question_key === 'objection' || 
     q.question_key === 'objections' ||
@@ -156,7 +140,6 @@ const ObjectionCard = ({ index, questions, data, onChange, onRemove, canRemove }
         )}
       </div>
       
-      {/* Objection Field - Always show with fallback */}
       <div className="mb-4">
         <label className="block text-base font-medium text-gray-900 mb-1">
           {objectionQ?.question_text || "What objections do you frequently hear?"} <span className="text-red-500">*</span>
@@ -173,7 +156,6 @@ const ObjectionCard = ({ index, questions, data, onChange, onRemove, canRemove }
         />
       </div>
 
-      {/* Handle Field - Always show with fallback */}
       <div>
         <label className="block text-base font-medium text-gray-900 mb-1">
           {handleQ?.question_text || "How do you usually handle these objections?"} <span className="text-red-500">*</span>
@@ -404,7 +386,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, itemName, isDeleting }
   );
 };
 
-// Knowledge Files Step Component - Main Component
+// Knowledge Files Step Component
 const KnowledgeFilesStep = () => {
   const [files, setFiles] = useState([]);
   const [urls, setUrls] = useState([]);
@@ -412,7 +394,6 @@ const KnowledgeFilesStep = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Modal states
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [showFileModal, setShowFileModal] = useState(false);
   const [showURLModal, setShowURLModal] = useState(false);
@@ -590,11 +571,8 @@ const ThankYouScreen = ({ onStart }) => (
       <button onClick={onStart} className="w-fit px-8 py-3 bg-[#4F46E5] text-white font-medium rounded-full hover:bg-[#4338CA] transition-colors">Start</button>
     </div>
     <div className="hidden lg:flex w-1/2 items-center justify-center p-0">
-      {/* <div className="text-center"> */}
-        {/* <h2 className="text-4xl lg:text-5xl font-bold text-white mb-8">Thank you for choosing AI Workforce</h2> */}
-        <div className="bg-white rounded-2xl p-0 w-full mx-auto"><img src={thankYouImage} alt="Thank you" className="w-full h-auto" onError={(e) => { e.target.style.display = 'none'; }} /></div>
-      </div>
-    {/* </div> */}
+      <div className="bg-white rounded-2xl p-0 w-full mx-auto"><img src={thankYouImage} alt="Thank you" className="w-full h-auto" onError={(e) => { e.target.style.display = 'none'; }} /></div>
+    </div>
   </div>
 );
 
@@ -602,71 +580,66 @@ const ThankYouScreen = ({ onStart }) => (
 const OnboardingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { 
+    completeStep, 
+    getCurrentOnboardingSubstep,
+    fetchStatus,
+  } = useOnboarding();
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [showThankYou, setShowThankYou] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Questions from API
   const [questions, setQuestions] = useState([]);
-
-  // Form answers - keyed by question_id
   const [answers, setAnswers] = useState({});
-
-  // For dynamic objections step
   const [objections, setObjections] = useState([{ objection: '', handle: '', objectionId: null, handleId: null }]);
-
-  // Knowledge files (frontend only for now)
   const [knowledgeFiles, setKnowledgeFiles] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
 
-// Get organization_id from user context
-const getOrganizationId = () => {
-  // Try from user context first (this is the proper way)
-  if (user?.organization_id) return user.organization_id;
-  if (user?.organization?.id) return user.organization.id;
-  
-  // Fallback: Try from localStorage user data
-  const savedUser = localStorage.getItem('user');
-  if (savedUser) {
-    try {
-      const parsed = JSON.parse(savedUser);
-      if (parsed.organization_id) return parsed.organization_id;
-      if (parsed.organization?.id) return parsed.organization.id;
-    } catch (e) { 
-      console.error('Error parsing user data:', e); 
+  const getOrganizationId = () => {
+    if (user?.organization_id) return user.organization_id;
+    if (user?.organization?.id) return user.organization.id;
+    
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        if (parsed.organization_id) return parsed.organization_id;
+        if (parsed.organization?.id) return parsed.organization.id;
+      } catch (e) { 
+        console.error('Error parsing user data:', e); 
+      }
     }
-  }
-  
-  return null;
-};
-  // Fetch questions on mount
+    
+    return null;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Fetch questions
         const questionsData = await api.getQuestions();
         setQuestions(questionsData);
 
-        // Try to fetch existing answers
+        // Get current substep from onboarding status
+        const initialStep = getCurrentOnboardingSubstep();
+        setCurrentStep(initialStep);
+
         const orgId = getOrganizationId();
         if (orgId) {
           try {
             const answersData = await api.getAnswers(orgId);
             if (answersData && answersData.length > 0) {
-              // Map answers to our state
               const answersMap = {};
               answersData.forEach(a => { answersMap[a.question_id] = a.answer_value; });
               setAnswers(answersMap);
 
-              // Handle objections if they exist
               const objectionAnswers = answersData.filter(a => a.question_key === 'objection' || a.question_key === 'handle');
               if (objectionAnswers.length > 0) {
-                // Group objections (this is simplified - may need adjustment based on actual data structure)
                 const objQ = questionsData.find(q => q.question_key === 'objection');
                 const handleQ = questionsData.find(q => q.question_key === 'handle');
                 if (objQ && handleQ) {
@@ -692,30 +665,27 @@ const getOrganizationId = () => {
     };
 
     fetchData();
-  }, []);
+  }, [getCurrentOnboardingSubstep]);
 
-// Get questions for current step
-const getStepQuestions = (stepIndex) => {
-  const stepConfig = STEP_CONFIG[stepIndex];
-  if (!stepConfig || stepConfig.isKnowledge) return [];
-  
-  return questions
-    .filter(q => stepConfig.keys.includes(q.question_key))
-    .sort((a, b) => a.display_order - b.display_order);
-};
-  // Handle field change
+  const getStepQuestions = (stepIndex) => {
+    const stepConfig = STEP_CONFIG[stepIndex];
+    if (!stepConfig || stepConfig.isKnowledge) return [];
+    
+    return questions
+      .filter(q => stepConfig.keys.includes(q.question_key))
+      .sort((a, b) => a.display_order - b.display_order);
+  };
+
   const handleFieldChange = (questionId, value) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
   };
 
-  // Handle objection change
   const handleObjectionChange = (index, field, value, questionId) => {
     setObjections(prev => {
       const newObjections = [...prev];
       newObjections[index] = { ...newObjections[index], [field]: value, [`${field}Id`]: questionId };
       return newObjections;
     });
-    // Also update answers state
     if (questionId) {
       setAnswers(prev => ({ ...prev, [questionId]: value }));
     }
@@ -731,80 +701,85 @@ const getStepQuestions = (stepIndex) => {
     setObjections(prev => prev.filter((_, i) => i !== index));
   };
 
- // Validate current step
-// Validate current step
-const isStepValid = () => {
-  const stepConfig = STEP_CONFIG[currentStep];
-  if (stepConfig.isKnowledge) return true;
+  const isStepValid = () => {
+    const stepConfig = STEP_CONFIG[currentStep];
+    if (stepConfig.isKnowledge) return true;
 
-  const stepQuestions = getStepQuestions(currentStep);
-  return stepQuestions.every(q => !q.is_required || answers[q.id]?.trim());
-};
+    const stepQuestions = getStepQuestions(currentStep);
+    return stepQuestions.every(q => !q.is_required || answers[q.id]?.trim());
+  };
 
-  // Handle next step
-  const handleNext = () => {
+  // Updated: Mark step as complete when moving to next
+  const handleNext = async () => {
     if (currentStep < STEP_CONFIG.length - 1) {
+      const stepName = ONBOARDING_SUBSTEPS[currentStep];
+      if (stepName) {
+        try {
+          await completeStep(stepName, {
+            completed_at: new Date().toISOString(),
+          });
+        } catch (err) {
+          console.error('Failed to mark step complete:', err);
+        }
+      }
+      
       setCurrentStep(prev => prev + 1);
     }
   };
 
-// Handle submit
-const handleSubmit = async () => {
-  const orgId = getOrganizationId();
-  if (!orgId) {
-    setError('Organization ID not found. Please log in again.');
-    return;
-  }
-
-  setSubmitting(true);
-  setError(null);
-
-  try {
-    // Prepare answers array from all answers
-    const answersArray = Object.entries(answers)
-      .filter(([_, value]) => value && value.trim())
-      .map(([questionId, value]) => ({
-        question_id: questionId,
-        answer_value: value.trim()
-      }));
-
-    console.log('Submitting answers:', answersArray);
-
-    // Check if we have answers for all required questions
-    const requiredQuestions = questions.filter(q => q.is_required);
-    const missingRequired = requiredQuestions.filter(q => !answers[q.id]?.trim());
-    
-    if (missingRequired.length > 0) {
-      setError(`Please answer all required questions.`);
-      setSubmitting(false);
+  // Updated: Submit and mark final step complete
+  const handleSubmit = async () => {
+    const orgId = getOrganizationId();
+    if (!orgId) {
+      setError('Organization ID not found. Please log in again.');
       return;
     }
 
-    // Submit to API
-    await api.submitAnswers(orgId, answersArray);
+    setSubmitting(true);
+    setError(null);
 
-    // Mark onboarding as complete
-    const userId = user?.id || localStorage.getItem('user_id');
-    if (userId) {
-      localStorage.setItem(`onboarding_${userId}`, 'true');
+    try {
+      const answersArray = Object.entries(answers)
+        .filter(([_, value]) => value && value.trim())
+        .map(([questionId, value]) => ({
+          question_id: questionId,
+          answer_value: value.trim()
+        }));
+
+      const requiredQuestions = questions.filter(q => q.is_required);
+      const missingRequired = requiredQuestions.filter(q => !answers[q.id]?.trim());
+      
+      if (missingRequired.length > 0) {
+        setError(`Please answer all required questions.`);
+        setSubmitting(false);
+        return;
+      }
+
+      await api.submitAnswers(orgId, answersArray);
+
+      // Mark knowledge_base step as complete
+      await completeStep('knowledge_base', {
+        completed_at: new Date().toISOString(),
+      });
+
+      // Refresh onboarding status
+      await fetchStatus();
+
+      setShowThankYou(true);
+    } catch (err) {
+      console.error('Error submitting answers:', err);
+      setError(err.message || 'Failed to submit answers. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
+  };
 
-    // Show thank you screen
-    setShowThankYou(true);
-  } catch (err) {
-    console.error('Error submitting answers:', err);
-    setError(err.message || 'Failed to submit answers. Please try again.');
-  } finally {
-    setSubmitting(false);
-  }
-};
   const handleBack = () => {
     if (currentStep > 0) setCurrentStep(prev => prev - 1);
   };
 
   const handleStart = () => navigate('/dashboard');
 
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -816,7 +791,6 @@ const handleSubmit = async () => {
     );
   }
 
-  // Thank you screen
   if (showThankYou) {
     return (
       <div className="min-h-screen bg-white">
@@ -828,9 +802,8 @@ const handleSubmit = async () => {
 
   const currentStepConfig = STEP_CONFIG[currentStep];
   const isKnowledgeStep = currentStepConfig.isKnowledge;
-  const stepQuestions = getStepQuestions(currentStep);
 
- return (
+  return (
     <div className="min-h-screen bg-white">
       <Header variant="simple" />
       <main className={`flex min-h-[calc(100vh-73px)] ${isKnowledgeStep ? '' : 'p-5'}`}>
@@ -845,7 +818,6 @@ const handleSubmit = async () => {
           )}
 
           <div className={isKnowledgeStep ? '' : 'max-w-xl'}>
-            {/* Regular form fields for all non-knowledge steps */}
             {!isKnowledgeStep && (
               <div>
                 {getStepQuestions(currentStep).map((question) => (
@@ -859,7 +831,6 @@ const handleSubmit = async () => {
               </div>
             )}
 
-            {/* Knowledge Files */}
             {isKnowledgeStep && (
               <KnowledgeFilesStep
                 files={knowledgeFiles}
@@ -872,7 +843,6 @@ const handleSubmit = async () => {
             )}
           </div>
 
-          {/* Navigation Buttons */}
           <div className="flex items-center gap-4 mt-8">
             {currentStep > 0 && (
               <button onClick={handleBack} disabled={submitting} className="px-8 py-3 border border-gray-300 text-gray-700 font-medium rounded-full hover:bg-gray-50 transition-colors disabled:opacity-50">Back</button>
@@ -888,7 +858,6 @@ const handleSubmit = async () => {
           </div>
         </div>
 
-        {/* Right Side - Illustration */}
         {!isKnowledgeStep && (
           <div className={`hidden lg:flex w-[50%] ${stepBgColors[currentStep]} items-center justify-center`}>
             <img src={stepImages[currentStep]} alt={currentStepConfig.title} className="w-full h-auto object-contain" onError={(e) => { e.target.onerror = null; e.target.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><rect fill="%23E5E7EB" width="400" height="400" rx="20"/><text x="200" y="200" text-anchor="middle" fill="%236B7280" font-size="14">Step ${currentStep + 1}</text></svg>`; }} />
