@@ -154,16 +154,53 @@ export const onboardingService = {
   },
 
   /**
-   * Skip all integration steps at once
+   * Skip all integration steps sequentially
+   * CRITICAL: Must skip one at a time because backend only allows skipping the current step.
+   * After each skip, we verify the current step before continuing.
    */
   skipAllIntegrations: async () => {
     const integrationSteps = ['crm_integration', 'email_integration', 'phone_setup', 'social_media'];
-    console.log('[OnboardingService] Skipping all integrations');
-    
-    const results = await Promise.allSettled(
-      integrationSteps.map(step => onboardingService.skipStep(step))
-    );
-    
+    console.log('[OnboardingService] Skipping all integration steps sequentially');
+
+    const results = [];
+
+    // Skip each step one at a time, checking current step before each skip
+    for (const step of integrationSteps) {
+      try {
+        // First, check current onboarding status
+        const status = await onboardingService.getStatus();
+        console.log(`[OnboardingService] Current step from backend: ${status.current_step}`);
+
+        // Check if this step is the current step
+        if (status.current_step !== step) {
+          console.log(`[OnboardingService] Skipping ${step} - not the current step (current: ${status.current_step})`);
+          // If this step is already completed or skipped, that's fine
+          const stepInfo = status.steps.find(s => s.step_name === step);
+          if (stepInfo && (stepInfo.status === 'completed' || stepInfo.status === 'skipped')) {
+            results.push({ status: 'already_processed', step, stepStatus: stepInfo.status });
+            continue;
+          }
+          // If we're past the integration steps, stop trying
+          if (!integrationSteps.includes(status.current_step)) {
+            console.log('[OnboardingService] Already past integration steps, stopping');
+            break;
+          }
+          continue;
+        }
+
+        // Skip the current step
+        const result = await onboardingService.skipStep(step);
+        results.push({ status: 'fulfilled', value: result });
+        console.log(`[OnboardingService] ✓ Skipped: ${step}`);
+      } catch (error) {
+        console.error(`[OnboardingService] ✗ Failed to skip ${step}:`, error.message);
+        results.push({ status: 'rejected', reason: error, step });
+        // Stop if we get an error - something is wrong
+        break;
+      }
+    }
+
+    console.log('[OnboardingService] All integration steps processed:', results);
     return results;
   },
 
