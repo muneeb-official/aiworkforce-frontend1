@@ -1720,10 +1720,11 @@ export const WhatsAppConnectModal = ({ isOpen, onClose, onConnect }) => {
         return;
       }
 
-      // Step 2: Get QR code
+      // Step 2: Get QR code (backend automatically uses the most recent session)
       const qrResult = await onConnect('qrcode');
 
       if (qrResult && (qrResult.success || qrResult.qr_code || qrResult.qr_code_image)) {
+        // Store session_id from QR code response for status checks
         setQrData(qrResult);
         setStep('qrcode');
       } else {
