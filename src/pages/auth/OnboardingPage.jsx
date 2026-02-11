@@ -1086,54 +1086,57 @@ const OnboardingPage = () => {
     }
   };
 
-  // Updated: Submit and mark final step complete
-  const handleSubmit = async () => {
-    const orgId = getOrganizationId();
-    if (!orgId) {
-      setError("Organization ID not found. Please log in again.");
+  // Replace the handleSubmit function in OnboardingPage.jsx with this:
+
+const handleSubmit = async () => {
+  const orgId = getOrganizationId();
+  if (!orgId) {
+    setError("Organization ID not found. Please log in again.");
+    return;
+  }
+
+  setSubmitting(true);
+  setError(null);
+
+  try {
+    // Create answersArray FIRST
+    const answersArray = Object.entries(answers)
+      .filter(([_, value]) => value && value.trim())
+      .map(([questionId, value]) => ({
+        question_id: questionId,
+        answer_value: value.trim(),
+      }));
+
+    const requiredQuestions = questions.filter((q) => q.is_required);
+    const missingRequired = requiredQuestions.filter(
+      (q) => !answers[q.id]?.trim(),
+    );
+
+    if (missingRequired.length > 0) {
+      setError("Please answer all required questions.");
+      setSubmitting(false);
       return;
     }
 
-    // Submit to API
+    // Submit to API - NOW answersArray is defined
     await questionnaireApi.submitAnswers(orgId, answersArray);
 
-    try {
-      const answersArray = Object.entries(answers)
-        .filter(([_, value]) => value && value.trim())
-        .map(([questionId, value]) => ({
-          question_id: questionId,
-          answer_value: value.trim(),
-        }));
+    // Mark knowledge_base step as complete
+    await completeStep("knowledge_base", {
+      completed_at: new Date().toISOString(),
+    });
 
-      const requiredQuestions = questions.filter((q) => q.is_required);
-      const missingRequired = requiredQuestions.filter(
-        (q) => !answers[q.id]?.trim(),
-      );
+    // Refresh onboarding status
+    await fetchStatus();
 
-      if (missingRequired.length > 0) {
-        setError(`Please answer all required questions.`);
-        setSubmitting(false);
-        return;
-      }
-
-      await api.submitAnswers(orgId, answersArray);
-
-      // Mark knowledge_base step as complete
-      await completeStep("knowledge_base", {
-        completed_at: new Date().toISOString(),
-      });
-
-      // Refresh onboarding status
-      await fetchStatus();
-
-      setShowThankYou(true);
-    } catch (err) {
-      console.error("Error submitting answers:", err);
-      setError(err.message || "Failed to submit answers. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    setShowThankYou(true);
+  } catch (err) {
+    console.error("Error submitting answers:", err);
+    setError(err.message || "Failed to submit answers. Please try again.");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   const handleBack = () => {
     if (currentStep > 0) setCurrentStep((prev) => prev - 1);
