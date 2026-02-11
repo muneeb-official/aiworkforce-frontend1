@@ -1,11 +1,11 @@
 // src/services/subscriptionService.js
-const API_BASE = 'http://localhost:8000/api/platform';
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 export const subscriptionService = {
   // Get all available services/plans
   getServices: async () => {
     try {
-      const response = await fetch(`${API_BASE}/services`, {
+      const response = await fetch(`${API_BASE}/platform/services`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -38,7 +38,7 @@ subscribe: async (serviceIds) => {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE}/solo/subscribe`, {
+    const response = await fetch(`${API_BASE}/platform/solo/subscribe`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ service_ids: serviceIds }),
@@ -64,7 +64,7 @@ subscribe: async (serviceIds) => {
   // Sync services with Stripe (admin only)
   syncWithStripe: async (force = false) => {
     try {
-      const response = await fetch(`${API_BASE}/stripe/sync/all`, {
+      const response = await fetch(`${API_BASE}/platform/stripe/sync/all`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -12,7 +12,7 @@ import step3Image from '../../assets/step-3.png';
 import thankYouImage from '../../assets/step-4.png';
 import { knowledgeBaseService } from '../../services/KnowledgeBaseService';
 
-const API_BASE_URL = 'http://localhost:8001';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Step configuration - maps question_keys to steps
 const STEP_CONFIG = [
