@@ -26,6 +26,8 @@ const LoadingDots = () => (
   </div>
 );
 
+// Replace the ProfileCard component in ProfileComponents.jsx with this:
+
 export const ProfileCard = ({
   profile,
   isSelected,
@@ -38,21 +40,17 @@ export const ProfileCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEnriching, setIsEnriching] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+
   const handleEnrich = async () => {
     if (isEnriching || profile.isEnriched) return;
 
     setIsEnriching(true);
 
     try {
-      // Ensure minimum loading time of 1.5 seconds for better UX
       const minLoadingTime = new Promise((resolve) =>
-        setTimeout(resolve, 1500),
+        setTimeout(resolve, 1500)
       );
-
-      // Call the actual API through context
       const apiCall = onEnrich(profile.id);
-
-      // Wait for both the API call and minimum loading time
       await Promise.all([apiCall, minLoadingTime]);
     } catch (error) {
       console.error("Error enriching profile:", error);
@@ -60,6 +58,7 @@ export const ProfileCard = ({
       setIsEnriching(false);
     }
   };
+
   const handleRowClick = (e) => {
     if (
       e.target.closest("button") ||
@@ -74,14 +73,14 @@ export const ProfileCard = ({
     <div
       className={`rounded-md transition-all duration-200 ${
         isSelected
-          ? "bg-white "
+          ? "bg-white"
           : isExpanded
             ? "bg-white border border-blue-600"
             : "bg-white hover:bg-[#F2F2FF] hover:shadow-md"
       }`}
     >
       {/* Main Row - Clickable */}
-      <div className="p-2 cursor-pointer z-[100]" onClick={handleRowClick}>
+      <div className="p-3 cursor-pointer" onClick={handleRowClick}>
         <div className="flex items-center gap-4">
           {/* Checkbox */}
           <input
@@ -89,23 +88,23 @@ export const ProfileCard = ({
             checked={isSelected}
             onChange={() => onSelect(profile.id)}
             className="
-    appearance-none
-    w-[18px] h-[18px]
-    rounded-[6px]
-    border border-gray-300
-    bg-white
-    hover:border-blue-600
-    focus:outline-none focus:ring-2 focus:ring-blue-500/30
-    cursor-pointer
-
-    checked:bg-blue-600 checked:border-blue-600
-    checked:after:content-['']
-    checked:after:block
-    checked:after:w-[6px] checked:after:h-[10px]
-    checked:after:border-r-2 checked:after:border-b-2 checked:after:border-white
-    checked:after:rotate-45
-    checked:after:translate-x-[5px] checked:after:translate-y-[1px]
-  "
+              appearance-none
+              w-[18px] h-[18px]
+              rounded-[6px]
+              border border-gray-300
+              bg-white
+              hover:border-blue-600
+              focus:outline-none focus:ring-2 focus:ring-blue-500/30
+              cursor-pointer
+              checked:bg-blue-600 checked:border-blue-600
+              checked:after:content-['']
+              checked:after:block
+              checked:after:w-[6px] checked:after:h-[10px]
+              checked:after:border-r-2 checked:after:border-b-2 checked:after:border-white
+              checked:after:rotate-45
+              checked:after:translate-x-[5px] checked:after:translate-y-[1px]
+              flex-shrink-0
+            "
             onClick={(e) => e.stopPropagation()}
           />
 
@@ -113,104 +112,113 @@ export const ProfileCard = ({
           <img
             src={profile.avatar}
             alt={profile.name}
-            className="w-[70px] h-[70px] rounded-full object-cover border-2 border-gray-100"
+            className="w-[50px] h-[50px] rounded-full object-cover border-2 border-gray-100 flex-shrink-0"
           />
 
-          {/* Info */}
-          <div className="flex-1">
-            <h3 className="font-bold text-[#000000] text-lg">{profile.name}</h3>
-            <p className="text-[#000000] font-semibold text-sm">
-              {profile.title}
-            </p>
-            <p className="text-[#000000] text-sm">
+          {/* Info Section - Name, Title, Location + Contact Details */}
+          <div className="flex-1 min-w-0">
+            {/* Name */}
+            <h3 className="font-bold text-[#000000] text-base">{profile.name}</h3>
+            
+            {/* Title */}
+            <p className="text-[#000000] font-medium text-sm">{profile.title}</p>
+            
+            {/* Location & Industry */}
+            <p className="text-[#666666] text-sm">
               {profile.location} • {profile.industry}
             </p>
-          </div>
-          <div className="flex flex-col gap-1">
-            {/* Website */}
-            <div className="flex items-center gap-2">
-              <img src={companyicon} alt="linkedin" className="w-4 h-4" />
-              <span className="text-gray-800 text-sm">
-                @ {profile.website || "chchelicopter.com"}
-              </span>
-            </div>
 
-            {/* Phone */}
-            <div className="flex items-center gap-2">
-              <img src={phonenumbericon} alt="linkedin" className="w-4 h-4" />
-              {profile.isEnriched ? (
-                <span className="text-gray-800 text-sm flex items-center gap-1">
-                  {(profile.phones || []).slice(0, 2).join(" , ")}
-                  {(profile.phones?.length || 0) > 2 && (
-                    <span className="text-[#000000] bg-[#F2F2FF] rounded px-1 py-0.5 text-xs">
-                      + {profile.phones.length - 2} more
+            {/* Contact Details - Now under the name */}
+            <div className="flex items-center gap-6 mt-2 flex-wrap">
+              {/* Website */}
+              <div className="flex items-center gap-1.5">
+                <img src={companyicon} alt="company" className="w-4 h-4 flex-shrink-0" />
+                <span className="text-gray-700 text-sm">
+                  @ {profile.website || "company.com"}
+                </span>
+              </div>
+
+              {/* Phone */}
+              <div className="flex items-center gap-1.5">
+                <img src={phonenumbericon} alt="phone" className="w-4 h-4 flex-shrink-0" />
+                {profile.isEnriched ? (
+                  <span className="text-gray-700 text-sm flex items-center gap-1">
+                    {(profile.phones || []).slice(0, 1).join(", ")}
+                    {(profile.phones?.length || 0) > 1 && (
+                      <span className="text-[#3C49F7] bg-[#F2F2FF] rounded px-1.5 py-0.5 text-xs">
+                        + {profile.phones.length - 1} more
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <span className="text-gray-700 text-sm flex items-center gap-1">
+                    +44 -
+                    <span className="bg-[#F2F2FF] text-[#F2F2FF] rounded px-4 py-0.5">
+                      hidden
                     </span>
-                  )}
-                </span>
-              ) : (
-                <span className="text-gray-800 text-sm flex items-center gap-1">
-                  +44 -{" "}
-                  <span className="bg-[#F2F2FF] text-[#F2F2FF] rounded px-4 py-0.5">
-                    hidden
-                  </span>
-                  <span className="text-[#000000] bg-[#F2F2FF] rounded px-1 py-0.5 text-xs">
-                    + 2 more
-                  </span>
-                </span>
-              )}
-            </div>
-
-            {/* Email */}
-            <div className="flex items-center gap-2">
-              <img src={emailicon} alt="linkedin" className="w-4 h-4" />
-              {profile.isEnriched ? (
-                <div className="flex items-center gap-1 flex-wrap">
-                  {(profile.emails || []).slice(0, 2).map((email, idx, arr) => (
-                    <a
-                      key={idx}
-                      href={`mailto:${email}`}
-                      className="text-blue-600 hover:underline text-sm"
-                    >
-                      {email}
-                      {idx < arr.length - 1 ? "," : ""}
-                    </a>
-                  ))}
-                  {(profile.emails?.length || 0) > 2 && (
-                    <span className="text-[#000000] bg-[#F2F2FF] rounded px-1 py-0.5 text-xs">
-                      + {profile.emails.length - 2} more
+                    <span className="text-[#3C49F7] bg-[#F2F2FF] rounded px-1.5 py-0.5 text-xs">
+                      + 2 more
                     </span>
-                  )}
-                </div>
-              ) : (
-                <span className="text-gray-800 text-sm flex items-center gap-1">
-                  xxx@
-                  <span className="bg-[#F2F2FF] text-[#F2F2FF] rounded px-6 py-0.5">
-                    hidden
                   </span>
-                  <span className="text-[#000000] bg-[#F2F2FF] rounded px-1 py-0.5 text-xs">
-                    + 1 more
+                )}
+              </div>
+
+              {/* Email */}
+              <div className="flex items-center gap-1.5">
+                <img src={emailicon} alt="email" className="w-4 h-4 flex-shrink-0" />
+                {profile.isEnriched ? (
+                  <div className="flex items-center gap-1">
+                    {(profile.emails || []).slice(0, 1).map((email, idx) => (
+                      <a
+                        key={idx}
+                        href={`mailto:${email}`}
+                        className="text-gray-700 text-sm hover:text-blue-600"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {email}
+                      </a>
+                    ))}
+                    {(profile.emails?.length || 0) > 1 && (
+                      <span className="text-[#3C49F7] bg-[#F2F2FF] rounded px-1.5 py-0.5 text-xs">
+                        + {profile.emails.length - 1} more
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-gray-700 text-sm flex items-center gap-1">
+                    xxx@
+                    <span className="bg-[#F2F2FF] text-[#F2F2FF] rounded px-4 py-0.5">
+                      hidden
+                    </span>
+                    <span className="text-[#3C49F7] bg-[#F2F2FF] rounded px-1.5 py-0.5 text-xs">
+                      + 1 more
+                    </span>
                   </span>
-                </span>
-              )}
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-3">
+          {/* Actions - Right Side */}
+          <div className="flex items-center gap-3 flex-shrink-0">
             {/* LinkedIn Icon */}
             <a
               href={profile.linkedin || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-7 h-7 text-white rounded flex items-center justify-center transition-colors"
+              className="w-7 h-7 flex items-center justify-center"
               onClick={(e) => e.stopPropagation()}
             >
               <img src={LinkedInIcon} alt="linkedin" className="w-5 h-5" />
             </a>
+
             {/* Enrich Button */}
             {!profile.isEnriched ? (
               <button
-                onClick={handleEnrich}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEnrich();
+                }}
                 disabled={isEnriching}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-w-[120px] ${
                   isEnriching
@@ -222,29 +230,10 @@ export const ProfileCard = ({
               </button>
             ) : (
               <div className="flex items-center gap-2 px-3 py-1.5 bg-[#F2F2FF] rounded text-[#0028B6]">
-                <img src={VerifiedIcon} alt="linkedin" className="w-7 h-7" />
-                <span className="text-[12px] font-semibold">
-                  Enriched Contact
-                </span>
+                <img src={VerifiedIcon} alt="verified" className="w-5 h-5" />
+                <span className="text-[12px] font-semibold">Enriched</span>
               </div>
             )}
-
-            {/* {profile.isEnriched ? (
-              <div className="flex items-center gap-2 px-3 py-1 bg-[#F2F2FF] text-[#0028B6]">
-                <img src={VerifiedIcon} alt="linkedin" className="w-7 h-7" />
-                <span className="text-[12px] font-semibold">Enriched Contact</span>
-              </div>
-            ) : (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEnrich(profile.id);
-                }}
-                className="px-4 py-1.5 bg-[#3C49F7] text-white text-sm font-medium rounded-full"
-              >
-                Enrich Profile
-              </button>
-            )} */}
 
             {/* Add to Project OR 3-dot menu based on context */}
             {context === "campaign" ? (
@@ -282,7 +271,7 @@ export const ProfileCard = ({
                   e.stopPropagation();
                   onAddToProject(profile);
                 }}
-                className="px-4 py-1.5 border-2 border-[#3C49F7] text-[#3C49F7] text-[14px] font-medium rounded-full"
+                className="px-4 py-1.5 border-2 border-[#3C49F7] text-[#3C49F7] text-[14px] font-medium rounded-full hover:bg-[#F2F2FF] transition-colors"
               >
                 Add to Project
               </button>
@@ -291,38 +280,28 @@ export const ProfileCard = ({
         </div>
       </div>
 
-      {/* Expanded Details */}
+      {/* Expanded Details - Keep as is */}
       {isExpanded && (
         <div className="px-4 pb-4">
           <div className="mt-2 ml-4 space-y-2">
             {/* Current Position */}
             <div className="flex border-b border-gray-200 pb-3 pl-2 -mb-3">
-              <span className="w-24 text-gray-900 text-sm font-bold">
-                Current
-              </span>
+              <span className="w-24 text-gray-900 text-sm font-bold">Current</span>
               <div className="flex-1 ml-0">
                 <p className="text-gray-900 text-sm">
-                  • {profile.currentPosition || profile.title} @{" "}
-                  {profile.company}
-                  {/* <span className="text-gray-900 ml-2 italic">
-                    2022 - Current
-                  </span> */}
+                  • {profile.currentPosition || profile.title} @ {profile.company}
                 </p>
               </div>
             </div>
 
             {/* Past Positions */}
             <div className="flex border-b border-gray-200 p-3">
-              <span className="w-24 text-gray-900 text-sm font-bold ml-4">
-                Past
-              </span>
+              <span className="w-24 text-gray-900 text-sm font-bold ml-4">Past</span>
               <div className="flex-1 -ml-5">
                 {(profile.pastPositions || []).map((pos, idx) => (
                   <p key={idx} className="text-gray-800 text-sm">
                     • {pos.title} @ {pos.company}
-                    <span className="text-gray-500 ml-2 italic">
-                      {pos.years}
-                    </span>
+                    <span className="text-gray-500 ml-2 italic">{pos.years}</span>
                   </p>
                 ))}
               </div>
@@ -330,24 +309,17 @@ export const ProfileCard = ({
 
             {/* Education */}
             <div className="flex border-b border-gray-200 pb-5">
-              <span className="w-24 text-gray-900 text-sm font-bold -ml-1.5">
-                Education
-              </span>
-              <div className="flex-1 ml-4 ">
-                {(
-                  profile.education || [
-                    { school: "University of Oxford", years: "2010-2013" },
-                    { school: "University of Cambridge", years: "2007-2010" },
-                    { school: "Lauriston Boys' School", years: "2003-2007" },
-                  ]
-                ).map((edu, idx) => (
+              <span className="w-24 text-gray-900 text-sm font-bold -ml-1.5">Education</span>
+              <div className="flex-1 ml-4">
+                {(profile.education || [
+                  { school: "University of Oxford", years: "2010-2013" },
+                  { school: "University of Cambridge", years: "2007-2010" },
+                ]).map((edu, idx) => (
                   <p key={idx} className="text-gray-900 text-sm">
                     • {edu.school}
                     {edu.degree ? ` - ${edu.degree}` : ""}
                     {edu.major ? ` (${edu.major})` : ""}
-                    <span className="text-gray-500 ml-2 italic">
-                      {edu.years}
-                    </span>
+                    <span className="text-gray-500 ml-2 italic">{edu.years}</span>
                   </p>
                 ))}
               </div>
@@ -355,97 +327,46 @@ export const ProfileCard = ({
 
             {/* Contact Info */}
             <div className="flex ml-2">
-              <span className="w-24 text-gray-900 text-sm font-bold">
-                Contact<br></br> Info
-              </span>
+              <span className="w-24 text-gray-900 text-sm font-bold">Contact<br />Info</span>
               <div className="flex-1 ml-1">
                 {profile.isEnriched ? (
                   <>
-                    {/* Website */}
                     <div className="flex items-center gap-2">
-                      <img
-                        src={companyicon}
-                        alt="company"
-                        className="w-4 h-4"
-                      />
+                      <img src={companyicon} alt="company" className="w-4 h-4" />
+                      <span className="text-gray-800 text-sm">@ {profile.website || "N/A"}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <img src={phonenumbericon} alt="phone" className="w-4 h-4" />
                       <span className="text-gray-800 text-sm">
-                        @ {profile.website || "N/A"}
+                        {(profile.phones || []).length > 0 ? profile.phones.join(", ") : "No phone numbers"}
                       </span>
                     </div>
-                    {/* Phone */}
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={phonenumbericon}
-                        alt="phone"
-                        className="w-4 h-4"
-                      />
-                      <span className="text-gray-800 text-sm">
-                        {(profile.phones || []).length > 0
-                          ? profile.phones.join(" , ")
-                          : "No phone numbers available"}
-                      </span>
-                    </div>
-                    {/* Email */}
                     <div className="flex items-center gap-2 flex-wrap">
                       <img src={emailicon} alt="email" className="w-4 h-4" />
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {(profile.emails || []).length > 0 ? (
-                          profile.emails.map((email, idx) => (
-                            <a
-                              key={idx}
-                              href={`mailto:${email}`}
-                              className="text-blue-600 hover:underline text-sm"
-                            >
-                              {email}
-                              {idx < profile.emails.length - 1 ? " ," : ""}
-                            </a>
-                          ))
-                        ) : (
-                          <span className="text-gray-500 text-sm">
-                            No emails available
-                          </span>
-                        )}
-                      </div>
+                      {(profile.emails || []).length > 0 ? (
+                        profile.emails.map((email, idx) => (
+                          <a key={idx} href={`mailto:${email}`} className="text-blue-600 hover:underline text-sm">
+                            {email}{idx < profile.emails.length - 1 ? "," : ""}
+                          </a>
+                        ))
+                      ) : (
+                        <span className="text-gray-500 text-sm">No emails available</span>
+                      )}
                     </div>
                   </>
                 ) : (
                   <>
-                    {/* Hidden Website */}
                     <div className="flex items-center gap-2">
-                      <img
-                        src={companyicon}
-                        alt="company"
-                        className="w-4 h-4"
-                      />
-                      <span className="text-gray-800 text-sm">
-                        @ xxxxxxx.com
-                      </span>
+                      <img src={companyicon} alt="company" className="w-4 h-4" />
+                      <span className="text-gray-800 text-sm">@ xxxxxxx.com</span>
                     </div>
-                    {/* Hidden Phone */}
                     <div className="flex items-center gap-2">
-                      <img
-                        src={phonenumbericon}
-                        alt="phone"
-                        className="w-4 h-4"
-                      />
-                      <span className="text-gray-800 text-sm">
-                        +44 - 123{" "}
-                        <span className="text-gray-400 italic">XX XXX</span>
-                        <span className="text-gray-500 ml-2 text-xs">
-                          + x more
-                        </span>
-                      </span>
+                      <img src={phonenumbericon} alt="phone" className="w-4 h-4" />
+                      <span className="text-gray-800 text-sm">+44 - 123 <span className="text-gray-400 italic">XX XXX</span></span>
                     </div>
-                    {/* Hidden Email */}
                     <div className="flex items-center gap-2">
                       <img src={emailicon} alt="email" className="w-4 h-4" />
-                      <span className="text-gray-800 text-sm">
-                        xxxxx
-                        <span className="text-gray-800">@xxxxx.com</span>
-                        <span className="text-gray-500 ml-2 text-xs">
-                          + x personal emails
-                        </span>
-                      </span>
+                      <span className="text-gray-800 text-sm">xxxxx@xxxxx.com</span>
                     </div>
                   </>
                 )}
@@ -460,9 +381,7 @@ export const ProfileCard = ({
               >
                 View Less
               </button>
-              <span
-                className={`py-0.5 px-2 text-sm italic bg-[#E8EAFF] font-medium ${profile.isEnriched ? "text-[#000000]" : "text-[#000000]"}`}
-              >
+              <span className="py-0.5 px-2 text-sm italic bg-[#E8EAFF] font-medium text-[#000000]">
                 {profile.isEnriched ? "1 Credit Used" : "1 Credit"}
               </span>
             </div>

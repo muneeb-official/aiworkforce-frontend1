@@ -949,8 +949,8 @@ const getPaginatedDetailItems = () => {
           </div>
         </div>
 
-        {/* Results Count & Actions */}
-        {!isLoadingResults && (
+{/* Results Count & Actions */}
+{!isLoadingResults && (
   <div className="flex items-center justify-between mb-4">
     <p className="text-sm text-gray-600">
       {(() => {
@@ -967,7 +967,72 @@ const getPaginatedDetailItems = () => {
         return `${startIndex} - ${endIndex} of about ${totalCount} ${label}.`;
       })()}
     </p>
-    {/* ... rest of the actions buttons ... */}
+    
+    {/* Action Buttons */}
+    <div className="flex items-center gap-3">
+      {((viewingCampaign?.sourceType || viewingCampaign?.source || "").toLowerCase() === "b2b"
+        ? b2bCompanies.length > 0
+        : leads.length > 0) && (
+        <>
+          {/* Export Leads Button */}
+          <button 
+            onClick={() => {
+              // Export functionality
+              const isB2B = (viewingCampaign?.sourceType || viewingCampaign?.source || "").toLowerCase() === "b2b";
+              if (isB2B) {
+                // Export B2B companies
+                const dataToExport = b2bCompanies.map(company => ({
+                  company_name: company.name,
+                  website: company.website,
+                  phone: company.phone,
+                  email: company.email,
+                  location: company.location,
+                  industry: company.industry_str,
+                  status: company.status,
+                }));
+                console.log("Exporting B2B companies:", dataToExport);
+                // You can call exportToCSV here if needed
+              } else {
+                // Export B2C leads
+                const dataToExport = leads.map(lead => ({
+                  name: lead.name,
+                  title: lead.title,
+                  company: lead.company,
+                  location: lead.location,
+                  email: lead.emails?.join('; ') || '',
+                  phone: lead.phones?.join('; ') || '',
+                  website: lead.website,
+                  is_enriched: lead.isEnriched ? 'Yes' : 'No',
+                }));
+                console.log("Exporting B2C leads:", dataToExport);
+                // You can call exportToCSV here if needed
+              }
+            }}
+            className="text-[#3C49F7] text-sm font-medium hover:underline"
+          >
+            Export {(viewingCampaign?.sourceType || viewingCampaign?.source || "").toLowerCase() === "b2b" ? "Companies" : "Leads"}
+          </button>
+          
+          {/* Enrich All Leads Button - Only for non-B2B */}
+          {(viewingCampaign?.sourceType || viewingCampaign?.source || "").toLowerCase() !== "b2b" && unenrichedCount > 0 && (
+            <button
+              onClick={handleEnrichAll}
+              className="border border-[#3C49F7] text-[#3C49F7] px-4 py-2 rounded-full text-sm font-medium hover:bg-[#F2F2FF] transition-colors"
+            >
+              Enrich All {unenrichedCount} Leads
+            </button>
+          )}
+          
+          {/* Start Workflow Builder Button */}
+          <button
+            onClick={() => handleStartWorkflow()}
+            className="bg-[#3C49F7] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#2a35d4] transition-colors"
+          >
+            Start Workflow Builder
+          </button>
+        </>
+      )}
+    </div>
   </div>
 )}
         {/* Select All - For B2B companies or regular leads */}
