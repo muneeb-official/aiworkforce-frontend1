@@ -33,13 +33,16 @@ export const ProtectedRoute = ({ children }) => {
 };
 
 /**
- * PublicRoute - For login/signup pages, redirects authenticated users
+ * PublicRoute - For login page ONLY (not signup)
+ * Redirects authenticated users to their appropriate step
  */
 export const PublicRoute = ({ children }) => {
+  const location = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { initialized, isOnboardingCompleted, currentStep, status } = useOnboarding();
+  const { initialized, isOnboardingCompleted, currentStep, status, loading: onboardingLoading } = useOnboarding();
+  const [timedOut, setTimedOut] = useState(false);
   
-  // If not authenticated, show children (login/signup page)
+  // If not authenticated, show children (login page)
   if (!isAuthenticated) {
     return children;
   }
@@ -49,34 +52,41 @@ export const PublicRoute = ({ children }) => {
     return <LoadingScreen />;
   }
 
-  // Wait for onboarding to initialize, but with a timeout
-  const [timedOut, setTimedOut] = useState(false);
-  
+  // Set up timeout
   useEffect(() => {
     const timer = setTimeout(() => {
       setTimedOut(true);
-    }, 5000); // 5 second timeout
+    }, 5000);
     
     return () => clearTimeout(timer);
   }, []);
 
-  // If onboarding hasn't initialized and hasn't timed out, show loading
-  if (!initialized && !timedOut) {
+  // Wait for onboarding to initialize (with timeout)
+  if (!initialized && !timedOut && onboardingLoading) {
     return <LoadingScreen />;
   }
 
-  // Determine redirect URL
+  // Determine redirect URL based on onboarding status
   let redirectTo = '/dashboard';
   
-  if (status) {
+  if (initialized && status) {
     if (isOnboardingCompleted) {
       redirectTo = '/dashboard';
     } else if (currentStep) {
       redirectTo = STEP_ROUTES[currentStep] || '/choose-plan';
+    } else {
+      // No current step means user just signed up - go to choose-plan
+      redirectTo = '/choose-plan';
     }
-  } else if (timedOut) {
-    // If timed out without status, go to choose-plan as fallback
-    redirectTo = '/choose-plan';
+  } else if (timedOut || !onboardingLoading) {
+    // If timed out or not loading anymore but no status,
+    // check if we have any indication of where to go
+    if (isOnboardingCompleted) {
+      redirectTo = '/dashboard';
+    } else {
+      // Default to choose-plan for new users
+      redirectTo = '/choose-plan';
+    }
   }
 
   return <Navigate to={redirectTo} replace />;
@@ -84,36 +94,11 @@ export const PublicRoute = ({ children }) => {
 
 /**
  * PaymentFlowRoute - For payment-related pages (choose-plan, cart)
+ * Allows access for users who need to complete payment
  */
 export const PaymentFlowRoute = ({ children }) => {
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { initialized, isOnboardingCompleted } = useOnboarding();
-
-  if (authLoading) {
-    return <LoadingScreen />;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Don't wait for onboarding status for payment flow
-  // User needs to be able to access these pages to complete payment
-
-  // If onboarding is already completed, redirect to dashboard
-  if (initialized && isOnboardingCompleted) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return children;
-};
-
-/**
- * IntegrationRoute - For integration hub page
- */
-export const IntegrationRoute = ({ children }) => {
-  const { isAuthenticated, loading: authLoading } = useAuth();
-  const { initialized, isOnboardingCompleted, isStepCompleted, currentStep } = useOnboarding();
+  const { initialized, isOnboardingCompleted, currentStep, loading: onboardingLoading } = useOnboarding();
 
   if (authLoading) {
     return <LoadingScreen />;
@@ -128,9 +113,62 @@ export const IntegrationRoute = ({ children }) => {
     return <Navigate to="/dashboard" replace />;
   }
 
+  // FIX: If onboarding is initialized and user is NOT on payment step,
+  // redirect them to their current step
+  if (initialized && currentStep && currentStep !== 'payment') {
+    const redirectTo = STEP_ROUTES[currentStep];
+    if (redirectTo) {
+      return <Navigate to={redirectTo} replace />;
+    }
+  }
+
+  // Allow access:
+  // 1. When onboarding not initialized yet (new user after signup)
+  // 2. When current step is 'payment'
+  // 3. When no current step (fresh signup)
+  return children;
+};
+
+/**
+ * IntegrationRoute - For integration hub page
+ * Requires payment to be completed
+ */
+export const IntegrationRoute = ({ children }) => {
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { initialized, isOnboardingCompleted, currentStep, loading: onboardingLoading } = useOnboarding();
+
+  if (authLoading) {
+    return <LoadingScreen />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Wait for onboarding to initialize
+  if (!initialized && onboardingLoading) {
+    return <LoadingScreen />;
+  }
+
+  // If onboarding is completed, redirect to dashboard
+  if (initialized && isOnboardingCompleted) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   // If payment is not completed, redirect to choose-plan
   if (initialized && currentStep === 'payment') {
     return <Navigate to="/choose-plan" replace />;
+  }
+
+  // If user is past integration steps, redirect to their current step
+  if (initialized && currentStep) {
+    const integrationSteps = ['crm_integration', 'email_integration', 'phone_setup', 'social_media'];
+    if (!integrationSteps.includes(currentStep)) {
+      const redirectTo = STEP_ROUTES[currentStep];
+      if (redirectTo && redirectTo !== '/integration-hub') {
+        return <Navigate to={redirectTo} replace />;
+      }
+    }
   }
 
   return children;
@@ -138,10 +176,11 @@ export const IntegrationRoute = ({ children }) => {
 
 /**
  * OnboardingQuestionsRoute - For onboarding questionnaire page
+ * Requires payment and integrations to be completed/skipped
  */
 export const OnboardingQuestionsRoute = ({ children }) => {
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { initialized, isOnboardingCompleted, currentStep } = useOnboarding();
+  const { initialized, isOnboardingCompleted, currentStep, loading: onboardingLoading } = useOnboarding();
 
   if (authLoading) {
     return <LoadingScreen />;
@@ -149,6 +188,11 @@ export const OnboardingQuestionsRoute = ({ children }) => {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Wait for onboarding to initialize
+  if (!initialized && onboardingLoading) {
+    return <LoadingScreen />;
   }
 
   // If onboarding is completed, redirect to dashboard
@@ -159,6 +203,14 @@ export const OnboardingQuestionsRoute = ({ children }) => {
   // If payment is not completed, redirect to choose-plan
   if (initialized && currentStep === 'payment') {
     return <Navigate to="/choose-plan" replace />;
+  }
+
+  // If user is still on integration steps, redirect to integration hub
+  if (initialized && currentStep) {
+    const integrationSteps = ['crm_integration', 'email_integration', 'phone_setup', 'social_media'];
+    if (integrationSteps.includes(currentStep)) {
+      return <Navigate to="/integration-hub" replace />;
+    }
   }
 
   return children;

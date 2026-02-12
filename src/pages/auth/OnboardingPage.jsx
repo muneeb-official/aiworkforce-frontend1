@@ -853,6 +853,48 @@ const OnboardingPage = () => {
   // Use ref to track if initial data has been loaded
   const initialLoadRef = useRef(false);
 
+  // =============================================
+  // FIX: Prevent browser back button navigation
+  // =============================================
+  useEffect(() => {
+    // Push initial state to history
+    window.history.pushState({ onboarding: true }, '', window.location.pathname);
+
+    const handlePopState = (event) => {
+      // When user clicks browser back button, push them forward again
+      window.history.pushState({ onboarding: true }, '', window.location.pathname);
+      
+      // Optionally: If you want back button to go to previous onboarding step instead:
+      // if (currentStep > 0) {
+      //   setCurrentStep(prev => prev - 1);
+      // }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  // Optional: Show confirmation when user tries to close/refresh the page
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      // Only show warning if user has entered some data
+      if (Object.keys(answers).length > 0 && !showThankYou) {
+        event.preventDefault();
+        event.returnValue = ''; // Chrome requires returnValue to be set
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [answers, showThankYou]);
+  // =============================================
+
   const getOrganizationId = () => {
     if (user?.organization_id) return user.organization_id;
     if (user?.organization?.id) return user.organization.id;

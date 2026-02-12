@@ -233,7 +233,9 @@ function App() {
                 }
               />
               
-              {/* SignUp - Public access */}
+              {/* FIX #1: SignUp - NO PublicRoute wrapper */}
+              {/* This allows the signup flow to complete and navigate to choose-plan */}
+              {/* without being redirected by PublicRoute */}
               <Route path="/signup" element={<SignUpPage />} />
 
               {/* ==================== */}
