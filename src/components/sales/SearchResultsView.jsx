@@ -10,7 +10,7 @@ export default function SearchResultsView({ mode = "b2c", config, context, searc
   // Default searchType based on mode
   const effectiveSearchType = searchType || (mode === "b2b" ? "basic" : "individual");
   // ↑ Added searchType as a prop with default value
-  
+
   const {
     selectedProfiles,
     toggleProfileSelection,
@@ -311,12 +311,13 @@ export default function SearchResultsView({ mode = "b2c", config, context, searc
 
         {/* Pagination */}
         <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages || Math.ceil(paginatedItems.length / itemsPerPage)}
-          onPageChange={setCurrentPage}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={setItemsPerPage}
-        />
+  currentPage={currentPage}
+  totalPages={totalPages}
+  totalResults={totalResults}  // Add this
+  onPageChange={setCurrentPage}
+  itemsPerPage={itemsPerPage}
+  onItemsPerPageChange={setItemsPerPage}
+/>
       </div>
 
       {/* Add to Project Modal */}

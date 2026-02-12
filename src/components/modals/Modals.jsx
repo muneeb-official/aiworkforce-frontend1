@@ -270,21 +270,35 @@ export const AddToProjectModal = ({
     }
   };
 
-  const handleCreateProject = async () => {
-    if (newProjectName.trim() && addProject) {
-      setIsCreatingProject(true);
+const handleCreateProject = async () => {
+  if (newProjectName.trim() && addProject) {
+    setIsCreatingProject(true);
+    try {
       const result = await addProject(newProjectName, newProjectDescription);
-      setIsCreatingProject(false);
-      // Close modal regardless of result, project was attempted
-      setSelectedProject(null);
-      setShowCreateProject(false);
-      setShowSuccess(false);
-      setSuccessType("");
+      
+      // Reset form fields
       setNewProjectName("");
       setNewProjectDescription("");
-      onClose();
+      
+      // Go back to project selection view (don't close modal)
+      setShowCreateProject(false);
+      
+      // Refresh the projects list to show the newly created project
+      if (fetchProjects) {
+        await fetchProjects();
+      }
+      
+      // Optionally auto-select the newly created project
+      if (result && result.id) {
+        setSelectedProject(result);
+      }
+    } catch (error) {
+      console.error("Error creating project:", error);
+    } finally {
+      setIsCreatingProject(false);
     }
-  };
+  }
+};
 
   const handleClose = () => {
     setSelectedProject(null);

@@ -128,7 +128,7 @@ export const Checkbox = ({ checked, onChange, label, indeterminate = false }) =>
 };
 
 // Pagination Component
-// Updated Pagination Component for CommonComponents.jsx
+// Updated Pagination Component - Replace in CommonComponents.jsx
 
 export const Pagination = ({
   currentPage,
@@ -136,32 +136,45 @@ export const Pagination = ({
   onPageChange,
   itemsPerPage,
   onItemsPerPageChange,
+  totalResults, // Optional: pass total results count for accurate calculation
 }) => {
+  // Calculate actual total pages based on totalResults if provided, otherwise use totalPages
+  const actualTotalPages = totalResults 
+    ? Math.ceil(totalResults / itemsPerPage) 
+    : totalPages;
+  
+  // Ensure we have at least 1 page and a valid number
+  const safeTotalPages = Math.max(1, actualTotalPages || 1);
+  
+  // Ensure currentPage doesn't exceed safeTotalPages
+  const safeCurrentPage = Math.min(currentPage, safeTotalPages);
+
   // Generate page numbers to display
   const getPageNumbers = () => {
     const pages = [];
     const maxVisible = 9;
 
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) {
+    // Only show pages up to safeTotalPages
+    if (safeTotalPages <= maxVisible) {
+      for (let i = 1; i <= safeTotalPages; i++) {
         pages.push(i);
       }
     } else {
       // Always show first page, last page, and pages around current
-      if (currentPage <= 5) {
+      if (safeCurrentPage <= 5) {
         for (let i = 1; i <= 7; i++) pages.push(i);
         pages.push('...');
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 4) {
+        pages.push(safeTotalPages);
+      } else if (safeCurrentPage >= safeTotalPages - 4) {
         pages.push(1);
         pages.push('...');
-        for (let i = totalPages - 6; i <= totalPages; i++) pages.push(i);
+        for (let i = safeTotalPages - 6; i <= safeTotalPages; i++) pages.push(i);
       } else {
         pages.push(1);
         pages.push('...');
-        for (let i = currentPage - 2; i <= currentPage + 2; i++) pages.push(i);
+        for (let i = safeCurrentPage - 2; i <= safeCurrentPage + 2; i++) pages.push(i);
         pages.push('...');
-        pages.push(totalPages);
+        pages.push(safeTotalPages);
       }
     }
     return pages;
@@ -175,32 +188,26 @@ export const Pagination = ({
           value={itemsPerPage}
           onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
           className="
-                appearance-none
-                px-3 py-2 pr-8
-                border border-gray-300
-                rounded-lg
-                text-sm
-                
-                bg-white
-              "
-                >
+            appearance-none
+            px-3 py-2 pr-8
+            border border-gray-300
+            rounded-lg
+            text-sm
+            bg-white
+          "
+        >
           <option value={10}>10</option>
           <option value={20}>20</option>
           <option value={50}>50</option>
         </select>
-
-        {/* Custom arrow */}
-        {/* <span className="pointer-events-none absolute right-3 text-gray-500">
-    ▼
-  </span> */}
       </div>
 
       {/* Page navigation */}
       <div className="flex items-center gap-1">
         {/* Previous arrow */}
         <button
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
+          onClick={() => onPageChange(safeCurrentPage - 1)}
+          disabled={safeCurrentPage === 1}
           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -208,7 +215,7 @@ export const Pagination = ({
           </svg>
         </button>
 
-        {/* Page numbers */}
+        {/* Page numbers - only show actual pages */}
         {getPageNumbers().map((page, index) => (
           page === '...' ? (
             <span key={`ellipsis-${index}`} className="w-8 h-8 flex items-center justify-center text-gray-400">
@@ -218,10 +225,11 @@ export const Pagination = ({
             <button
               key={page}
               onClick={() => onPageChange(page)}
-              className={`w-[24px] h-[24px] rounded text-[14px] font-medium transition-colors ${currentPage === page
+              className={`w-[24px] h-[24px] rounded text-[14px] font-medium transition-colors ${
+                safeCurrentPage === page
                   ? "bg-gray-900 text-white"
                   : "text-gray-600 hover:bg-gray-100"
-                }`}
+              }`}
             >
               {page}
             </button>
@@ -230,8 +238,8 @@ export const Pagination = ({
 
         {/* Next arrow */}
         <button
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
+          onClick={() => onPageChange(safeCurrentPage + 1)}
+          disabled={safeCurrentPage === safeTotalPages}
           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -245,7 +253,6 @@ export const Pagination = ({
     </div>
   );
 };
-
 // Loading Spinner
 export const LoadingSpinner = () => (
   <div className="flex items-center justify-center py-3 gap-1">

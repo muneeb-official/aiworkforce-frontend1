@@ -346,6 +346,9 @@ const CampaignManager = () => {
   const [b2bCompanies, setB2bCompanies] = useState([]);
   const [selectedCompanies, setSelectedCompanies] = useState([]);
 
+  const [detailCurrentPage, setDetailCurrentPage] = useState(1);
+const [detailItemsPerPage, setDetailItemsPerPage] = useState(10);
+
   // Modal states
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [showRemoveSuccess, setShowRemoveSuccess] = useState(false);
@@ -369,6 +372,15 @@ const CampaignManager = () => {
   const [campaignProjectIds, setCampaignProjectIds] = useState(new Set());
 
   // const [openProfileMenuId, setOpenProfileMenuId] = useState(null);
+
+  // Get paginated data for the detail view
+const getPaginatedDetailItems = () => {
+  const isB2B = (viewingCampaign?.sourceType || viewingCampaign?.source || "").toLowerCase() === "b2b";
+  const items = isB2B ? b2bCompanies : leads;
+  const startIndex = (detailCurrentPage - 1) * detailItemsPerPage;
+  const endIndex = startIndex + detailItemsPerPage;
+  return items.slice(startIndex, endIndex);
+};
 
   // Fetch projects from API
   useEffect(() => {
@@ -685,6 +697,8 @@ const CampaignManager = () => {
     setViewingCampaign(campaign);
     setSelectedLeads([]);
 
+    setDetailCurrentPage(1);
+
     // Fetch actual results for the campaign, passing source type
     const campaignSource = campaign.sourceType || campaign.source;
     await fetchProjectResults(campaign.id, campaignSource);
@@ -937,66 +951,25 @@ const CampaignManager = () => {
 
         {/* Results Count & Actions */}
         {!isLoadingResults && (
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-gray-600">
-              {(() => {
-                const isB2B =
-                  (
-                    viewingCampaign?.sourceType ||
-                    viewingCampaign?.source ||
-                    ""
-                  ).toLowerCase() === "b2b";
-                const count = isB2B ? b2bCompanies.length : leads.length;
-                const label = isB2B ? "companies" : "results";
-                return count > 0
-                  ? `1 - ${Math.min(10, count)} of about ${count} ${label}.`
-                  : `No ${label} found.`;
-              })()}
-            </p>
-            <div className="flex items-center gap-3">
-              {((
-                viewingCampaign?.sourceType ||
-                viewingCampaign?.source ||
-                ""
-              ).toLowerCase() === "b2b"
-                ? b2bCompanies.length > 0
-                : leads.length > 0) && (
-                  <>
-                    <button className="text-[#3C49F7] text-sm font-medium hover:underline">
-                      Export{" "}
-                      {(
-                        viewingCampaign?.sourceType ||
-                        viewingCampaign?.source ||
-                        ""
-                      ).toLowerCase() === "b2b"
-                        ? "Companies"
-                        : "Leads"}
-                    </button>
-                    {(
-                      viewingCampaign?.sourceType ||
-                      viewingCampaign?.source ||
-                      ""
-                    ).toLowerCase() !== "b2b" &&
-                      unenrichedCount > 0 && (
-                        <button
-                          onClick={handleEnrichAll}
-                          className="border border-[#3C49F7] text-[#3C49F7] px-4 py-2 rounded-full text-sm font-medium hover:bg-[#F2F2FF]"
-                        >
-                          Enrich All {unenrichedCount} Leads
-                        </button>
-                      )}
-                    <button
-                      onClick={() => handleStartWorkflow()}
-                      className="bg-[#3C49F7] text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-[#2a35d4]"
-                    >
-                      Start Workflow Builder
-                    </button>
-                  </>
-                )}
-            </div>
-          </div>
-        )}
-
+  <div className="flex items-center justify-between mb-4">
+    <p className="text-sm text-gray-600">
+      {(() => {
+        const isB2B = (viewingCampaign?.sourceType || viewingCampaign?.source || "").toLowerCase() === "b2b";
+        const totalCount = isB2B ? b2bCompanies.length : leads.length;
+        const label = isB2B ? "companies" : "results";
+        
+        if (totalCount === 0) {
+          return `No ${label} found.`;
+        }
+        
+        const startIndex = (detailCurrentPage - 1) * detailItemsPerPage + 1;
+        const endIndex = Math.min(detailCurrentPage * detailItemsPerPage, totalCount);
+        return `${startIndex} - ${endIndex} of about ${totalCount} ${label}.`;
+      })()}
+    </p>
+    {/* ... rest of the actions buttons ... */}
+  </div>
+)}
         {/* Select All - For B2B companies or regular leads */}
         {!isLoadingResults && (b2bCompanies.length > 0 || leads.length > 0) && (
           <div className="flex items-center gap-3 mb-4">
@@ -1035,362 +1008,191 @@ const CampaignManager = () => {
           </div>
         )}
 
-        {/* Results List - B2B Companies or Regular Leads */}
-        <div className="space-y-2">
-          {isLoadingResults ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="flex flex-col items-center gap-3">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3C49F7]"></div>
-                <p className="text-sm text-gray-500">Loading results...</p>
-              </div>
-            </div>
-          ) : (
-            viewingCampaign?.sourceType ||
-            viewingCampaign?.source ||
-            ""
-          ).toLowerCase() === "b2b" ? (
-            // B2B Projects - Show CompanyCard with View Active Directors (exactly like B2B advanced search)
-            b2bCompanies.length === 0 ? (
-              <div className="flex items-center justify-center py-12">
-                <p className="text-sm text-gray-500">No companies found</p>
-              </div>
-            ) : (
-              b2bCompanies.map((company) => (
-                <CompanyCard
-                  key={company.id}
-                  company={company}
-                  isSelected={selectedCompanies.includes(company.id)}
-                  onSelect={(companyId) => {
-                    setSelectedCompanies((prev) =>
-                      prev.includes(companyId)
-                        ? prev.filter((id) => id !== companyId)
-                        : [...prev, companyId],
-                    );
-                  }}
-                  onAddToProject={() => handleRemoveLead(company)}
-                  searchType="advance"
-                  context={{
-                    fetchDirectors: async (companyId) => {
-                      // Find the company to get the companyNumber (Companies House number)
-                      const targetCompany = b2bCompanies.find(
-                        (c) => c.id === companyId,
-                      );
-                      const companyNumber = targetCompany?.companyNumber;
+        
+{/* Results List - B2B Companies or Regular Leads */}
+<div className="space-y-2">
+  {isLoadingResults ? (
+    <div className="flex items-center justify-center py-12">
+      <div className="flex flex-col items-center gap-3">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3C49F7]"></div>
+        <p className="text-sm text-gray-500">Loading results...</p>
+      </div>
+    </div>
+  ) : (viewingCampaign?.sourceType || viewingCampaign?.source || "").toLowerCase() === "b2b" ? (
+    // B2B Projects
+    b2bCompanies.length === 0 ? (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-sm text-gray-500">No companies found</p>
+      </div>
+    ) : (
+      getPaginatedDetailItems().map((company) => (
+        <CompanyCard
+          key={company.id}
+          company={company}
+          isSelected={selectedCompanies.includes(company.id)}
+          onSelect={(companyId) => {
+            setSelectedCompanies((prev) =>
+              prev.includes(companyId)
+                ? prev.filter((id) => id !== companyId)
+                : [...prev, companyId]
+            );
+          }}
+          onAddToProject={() => handleRemoveLead(company)}
+          searchType="advance"
+          context={{
+            // ... keep existing context
+          }}
+        />
+      ))
+    )
+  ) : (
+    // Non-B2B Projects
+    leads.length === 0 ? (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-sm text-gray-500">No results found</p>
+      </div>
+    ) : (
+      getPaginatedDetailItems().map((lead) => (
+        <ProfileCard
+          key={lead.id}
+          profile={lead}
+          isSelected={selectedLeads.includes(lead.id)}
+          onSelect={handleSelectLead}
+          onEnrich={handleEnrichLead}
+          onRemoveFromCampaign={() => handleRemoveLead(lead)}
+          context="campaign"
+        />
+      ))
+    )
+  )}
+</div>
 
-                      if (!companyNumber) {
-                        console.error(
-                          "No company number found for company:",
-                          companyId,
-                        );
-                        return [];
-                      }
+        
+{/* Pagination */}
+{!isLoadingResults &&
+  (isB2BProject ? b2bCompanies.length > 0 : leads.length > 0) && (
+    <div className="flex items-center justify-between mt-6">
+      {/* Items per page dropdown */}
+      <div className="relative">
+        <select 
+          value={detailItemsPerPage}
+          onChange={(e) => {
+            setDetailItemsPerPage(Number(e.target.value));
+            setDetailCurrentPage(1); // Reset to page 1 when changing items per page
+          }}
+          className="appearance-none border border-gray-300 rounded-lg px-3 py-1.5 pr-8 text-sm bg-white cursor-pointer focus:outline-none focus:border-[#3C49F7]"
+        >
+          <option value={10}>10</option>
+          <option value={25}>25</option>
+          <option value={50}>50</option>
+        </select>
+      </div>
+      
+      {/* Page navigation */}
+      <div className="flex items-center gap-1">
+        {(() => {
+          const totalItems = isB2BProject ? b2bCompanies.length : leads.length;
+          const totalPages = Math.max(1, Math.ceil(totalItems / detailItemsPerPage));
+          
+          // Generate page numbers
+          const getPageNumbers = () => {
+            const pages = [];
+            const maxVisible = 9;
 
-                      // Fetch directors using the same API as B2BSearchContext
-                      try {
-                        const response = await api.get(
-                          `/b2b/v1/companies-house/company/${companyNumber}/directors`,
-                        );
+            if (totalPages <= maxVisible) {
+              for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+              }
+            } else {
+              if (detailCurrentPage <= 5) {
+                for (let i = 1; i <= 7; i++) pages.push(i);
+                pages.push('...');
+                pages.push(totalPages);
+              } else if (detailCurrentPage >= totalPages - 4) {
+                pages.push(1);
+                pages.push('...');
+                for (let i = totalPages - 6; i <= totalPages; i++) pages.push(i);
+              } else {
+                pages.push(1);
+                pages.push('...');
+                for (let i = detailCurrentPage - 2; i <= detailCurrentPage + 2; i++) pages.push(i);
+                pages.push('...');
+                pages.push(totalPages);
+              }
+            }
+            return pages;
+          };
 
-                        const transformedDirectors = (
-                          response.data.directors || []
-                        ).map((director, index) => {
-                          const address = director.address
-                            ? [
-                              director.address.premises,
-                              director.address.address_line_1,
-                              director.address.address_line_2,
-                              director.address.locality,
-                              director.address.region,
-                              director.address.postal_code,
-                              director.address.country,
-                            ]
-                              .filter(Boolean)
-                              .join(", ")
-                            : "N/A";
-
-                          return {
-                            id: `${companyNumber}-director-${index}`,
-                            name:
-                              director.formatted_name || director.original_name,
-                            title: director.officer_role || "Director",
-                            email: "***@company.com",
-                            secondaryEmail: null,
-                            phones: ["***-***-****"],
-                            maskedName:
-                              director.formatted_name || director.original_name,
-                            maskedEmail: "***@company.com",
-                            maskedSecondaryEmail: null,
-                            maskedPhones: ["***-***-****"],
-                            isEnriched: false,
-                            appointed_on: director.appointed_on,
-                            address: address,
-                            officer_role: director.officer_role,
-                          };
-                        });
-
-                        // Update the company with directors
-                        setB2bCompanies((prev) =>
-                          prev.map((c) =>
-                            c.id === companyId
-                              ? { ...c, directors: transformedDirectors }
-                              : c,
-                          ),
-                        );
-
-                        return transformedDirectors;
-                      } catch (error) {
-                        console.error("Error fetching directors:", error);
-                        return [];
-                      }
-                    },
-                    enrichDirector: async (companyId, directorId) => {
-                      // Enrich director using the same API flow as B2BSearchContext
-                      const company = b2bCompanies.find(
-                        (c) => c.id === companyId,
-                      );
-                      const director = company?.directors?.find(
-                        (d) => d.id === directorId,
-                      );
-
-                      if (!company || !director) {
-                        console.error("Company or director not found");
-                        return false;
-                      }
-
-                      console.log(
-                        "🔍 Enriching director:",
-                        director.name,
-                        "at",
-                        company.name,
-                      );
-
-                      let enrichedData = null;
-                      let dataSource = null;
-
-                      // Try RocketReach first
-                      try {
-                        const rocketReachBody = {
-                          query: {
-                            name: [director.name],
-                            current_employer: [company.name],
-                          },
-                        };
-
-                        console.log(
-                          "📡 Calling RocketReach API with:",
-                          rocketReachBody,
-                        );
-                        const rocketReachResponse = await api.post(
-                          "/b2b/v1/rocketreach/person-lookup",
-                          rocketReachBody,
-                        );
-
-                        console.log(
-                          "✅ RocketReach API Response:",
-                          rocketReachResponse.data,
-                        );
-
-                        if (
-                          rocketReachResponse.data?.profile &&
-                          Object.keys(rocketReachResponse.data.profile).length >
-                          0 &&
-                          rocketReachResponse.data.profile.id
-                        ) {
-                          enrichedData = rocketReachResponse.data.profile;
-                          dataSource = "rocketreach";
-                          console.log("✅ Using RocketReach data");
-                        }
-                      } catch (rocketReachError) {
-                        console.log(
-                          "⚠️ RocketReach failed, trying ContactOut...",
-                          rocketReachError.message,
-                        );
-                      }
-
-                      // Fallback to ContactOut
-                      if (!enrichedData) {
-                        try {
-                          const contactOutBody = {
-                            full_name: director.name,
-                            company: [company.name],
-                          };
-
-                          console.log(
-                            "📡 Calling ContactOut API with:",
-                            contactOutBody,
-                          );
-                          const contactOutResponse = await api.post(
-                            "/b2b/v1/contactout/enrich",
-                            contactOutBody,
-                          );
-
-                          console.log(
-                            "✅ ContactOut API Response:",
-                            contactOutResponse.data,
-                          );
-
-                          if (
-                            contactOutResponse.data?.profile &&
-                            Object.keys(contactOutResponse.data.profile)
-                              .length > 0
-                          ) {
-                            enrichedData = contactOutResponse.data.profile;
-                            dataSource = "contactout";
-                            console.log("✅ Using ContactOut data");
-                          } else {
-                            console.error("❌ Both APIs returned empty data");
-                            return false;
-                          }
-                        } catch (contactOutError) {
-                          console.error(
-                            "❌ Both enrichment APIs failed:",
-                            contactOutError.message,
-                          );
-                          return false;
-                        }
-                      }
-
-                      // Transform and update director with enriched data
-                      let phones = [];
-                      let emails = [];
-                      let title = director.title;
-                      let linkedin_url = director.linkedin_url;
-
-                      if (dataSource === "rocketreach") {
-                        phones = (enrichedData.phones || []).map(
-                          (phone) => phone.number,
-                        );
-                        emails = (enrichedData.emails || []).map(
-                          (email) => email.email,
-                        );
-                        title = enrichedData.current_title || director.title;
-                        linkedin_url = enrichedData.linkedin_url;
-                      } else if (dataSource === "contactout") {
-                        const allEmails = [
-                          ...(enrichedData.email || []),
-                          ...(enrichedData.work_email || []),
-                          ...(enrichedData.personal_email || []),
-                        ];
-                        emails = allEmails.filter(Boolean);
-                        phones = (enrichedData.phone || []).filter(Boolean);
-                        title = enrichedData.headline || director.title;
-                        linkedin_url = enrichedData.url;
-                      }
-
-                      // Update the director with enriched data
-                      setB2bCompanies((prev) =>
-                        prev.map((c) => {
-                          if (c.id === companyId) {
-                            return {
-                              ...c,
-                              directors: c.directors.map((d) =>
-                                d.id === directorId
-                                  ? {
-                                    ...d,
-                                    isEnriched: true,
-                                    name:
-                                      enrichedData.name ||
-                                      enrichedData.full_name ||
-                                      d.name,
-                                    title: title,
-                                    email: emails[0] || d.email,
-                                    secondaryEmail: emails[1] || null,
-                                    phones:
-                                      phones.length > 0 ? phones : d.phones,
-                                    linkedin_url: linkedin_url,
-                                    enrichmentSource: dataSource,
-                                  }
-                                  : d,
-                              ),
-                            };
-                          }
-                          return c;
-                        }),
-                      );
-
-                      console.log(
-                        `✅ Successfully enriched director using ${dataSource}`,
-                      );
-                      return true;
-                    },
-                  }}
-                />
-              ))
-            )
-          ) : // Non-B2B Projects - Show ProfileCard for leads
-            leads.length === 0 ? (
-              <div className="flex items-center justify-center py-12">
-                <p className="text-sm text-gray-500">No results found</p>
-              </div>
-            ) : (
-              leads.map((lead) => (
-                <ProfileCard
-                  key={lead.id}
-                  profile={lead}
-                  isSelected={selectedLeads.includes(lead.id)}
-                  onSelect={handleSelectLead}
-                  onEnrich={handleEnrichLead}
-                  onRemoveFromCampaign={() => handleRemoveLead(lead)}
-                  context="campaign"
-                />
-              ))
-            )}
-        </div>
-
-        {/* Pagination */}
-        {!isLoadingResults &&
-          (isB2BProject ? b2bCompanies.length > 0 : leads.length > 0) && (
-            <div className="flex items-center justify-between mt-6">
-              <div className="relative">
-                <select className="appearance-none border border-gray-300 rounded-lg px-3 py-1.5 pr-8 text-sm bg-white cursor-pointer focus:outline-none focus:border-[#3C49F7]">
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-1">
-                <button className="p-2 rounded hover:bg-gray-100">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((page) => (
+          return (
+            <>
+              {/* Previous arrow */}
+              <button 
+                onClick={() => setDetailCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={detailCurrentPage === 1}
+                className="p-2 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              
+              {/* Page numbers */}
+              {getPageNumbers().map((page, index) => (
+                page === '...' ? (
+                  <span key={`ellipsis-${index}`} className="w-8 h-8 flex items-center justify-center text-gray-400">
+                    ...
+                  </span>
+                ) : (
                   <button
                     key={page}
-                    className={`w-8 h-8 rounded text-sm font-medium ${page === 1 ? "bg-[#1a1a1a] text-white" : "text-gray-600 hover:bg-gray-100"}`}
+                    onClick={() => setDetailCurrentPage(page)}
+                    className={`w-8 h-8 rounded text-sm font-medium ${
+                      detailCurrentPage === page 
+                        ? "bg-[#1a1a1a] text-white" 
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
                   >
                     {page}
                   </button>
-                ))}
-                <button className="p-2 rounded hover:bg-gray-100">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
-
+                )
+              ))}
+              
+              {/* Next arrow */}
+              <button 
+                onClick={() => setDetailCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={detailCurrentPage === totalPages}
+                className="p-2 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </>
+          );
+        })()}
+      </div>
+    </div>
+  )}
         {/* Modals */}
         <CampaignManagerModals
           showRemoveConfirm={showRemoveConfirm}
@@ -1424,6 +1226,8 @@ const CampaignManager = () => {
       </div>
     );
   }
+
+
 
   // Main Campaign List View
   return (

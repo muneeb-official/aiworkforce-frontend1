@@ -560,12 +560,12 @@ export const DateRangeSplitFilter = ({ filterKey, activeFilters, onAddFilter, on
 };
 
 // Location Filter - FIXED VERSION with working radius slider
-// Replace your existing LocationFilter in FilterComponents.jsx with this
+// Replace the LocationFilter component in FilterComponents.jsx with this fixed version:
 
 export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, hasModifier, activeFilters, onAddFilter, onRemoveFilter, onUpdateModifier }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [expandedItems, setExpandedItems] = useState({});
-    const [radius, setRadius] = useState(0); // Add state for radius
+    const [radius, setRadius] = useState(0);
 
     const handleParentSelect = (loc) => {
         const isSelected = activeFilters.some(f => f.type === filterKey && f.value === loc.name);
@@ -602,12 +602,10 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
         }, 50);
     };
 
-    // Handle radius change
     const handleRadiusChange = (e) => {
         const newRadius = parseInt(e.target.value);
         setRadius(newRadius);
         
-        // Update or add radius filter
         const radiusFilterType = `${filterKey}_radius`;
         const existingRadiusFilter = activeFilters.find(f => f.type === radiusFilterType);
         
@@ -643,13 +641,22 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
 
                     return (
                         <div key={loc.name}>
-                            <div className="flex items-center justify-between px-2 hover:bg-gray-50 rounded-lg group flex-nowrap whitespace-nowrap">
-                                <div className="flex items-center gap-2 flex-1">
-                                    {loc.children && (
-                                        <button onClick={() => setExpandedItems(p => ({ ...p, [loc.name]: !p[loc.name] }))} className="p-0.5">
-                                            <ChevronRight className={`text-blue-600 transition-transform ${expandedItems[loc.name] ? "rotate-90" : ""}`} />
+                            {/* Parent Item */}
+                            <div className="flex items-center justify-between px-2 py-1 hover:bg-gray-50 rounded-lg group">
+                                <div className="flex items-center gap-2">
+                                    {/* Chevron for expandable items */}
+                                    {loc.children ? (
+                                        <button 
+                                            onClick={() => setExpandedItems(p => ({ ...p, [loc.name]: !p[loc.name] }))} 
+                                            className="p-0.5 flex-shrink-0"
+                                        >
+                                            <ChevronRight className={`w-4 h-4 text-blue-600 transition-transform ${expandedItems[loc.name] ? "rotate-90" : ""}`} />
                                         </button>
+                                    ) : (
+                                        <div className="w-5 flex-shrink-0" />
                                     )}
+                                    
+                                    {/* Checkbox */}
                                     <button 
                                         onClick={() => handleParentSelect(loc)} 
                                         className="flex items-center gap-2"
@@ -662,6 +669,8 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
                                         </span>
                                     </button>
                                 </div>
+                                
+                                {/* Modifier button */}
                                 {hasModifier && (
                                     <ModifierButtonInline
                                         currentFilter={currentFilter}
@@ -669,19 +678,39 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
                                     />
                                 )}
                             </div>
+                            
+                            {/* Children Items - FIXED ALIGNMENT */}
                             {expandedItems[loc.name] && loc.children && (
-                                <div className="ml-4 space-y-1">
+                                <div className="space-y-1">
                                     {loc.children.map((child) => {
                                         const isChildSelected = activeFilters.some(f => f.type === filterKey && f.value === child);
                                         const childFilter = activeFilters.find(f => f.type === filterKey && f.value === child);
+                                        
                                         return (
-                                            <div key={child} className="flex items-center gap-0 px-2 hover:bg-gray-50 rounded-lg group flex-nowrap whitespace-nowrap [&>*]:shrink-0">
-                                                <button onClick={() => handleChildSelect(child)} className="flex items-center gap-2 appearance-none w-[18px] h-[18px] rounded-[6px] border border-gray-300 bg-white hover:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer flex-shrink-0">
-                                                    <div className={`w-5 h-5 rounded flex items-center justify-center ${isChildSelected ? "bg-blue-600 border-blue-600" : "border-gray-300"}`}>
-                                                        {isChildSelected && <CheckIcon />}
-                                                    </div>
-                                                    <span className="text-[14px] text-[#0C1112]">{child}</span>
-                                                </button>
+                                            <div 
+                                                key={child} 
+                                                className="flex items-center justify-between px-2 py-1 hover:bg-gray-50 rounded-lg group"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    {/* Spacer to align with parent (chevron width + gap) */}
+                                                    <div className="w-5 flex-shrink-0" />
+                                                    
+                                                    {/* Indent for child level */}
+                                                    <div className="w-4 flex-shrink-0" />
+                                                    
+                                                    {/* Checkbox + Label */}
+                                                    <button 
+                                                        onClick={() => handleChildSelect(child)} 
+                                                        className="flex items-center gap-2"
+                                                    >
+                                                        <div className={`w-[18px] h-[18px] rounded-[6px] border flex items-center justify-center flex-shrink-0 ${isChildSelected ? "bg-blue-600 border-blue-600" : "border-gray-300 bg-white hover:border-blue-600"}`}>
+                                                            {isChildSelected && <CheckIcon />}
+                                                        </div>
+                                                        <span className="text-[14px] text-[#0C1112]">{child}</span>
+                                                    </button>
+                                                </div>
+                                                
+                                                {/* Modifier button for child */}
                                                 {hasModifier && (
                                                     <ModifierButtonInline
                                                         currentFilter={childFilter}
@@ -698,7 +727,7 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
                 })}
             </div>
             
-            {/* FIXED: Interactive Radius Slider */}
+            {/* Radius Slider */}
             {hasRadius && (
                 <div className="py-2 max-w-lg">
                     <div className="flex items-center gap-3 mb-1">
@@ -706,19 +735,14 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
                         <span className="w-5 h-5 rounded-full bg-gray-800 text-white flex items-center justify-center text-xs font-bold">?</span>
                     </div>
 
-                    {/* Slider Container */}
                     <div className="relative h-6 flex items-center">
-                        {/* Background track */}
                         <div className="absolute left-0 right-0 h-[2px] bg-gray-400 rounded-full" />
-                        
-                        {/* Active track (blue portion) */}
                         <div 
                             className="absolute left-0 h-[2px] bg-blue-600 rounded-full" 
                             style={{ width: `${radius}%` }}
                         />
 
-                        {/* Step markers */}
-                        {steps.map((step, index) => (
+                        {steps.map((step) => (
                             <div
                                 key={step}
                                 className={`absolute h-5 w-[3px] rounded-sm transition-colors ${
@@ -731,7 +755,6 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
                             />
                         ))}
 
-                        {/* Actual range input (invisible but functional) */}
                         <input
                             type="range"
                             min="0"
@@ -742,7 +765,6 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
                             className="absolute w-full h-6 opacity-0 cursor-pointer z-10"
                         />
 
-                        {/* Draggable thumb indicator - straight vertical line */}
                         <div 
                             className="absolute h-5 w-[3px] bg-blue-600 rounded-sm pointer-events-none"
                             style={{ 
@@ -752,13 +774,9 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
                         />
                     </div>
 
-                    {/* Labels */}
                     <div className="flex justify-between text-base font-semibold text-gray-700 mt-2">
                         {steps.map((step) => (
-                            <span
-                                key={step}
-                                className={step <= radius ? 'text-blue-600' : ''}
-                            >
+                            <span key={step} className={step <= radius ? 'text-blue-600' : ''}>
                                 {step}
                             </span>
                         ))}
@@ -768,13 +786,14 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
         </div>
     );
 };
-// Inline Modifier Button
+
+// Inline Modifier Button (keep this as is)
 const ModifierButtonInline = ({ currentFilter, onModifierClick }) => {
     const [showModifier, setShowModifier] = useState(false);
     const btnRef = useRef(null);
 
     return (
-        <div className="relative">
+        <div className="relative flex-shrink-0">
             <button
                 ref={btnRef}
                 onClick={() => setShowModifier(!showModifier)}
