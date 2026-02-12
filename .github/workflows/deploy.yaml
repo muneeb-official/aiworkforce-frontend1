@@ -45,5 +45,5 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
-      # - name: Deploy changes
-      #   run: aws ecs update-service --cluster hairai --service hairai-frontend-service --force-new-deployment --no-cli-pager
+      - name: Deploy changes
+        run: aws ecs update-service --cluster ai-workforce-prod --service aiw-frontend-service --force-new-deployment --no-cli-pager
