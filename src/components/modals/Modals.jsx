@@ -1769,6 +1769,17 @@ export const WhatsAppConnectModal = ({ isOpen, onClose, onConnect }) => {
     }
   };
 
+  // Auto-refresh QR code every 60 seconds while on qrcode step
+  useEffect(() => {
+    if (step !== 'qrcode' || !isOpen) return;
+
+    const intervalId = setInterval(() => {
+      handleRefreshQR();
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, [step, isOpen]);
+
   const handleDone = () => {
     // User confirms they've scanned the QR code
     handleClose();

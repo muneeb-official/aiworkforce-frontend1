@@ -313,7 +313,7 @@ export default function SearchResultsView({ mode = "b2c", config, context, searc
         <Pagination
   currentPage={currentPage}
   totalPages={totalPages}
-  totalResults={totalResults}  // Add this
+  totalResults={isB2B ? undefined : totalResults}
   onPageChange={setCurrentPage}
   itemsPerPage={itemsPerPage}
   onItemsPerPageChange={setItemsPerPage}

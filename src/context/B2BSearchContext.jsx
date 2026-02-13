@@ -229,14 +229,19 @@ export const B2BSearchProvider = ({ children }) => {
         body.start_index = String((currentPage - 1) * itemsPerPage);
         body.size = String(itemsPerPage);
 
+        const endpoint = `/b2b/v1/companies-house/advanced-search?exclude_existing=${excludeInProject}`;
+        console.log("🔍 [B2B Advanced Search] Request URL:", endpoint);
         console.log(
-          "Advanced search request body:",
+          "🔍 [B2B Advanced Search] Request Body:",
           JSON.stringify(body, null, 2),
         );
 
-        response = await api.post(
-          `/b2b/v1/companies-house/advanced-search?exclude_existing=${excludeInProject}`,
-          body,
+        response = await api.post(endpoint, body);
+
+        console.log("✅ [B2B Advanced Search] Response Status:", response.status);
+        console.log(
+          "✅ [B2B Advanced Search] Response Data:",
+          JSON.stringify(response.data, null, 2),
         );
 
         // Transform Companies House API response
@@ -285,13 +290,27 @@ export const B2BSearchProvider = ({ children }) => {
       } else {
         // Use basic search endpoint (RocketReach)
         const query = transformFiltersToQuery(activeFilters);
-
-        response = await api.post(`/b2b/v1/rocketreach/company-search?exclude_existing=${excludeInProject}`, {
+        const endpoint = `/b2b/v1/rocketreach/company-search?exclude_existing=${excludeInProject}`;
+        const requestBody = {
           query,
           order_by: "popularity",
           start: (currentPage - 1) * itemsPerPage + 1,
-          size: itemsPerPage,
-        });
+          page_size: itemsPerPage,
+        };
+
+        console.log("🔍 [B2B Basic Search] Request URL:", endpoint);
+        console.log(
+          "🔍 [B2B Basic Search] Request Body:",
+          JSON.stringify(requestBody, null, 2),
+        );
+
+        response = await api.post(endpoint, requestBody);
+
+        console.log("✅ [B2B Basic Search] Response Status:", response.status);
+        console.log(
+          "✅ [B2B Basic Search] Response Data:",
+          JSON.stringify(response.data, null, 2),
+        );
 
         const transformedCompanies = response.data.companies.map((company) => ({
           id: company.id,
@@ -320,10 +339,10 @@ export const B2BSearchProvider = ({ children }) => {
       }
 
       setHasSearched(true);
-      setCurrentPage(1);
     } catch (error) {
-      console.error("Error searching companies:", error);
-      console.error("Error details:", error.response?.data || error.message);
+      console.error("❌ [B2B Company Search] Error:", error);
+      console.error("❌ [B2B Company Search] Error Status:", error.response?.status);
+      console.error("❌ [B2B Company Search] Error Data:", JSON.stringify(error.response?.data, null, 2) || error.message);
       setCompanies([]);
     } finally {
       setIsLoading(false);
@@ -1203,22 +1222,40 @@ export const B2BSearchProvider = ({ children }) => {
     setExpandedCompany((prev) => (prev === companyId ? null : companyId));
   }, []);
 
-  // Get paginated companies
+  // Get paginated companies - API already returns paginated data
   const getPaginatedCompanies = useCallback(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return companies.slice(start, end);
-  }, [companies, currentPage, itemsPerPage]);
+    return companies;
+  }, [companies]);
 
-  // Calculate total pages
-  const totalPages = Math.ceil(companies.length / itemsPerPage);
+  // Fixed 20 pages for pagination
+  const totalPages = 20;
 
-  // Auto-trigger search when filters change
+  // Handler for changing page - clears selection and triggers new search
+  const handlePageChange = useCallback((newPage) => {
+    setSelectedCompanies([]);
+    setCurrentPage(newPage);
+  }, []);
+
+  // Handler for changing items per page - resets to page 1 and triggers new search
+  const handleItemsPerPageChange = useCallback((newItemsPerPage) => {
+    setSelectedCompanies([]);
+    setCurrentPage(1);
+    setItemsPerPage(newItemsPerPage);
+  }, []);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    if (activeFilters.length > 0) {
+      setCurrentPage(1);
+    }
+  }, [activeFilters]);
+
+  // Auto-trigger search when filters, page, or items per page change
   useEffect(() => {
     if (activeFilters.length > 0) {
       searchCompanies();
     }
-  }, [activeFilters, searchCompanies]);
+  }, [activeFilters, currentPage, itemsPerPage, excludeInProject, searchCompanies]);
 
   const value = {
     // Credits
@@ -1259,9 +1296,9 @@ export const B2BSearchProvider = ({ children }) => {
 
     // Pagination
     currentPage,
-    setCurrentPage,
+    setCurrentPage: handlePageChange,
     itemsPerPage,
-    setItemsPerPage,
+    setItemsPerPage: handleItemsPerPageChange,
     totalPages,
     totalResults,
     setTotalResults,

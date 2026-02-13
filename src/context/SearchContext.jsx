@@ -28,6 +28,9 @@ export const SearchProvider = ({ children }) => {
   // Active filters state
   const [activeFilters, setActiveFilters] = useState([]);
 
+  // Search query from the main search bar
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Search results state
   const [profiles, setProfiles] = useState(profilesData);
   const [selectedProfiles, setSelectedProfiles] = useState([]);
@@ -56,6 +59,13 @@ export const SearchProvider = ({ children }) => {
   const [projects, setProjects] = useState([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
 
+  // Helper to detect if a string is a URL/link
+  const isLink = useCallback((str) => {
+    if (!str) return false;
+    const trimmed = str.trim();
+    return /^https?:\/\//i.test(trimmed) || /^(www\.)?linkedin\.com/i.test(trimmed);
+  }, []);
+
   // Transform activeFilters to API query format
   const transformFiltersToAPIQuery = useCallback(() => {
     const query = {
@@ -74,6 +84,11 @@ export const SearchProvider = ({ children }) => {
       exclude_current_employer: [],
       exclude_location: [],
     };
+
+    // If searchQuery is a link, add it to query
+    if (isLink(searchQuery)) {
+      query.link = [searchQuery.trim()];
+    }
 
     // Find radius filter if exists
     const radiusFilter = activeFilters.find(
@@ -168,7 +183,7 @@ export const SearchProvider = ({ children }) => {
     });
 
     return query;
-  }, [activeFilters]);
+  }, [activeFilters, isLink, searchQuery]);
 
   // Search API function
   const searchPeople = useCallback(async () => {
@@ -378,9 +393,10 @@ export const SearchProvider = ({ children }) => {
       excludeInProject,
     );
 
-    // Auto-trigger search when filters are present
-    if (activeFilters.length > 0) {
-      console.log("📋 Active filters:", activeFilters);
+    // Auto-trigger search when filters are present or searchQuery is a link
+    const hasLink = isLink(searchQuery);
+    if (activeFilters.length > 0 || hasLink) {
+      console.log("📋 Active filters:", activeFilters, "hasLink:", hasLink);
       if (!hasSearched) {
         console.log("✨ Setting hasSearched to true");
         setHasSearched(true);
@@ -392,7 +408,7 @@ export const SearchProvider = ({ children }) => {
       searchPeople();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeFilters, currentPage, itemsPerPage, excludeInProject]);
+  }, [activeFilters, currentPage, itemsPerPage, excludeInProject, searchQuery]);
 
   // Add filter
   const addFilter = useCallback((filter) => {
@@ -413,6 +429,7 @@ export const SearchProvider = ({ children }) => {
   // Clear all filters
   const clearFilters = useCallback(() => {
     setActiveFilters([]);
+    setSearchQuery("");
     setHasSearched(false);
     setSelectedProfiles([]);
     setProfiles([]);
@@ -1145,6 +1162,9 @@ export const SearchProvider = ({ children }) => {
 
     // Search
     searchPeople,
+    searchQuery,
+    setSearchQuery,
+    isLink,
   };
 
   return (

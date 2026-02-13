@@ -235,30 +235,12 @@ export const SelectedFilterItem = ({ filter, hasModifier, onRemove, onUpdateModi
     const btnRef = useRef(null);
 
     return (
-        <div className="flex items-center gap-0 px-2 hover:bg-gray-50 rounded-lg group flex-nowrap whitespace-nowrap [&>*]:shrink-0">
-            <button onClick={onRemove} className="flex items-center gap-2 appearance-none
-  w-[18px] h-[18px]
-  rounded-[6px]
-  border border-gray-300
-  bg-white
-  hover:border-blue-600
-  focus:outline-none focus:ring-2 focus:ring-blue-500/30
-  cursor-pointer
-  checked:bg-blue-600 checked:border-blue-600
-  checked:after:content-['']
-  checked:after:block
-  checked:after:w-[6px] checked:after:h-[10px]
-  checked:after:border-r-2 checked:after:border-b-2 checked:after:border-white
-  checked:after:rotate-45
-  checked:after:translate-x-[5px] checked:after:translate-y-[1px]
-  flex-shrink-0">
-                {/* <div className="w-5 h-5 rounded bg-blue-600 flex items-center justify-center">
-                    <CheckIcon />
-                </div> */}
-                <span className="text-[14px] text-[#0C1112]">{filter.value}</span>
+        <div className="flex items-center justify-between gap-2 px-2 hover:bg-gray-50 rounded-lg group">
+            <button onClick={onRemove} className="flex items-center gap-2 min-w-0">
+                <span className="text-[14px] text-[#0C1112] truncate">{filter.value}</span>
             </button>
             {hasModifier && (
-                <div className="relative">
+                <div className="relative flex-shrink-0">
                     <button ref={btnRef} onClick={() => setShowModifier(!showModifier)} className="p-1 hover:bg-gray-200 rounded">
                         <img src={FilterIcon} alt="filter" className="w-4 h-4" />
                     </button>
@@ -567,6 +549,16 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
     const [expandedItems, setExpandedItems] = useState({});
     const [radius, setRadius] = useState(0);
 
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter" && searchTerm.trim()) {
+            const exists = activeFilters.some(f => f.type === filterKey && f.value.toLowerCase() === searchTerm.trim().toLowerCase());
+            if (!exists) {
+                onAddFilter({ type: filterKey, value: searchTerm.trim(), icon: "location" });
+            }
+            setSearchTerm("");
+        }
+    };
+
     const handleParentSelect = (loc) => {
         const isSelected = activeFilters.some(f => f.type === filterKey && f.value === loc.name);
         if (isSelected) {
@@ -632,6 +624,7 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
                 placeholder={placeholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 mb-2"
             />
             <div className="space-y-1 max-h-48 overflow-y-auto">

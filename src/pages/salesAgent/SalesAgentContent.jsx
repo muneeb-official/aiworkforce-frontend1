@@ -53,13 +53,25 @@ export default function SalesAgentContent({ mode = "b2c", setActivePage, credits
     setExcludeInProject,
   } = context;
 
+  // B2C-specific: search query stored in context for link detection
+  const {
+    searchQuery: b2cSearchQuery,
+    setSearchQuery: setB2cSearchQuery,
+    isLink: b2cIsLink,
+    searchPeople: b2cSearchPeople,
+  } = b2cContext;
+
   // Search type state - uses first option from config
   const [localSearchType, setLocalSearchType] = useState(config.searchTypes[0].key);
 
   // For B2B, sync with context's searchType
   const searchType = mode === "b2b" ? (b2bContext.searchType || localSearchType) : localSearchType;
   const setSearchType = mode === "b2b" ? b2bContext.setSearchType : setLocalSearchType;
-  const [searchQuery, setSearchQuery] = useState("");
+  const [localSearchQuery, setLocalSearchQuery] = useState("");
+
+  // For B2C, use context searchQuery; for B2B, use local state
+  const searchQuery = mode === "b2c" ? (b2cSearchQuery ?? localSearchQuery) : localSearchQuery;
+  const setSearchQuery = mode === "b2c" ? setB2cSearchQuery : setLocalSearchQuery;
 
   // Saved searches state
   const [savedSearches, setSavedSearches] = useState([]);
@@ -141,6 +153,13 @@ export default function SalesAgentContent({ mode = "b2c", setActivePage, credits
       // For B2C mode, trigger the API search
       if (mode === "b2c") {
         setShowLoadingModal(true);
+
+        // If the query is a link, the useEffect in SearchContext will
+        // auto-trigger searchPeople. Otherwise trigger it manually if filters exist.
+        if (b2cIsLink && b2cIsLink(searchQuery)) {
+          b2cSearchPeople && b2cSearchPeople();
+        }
+
         setTimeout(() => {
           setShowLoadingModal(false);
           setHasSearched(true);
