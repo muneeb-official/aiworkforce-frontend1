@@ -205,7 +205,7 @@ export const SearchProvider = ({ children }) => {
         order_by: "popularity",
         contact_method: "email",
         start: (currentPage - 1) * itemsPerPage + 1,
-        size: itemsPerPage,
+        page_size: itemsPerPage,
       };
 
       // Use ref to get latest excludeInProject value
@@ -1105,8 +1105,8 @@ export const SearchProvider = ({ children }) => {
     setCurrentPage(newPage);
   }, []);
 
-  // Calculate total pages based on API totalResults
-  const totalPages = Math.ceil(totalResults / itemsPerPage);
+  // Fixed 20 pages for pagination
+  const totalPages = 20;
 
   const value = {
     // Credits
