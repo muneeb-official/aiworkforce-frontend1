@@ -47,6 +47,59 @@ export const CheckIcon = () => (
     </svg>
 );
 
+// Suggestion Dropdown Component
+export const SuggestionDropdown = ({ 
+    suggestions, 
+    isOpen, 
+    onSelect, 
+    onClose, 
+    inputValue,
+    highlightMatch = true 
+}) => {
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                onClose();
+            }
+        };
+        if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [isOpen, onClose]);
+
+    if (!isOpen || suggestions.length === 0) return null;
+
+    const highlightText = (text, query) => {
+        if (!highlightMatch || !query) return text;
+        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        const parts = text.split(regex);
+        return parts.map((part, i) => 
+            regex.test(part) ? <span key={i} className="font-semibold text-blue-600">{part}</span> : part
+        );
+    };
+
+    return (
+        <div 
+            ref={dropdownRef}
+            className="absolute left-0 right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 max-h-48 overflow-y-auto"
+        >
+            {suggestions.map((suggestion, index) => (
+                <button
+                    key={index}
+                    onClick={() => onSelect(suggestion)}
+                    className="w-full px-3 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                >
+                    <span>{highlightText(suggestion.label || suggestion, inputValue)}</span>
+                    {suggestion.count && (
+                        <span className="text-gray-400 text-xs">({suggestion.count})</span>
+                    )}
+                </button>
+            ))}
+        </div>
+    );
+};
+
 // Modifier Dropdown Component
 export const ModifierDropdown = ({ isOpen, onClose, onSelect, currentModifier, buttonRef }) => {
     const dropdownRef = useRef(null);
@@ -161,9 +214,36 @@ export const FilterSection = ({ title, count, children, defaultOpen = false }) =
     );
 };
 
-// Text Filter
-export const TextFilter = ({ filterKey, placeholder, hasModifier, activeFilters, onAddFilter, onRemoveFilter, onUpdateModifier }) => {
+// Text Filter with Suggestions
+export const TextFilter = ({ 
+    filterKey, 
+    placeholder, 
+    hasModifier, 
+    activeFilters, 
+    onAddFilter, 
+    onRemoveFilter, 
+    onUpdateModifier,
+    suggestions = [] // Array of suggestion strings or objects with { label, count }
+}) => {
     const [inputValue, setInputValue] = useState("");
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        if (inputValue.trim() && suggestions.length > 0) {
+            const filtered = suggestions.filter(s => {
+                const label = typeof s === 'string' ? s : s.label;
+                return label.toLowerCase().includes(inputValue.toLowerCase()) &&
+                    !activeFilters.some(f => f.type === filterKey && f.value.toLowerCase() === label.toLowerCase());
+            });
+            setFilteredSuggestions(filtered.slice(0, 10)); // Limit to 10 suggestions
+            setShowSuggestions(filtered.length > 0);
+        } else {
+            setShowSuggestions(false);
+            setFilteredSuggestions([]);
+        }
+    }, [inputValue, suggestions, activeFilters, filterKey]);
 
     const handleKeyDown = (e) => {
         if (e.key === "Enter" && inputValue.trim()) {
@@ -172,46 +252,129 @@ export const TextFilter = ({ filterKey, placeholder, hasModifier, activeFilters,
                 onAddFilter({ type: filterKey, value: inputValue.trim(), icon: filterKey });
             }
             setInputValue("");
+            setShowSuggestions(false);
+        }
+        if (e.key === "Escape") {
+            setShowSuggestions(false);
         }
     };
 
-    return (
-        <input
-            type="text"
-            placeholder={placeholder}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-        />
-    );
-};
-
-// Text with Checkbox Filter
-export const TextWithCheckboxFilter = ({ filterKey, placeholder, hasModifier, activeFilters, onAddFilter, onRemoveFilter, onUpdateModifier }) => {
-    const [inputValue, setInputValue] = useState("");
-    const selectedFilters = activeFilters.filter(f => f.type === filterKey);
-
-    const handleKeyDown = (e) => {
-        if (e.key === "Enter" && inputValue.trim()) {
-            const exists = activeFilters.some(f => f.type === filterKey && f.value.toLowerCase() === inputValue.trim().toLowerCase());
-            if (!exists) {
-                onAddFilter({ type: filterKey, value: inputValue.trim(), icon: filterKey });
-            }
-            setInputValue("");
+    const handleSuggestionSelect = (suggestion) => {
+        const value = typeof suggestion === 'string' ? suggestion : suggestion.label;
+        const exists = activeFilters.some(f => f.type === filterKey && f.value.toLowerCase() === value.toLowerCase());
+        if (!exists) {
+            onAddFilter({ type: filterKey, value, icon: filterKey });
         }
+        setInputValue("");
+        setShowSuggestions(false);
     };
 
     return (
-        <div className="space-y-2">
+        <div ref={containerRef} className="relative">
             <input
                 type="text"
                 placeholder={placeholder}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onFocus={() => {
+                    if (inputValue.trim() && filteredSuggestions.length > 0) {
+                        setShowSuggestions(true);
+                    }
+                }}
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
             />
+            <SuggestionDropdown
+                suggestions={filteredSuggestions}
+                isOpen={showSuggestions}
+                onSelect={handleSuggestionSelect}
+                onClose={() => setShowSuggestions(false)}
+                inputValue={inputValue}
+            />
+        </div>
+    );
+};
+
+// Text with Checkbox Filter with Suggestions
+export const TextWithCheckboxFilter = ({ 
+    filterKey, 
+    placeholder, 
+    hasModifier, 
+    activeFilters, 
+    onAddFilter, 
+    onRemoveFilter, 
+    onUpdateModifier,
+    suggestions = []
+}) => {
+    const [inputValue, setInputValue] = useState("");
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+    const selectedFilters = activeFilters.filter(f => f.type === filterKey);
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        if (inputValue.trim() && suggestions.length > 0) {
+            const filtered = suggestions.filter(s => {
+                const label = typeof s === 'string' ? s : s.label;
+                return label.toLowerCase().includes(inputValue.toLowerCase()) &&
+                    !activeFilters.some(f => f.type === filterKey && f.value.toLowerCase() === label.toLowerCase());
+            });
+            setFilteredSuggestions(filtered.slice(0, 10));
+            setShowSuggestions(filtered.length > 0);
+        } else {
+            setShowSuggestions(false);
+            setFilteredSuggestions([]);
+        }
+    }, [inputValue, suggestions, activeFilters, filterKey]);
+
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter" && inputValue.trim()) {
+            const exists = activeFilters.some(f => f.type === filterKey && f.value.toLowerCase() === inputValue.trim().toLowerCase());
+            if (!exists) {
+                onAddFilter({ type: filterKey, value: inputValue.trim(), icon: filterKey });
+            }
+            setInputValue("");
+            setShowSuggestions(false);
+        }
+        if (e.key === "Escape") {
+            setShowSuggestions(false);
+        }
+    };
+
+    const handleSuggestionSelect = (suggestion) => {
+        const value = typeof suggestion === 'string' ? suggestion : suggestion.label;
+        const exists = activeFilters.some(f => f.type === filterKey && f.value.toLowerCase() === value.toLowerCase());
+        if (!exists) {
+            onAddFilter({ type: filterKey, value, icon: filterKey });
+        }
+        setInputValue("");
+        setShowSuggestions(false);
+    };
+
+    return (
+        <div ref={containerRef} className="space-y-2">
+            <div className="relative">
+                <input
+                    type="text"
+                    placeholder={placeholder}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => {
+                        if (inputValue.trim() && filteredSuggestions.length > 0) {
+                            setShowSuggestions(true);
+                        }
+                    }}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                />
+                <SuggestionDropdown
+                    suggestions={filteredSuggestions}
+                    isOpen={showSuggestions}
+                    onSelect={handleSuggestionSelect}
+                    onClose={() => setShowSuggestions(false)}
+                    inputValue={inputValue}
+                />
+            </div>
             {selectedFilters.length > 0 && (
                 <div className="space-y-1">
                     {selectedFilters.map((filter) => (
@@ -257,10 +420,42 @@ export const SelectedFilterItem = ({ filter, hasModifier, onRemove, onUpdateModi
     );
 };
 
-// Select with Checkbox Filter
-export const SelectWithCheckboxFilter = ({ filterKey, placeholder, inputPlaceholder, options, hasModifier, activeFilters, onAddFilter, onRemoveFilter, onUpdateModifier }) => {
+// Select with Checkbox Filter with Suggestions
+export const SelectWithCheckboxFilter = ({ 
+    filterKey, 
+    placeholder, 
+    inputPlaceholder, 
+    options, 
+    hasModifier, 
+    activeFilters, 
+    onAddFilter, 
+    onRemoveFilter, 
+    onUpdateModifier,
+    suggestions = []
+}) => {
     const [inputValue, setInputValue] = useState("");
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [filteredSuggestions, setFilteredSuggestions] = useState([]);
     const selectedFilters = activeFilters.filter(f => f.type === filterKey);
+    const containerRef = useRef(null);
+
+    // Merge options and suggestions for filtering
+    const allSuggestions = suggestions.length > 0 ? suggestions : options.map(o => ({ label: o.label || o, count: o.count }));
+
+    useEffect(() => {
+        if (inputValue.trim() && allSuggestions.length > 0) {
+            const filtered = allSuggestions.filter(s => {
+                const label = typeof s === 'string' ? s : s.label;
+                return label.toLowerCase().includes(inputValue.toLowerCase()) &&
+                    !activeFilters.some(f => f.type === filterKey && f.value.toLowerCase() === label.toLowerCase());
+            });
+            setFilteredSuggestions(filtered.slice(0, 10));
+            setShowSuggestions(filtered.length > 0);
+        } else {
+            setShowSuggestions(false);
+            setFilteredSuggestions([]);
+        }
+    }, [inputValue, allSuggestions, activeFilters, filterKey]);
 
     const handleInputKeyDown = (e) => {
         if (e.key === "Enter" && inputValue.trim()) {
@@ -269,19 +464,47 @@ export const SelectWithCheckboxFilter = ({ filterKey, placeholder, inputPlacehol
                 onAddFilter({ type: filterKey, value: inputValue.trim(), icon: filterKey });
             }
             setInputValue("");
+            setShowSuggestions(false);
+        }
+        if (e.key === "Escape") {
+            setShowSuggestions(false);
         }
     };
 
+    const handleSuggestionSelect = (suggestion) => {
+        const value = typeof suggestion === 'string' ? suggestion : suggestion.label;
+        const exists = activeFilters.some(f => f.type === filterKey && f.value.toLowerCase() === value.toLowerCase());
+        if (!exists) {
+            onAddFilter({ type: filterKey, value, icon: filterKey });
+        }
+        setInputValue("");
+        setShowSuggestions(false);
+    };
+
     return (
-        <div className="space-y-2">
-            <input
-                type="text"
-                placeholder={inputPlaceholder || "Value"}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleInputKeyDown}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-            />
+        <div ref={containerRef} className="space-y-2">
+            <div className="relative">
+                <input
+                    type="text"
+                    placeholder={inputPlaceholder || "Value"}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleInputKeyDown}
+                    onFocus={() => {
+                        if (inputValue.trim() && filteredSuggestions.length > 0) {
+                            setShowSuggestions(true);
+                        }
+                    }}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                />
+                <SuggestionDropdown
+                    suggestions={filteredSuggestions}
+                    isOpen={showSuggestions}
+                    onSelect={handleSuggestionSelect}
+                    onClose={() => setShowSuggestions(false)}
+                    inputValue={inputValue}
+                />
+            </div>
             {selectedFilters.length > 0 && (
                 <div className="space-y-1">
                     {selectedFilters.map((filter) => (
@@ -299,8 +522,17 @@ export const SelectWithCheckboxFilter = ({ filterKey, placeholder, inputPlacehol
     );
 };
 
-// Searchable Select Filter (for B2B)
-export const SearchableSelectFilter = ({ filterKey, placeholder, options, hasModifier, activeFilters, onAddFilter, onRemoveFilter, onUpdateModifier }) => {
+// Searchable Select Filter (for B2B) with enhanced suggestions
+export const SearchableSelectFilter = ({ 
+    filterKey, 
+    placeholder, 
+    options, 
+    hasModifier, 
+    activeFilters, 
+    onAddFilter, 
+    onRemoveFilter, 
+    onUpdateModifier 
+}) => {
     const [searchTerm, setSearchTerm] = useState("");
 
     const filteredOptions = options.filter(opt =>
@@ -328,6 +560,16 @@ export const SearchableSelectFilter = ({ filterKey, placeholder, options, hasMod
         }, 50);
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter" && searchTerm.trim()) {
+            const exists = activeFilters.some(f => f.type === filterKey && f.value.toLowerCase() === searchTerm.trim().toLowerCase());
+            if (!exists) {
+                onAddFilter({ type: filterKey, value: searchTerm.trim(), icon: filterKey });
+            }
+            setSearchTerm("");
+        }
+    };
+
     return (
         <div>
             <input
@@ -335,6 +577,7 @@ export const SearchableSelectFilter = ({ filterKey, placeholder, options, hasMod
                 placeholder={placeholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 mb-2"
             />
             <div className="space-y-1 max-h-48 overflow-y-auto">
@@ -541,13 +784,48 @@ export const DateRangeSplitFilter = ({ filterKey, activeFilters, onAddFilter, on
     );
 };
 
-// Location Filter - FIXED VERSION with working radius slider
-// Replace the LocationFilter component in FilterComponents.jsx with this fixed version:
-
-export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, hasModifier, activeFilters, onAddFilter, onRemoveFilter, onUpdateModifier }) => {
+// Location Filter with Suggestions
+export const LocationFilter = ({ 
+    filterKey, 
+    placeholder, 
+    options, 
+    hasRadius, 
+    hasModifier, 
+    activeFilters, 
+    onAddFilter, 
+    onRemoveFilter, 
+    onUpdateModifier,
+    suggestions = []
+}) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [expandedItems, setExpandedItems] = useState({});
     const [radius, setRadius] = useState(0);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+    const containerRef = useRef(null);
+
+    // Combine options and suggestions for autocomplete
+    const allLocationSuggestions = suggestions.length > 0 
+        ? suggestions 
+        : options.flatMap(loc => [
+            { label: loc.name, count: loc.count },
+            ...(loc.children || []).map(child => ({ label: child }))
+        ]);
+
+    useEffect(() => {
+        if (searchTerm.trim() && allLocationSuggestions.length > 0) {
+            const filtered = allLocationSuggestions.filter(s => {
+                const label = typeof s === 'string' ? s : s.label;
+                return label.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                    !activeFilters.some(f => f.type === filterKey && f.value.toLowerCase() === label.toLowerCase());
+            });
+            setFilteredSuggestions(filtered.slice(0, 8));
+            setShowSuggestions(filtered.length > 0);
+        } else {
+            setShowSuggestions(false);
+            setFilteredSuggestions([]);
+        }
+    }, [searchTerm, allLocationSuggestions, activeFilters, filterKey]);
 
     const handleKeyDown = (e) => {
         if (e.key === "Enter" && searchTerm.trim()) {
@@ -556,7 +834,21 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
                 onAddFilter({ type: filterKey, value: searchTerm.trim(), icon: "location" });
             }
             setSearchTerm("");
+            setShowSuggestions(false);
         }
+        if (e.key === "Escape") {
+            setShowSuggestions(false);
+        }
+    };
+
+    const handleSuggestionSelect = (suggestion) => {
+        const value = typeof suggestion === 'string' ? suggestion : suggestion.label;
+        const exists = activeFilters.some(f => f.type === filterKey && f.value.toLowerCase() === value.toLowerCase());
+        if (!exists) {
+            onAddFilter({ type: filterKey, value, icon: "location" });
+        }
+        setSearchTerm("");
+        setShowSuggestions(false);
     };
 
     const handleParentSelect = (loc) => {
@@ -618,15 +910,29 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
     const steps = [0, 25, 50, 75, 100];
 
     return (
-        <div>
-            <input
-                type="text"
-                placeholder={placeholder}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 mb-2"
-            />
+        <div ref={containerRef}>
+            <div className="relative">
+                <input
+                    type="text"
+                    placeholder={placeholder}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => {
+                        if (searchTerm.trim() && filteredSuggestions.length > 0) {
+                            setShowSuggestions(true);
+                        }
+                    }}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 mb-2"
+                />
+                <SuggestionDropdown
+                    suggestions={filteredSuggestions}
+                    isOpen={showSuggestions}
+                    onSelect={handleSuggestionSelect}
+                    onClose={() => setShowSuggestions(false)}
+                    inputValue={searchTerm}
+                />
+            </div>
             <div className="space-y-1 max-h-48 overflow-y-auto">
                 {options.filter(loc => loc.name.toLowerCase().includes(searchTerm.toLowerCase())).map((loc) => {
                     const isSelected = activeFilters.some(f => f.type === filterKey && f.value === loc.name);
@@ -672,7 +978,7 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
                                 )}
                             </div>
                             
-                            {/* Children Items - FIXED ALIGNMENT */}
+                            {/* Children Items */}
                             {expandedItems[loc.name] && loc.children && (
                                 <div className="space-y-1">
                                     {loc.children.map((child) => {
@@ -685,7 +991,7 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
                                                 className="flex items-center justify-between px-2 py-1 hover:bg-gray-50 rounded-lg group"
                                             >
                                                 <div className="flex items-center gap-2">
-                                                    {/* Spacer to align with parent (chevron width + gap) */}
+                                                    {/* Spacer to align with parent */}
                                                     <div className="w-5 flex-shrink-0" />
                                                     
                                                     {/* Indent for child level */}
@@ -780,7 +1086,7 @@ export const LocationFilter = ({ filterKey, placeholder, options, hasRadius, has
     );
 };
 
-// Inline Modifier Button (keep this as is)
+// Inline Modifier Button
 const ModifierButtonInline = ({ currentFilter, onModifierClick }) => {
     const [showModifier, setShowModifier] = useState(false);
     const btnRef = useRef(null);
@@ -817,6 +1123,7 @@ export default {
     ExpandableCheckboxItem,
     SelectedFilterItem,
     ModifierDropdown,
+    SuggestionDropdown,
     ChevronDown,
     ChevronRight,
 };
