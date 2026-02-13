@@ -191,11 +191,12 @@ const AddFileModal = ({ isOpen, onClose, onFileUploaded }) => {
     const ext = file.name.split(".").pop().toLowerCase();
     const colors = {
       csv: "bg-green-100 text-green-600",
-      pdf: "bg-red-100 text-red-600",
-      png: "bg-blue-100 text-blue-600",
-      jpg: "bg-blue-100 text-blue-600",
-      jpeg: "bg-blue-100 text-blue-600",
-      txt: "bg-gray-100 text-gray-600",
+  pdf: "bg-red-100 text-red-600",
+  png: "bg-blue-100 text-blue-600",
+  jpg: "bg-blue-100 text-blue-600",
+  jpeg: "bg-blue-100 text-blue-600",
+  txt: "bg-gray-100 text-gray-600",
+  docx: "bg-blue-100 text-blue-600",
     };
     return colors[ext] || "bg-gray-100 text-gray-600";
   };
@@ -241,7 +242,7 @@ const AddFileModal = ({ isOpen, onClose, onFileUploaded }) => {
             Browse File
             <input
               type="file"
-              accept=".csv,.pdf,.png,.jpg,.jpeg,.txt"
+              accept=".csv,.pdf,.png,.jpg,.jpeg,.txt,.docx"
               onChange={handleFileSelect}
               className="hidden"
               disabled={isUploading}

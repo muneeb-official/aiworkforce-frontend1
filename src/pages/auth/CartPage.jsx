@@ -59,12 +59,28 @@ const CheckmarkIcon = () => (
     height="20"
     viewBox="0 0 24 24"
     fill="none"
-    stroke="#10B981"
+    stroke="#4F46E5"
     strokeWidth="3"
     strokeLinecap="round"
     strokeLinejoin="round"
   >
     <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
 
@@ -74,6 +90,100 @@ const LoadingSpinner = () => (
     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
   </div>
 );
+
+// Terms & Conditions Modal
+const TermsModal = ({ isOpen, onClose, onAccept }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/50"
+        onClick={onClose}
+      />
+      <div className="relative bg-white rounded-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden shadow-xl">
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-100">
+          <h2
+            className="text-2xl font-bold text-gray-900"
+            style={{ fontFamily: "DM Sans, sans-serif" }}
+          >
+            Terms & Conditions
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <CloseIcon />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(80vh-180px)]">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                What is Lorem Ipsum
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                Lorem Ipsum has been the industry's standard dummy text ever since the
+                1500s, when an unknown printer took a galley of type and scrambled it to
+                make a type specimen book. It has survived not only five centuries, but also
+                the leap into electronic typesetting, remaining essentially unchanged. It was
+                popularised in the 1960s with the release of Letraset sheets containing
+                Lorem Ipsum passages, and more recently with desktop publishing software
+                like Aldus PageMaker including versions of Lorem Ipsum.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                What is Lorem Ipsum
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                Lorem Ipsum has been the industry's standard dummy text ever since the
+                1500s, when an unknown printer took a galley of type and scrambled it to
+                make a type specimen book. It has survived not only five centuries, but also
+                the leap into electronic typesetting, remaining essentially unchanged. It was
+                popularised in the 1960s with the release of Letraset sheets containing
+                Lorem Ipsum passages, and more recently with desktop publishing software
+                like Aldus PageMaker including versions of Lorem Ipsum.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                What is Lorem Ipsum
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+                Lorem Ipsum has been the industry's standard dummy text ever since the
+                1500s, when an unknown printer took a galley of type and scrambled it to
+                make a type specimen book. It has survived not only five centuries, but also
+                the leap into electronic typesetting, remaining essentially unchanged. It was
+                popularised in the 1960s with the release of Letraset sheets containing
+                Lorem Ipsum passages, and more recently with desktop publishing software
+                like Aldus PageMaker including versions of Lorem Ipsum.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 border-t border-gray-100">
+          <button
+            onClick={onAccept}
+            className="px-6 py-3 bg-[#4F46E5] text-white font-medium rounded-full hover:bg-[#4338CA] transition-colors"
+          >
+            I, Understood
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Empty Cart State
 const EmptyCartState = ({ onBrowsePlans }) => (
@@ -124,9 +234,12 @@ const CartPage = () => {
     clearCart,
   } = useSubscription();
 
-  const [paymentType, setPaymentType] = useState("yearly");
   const [currency, setCurrency] = useState("GBP");
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromos, setAppliedPromos] = useState([]);
 
   const currencies = ["GBP", "USD", "EUR"];
 
@@ -147,17 +260,35 @@ const CartPage = () => {
     );
   }
 
-  // Calculate prices
+  // Calculate prices (monthly only)
   const basePrice = selectedPlan.price + (selectedSEO?.price || 0);
-  const monthlyPrice = basePrice;
-  const yearlyPrice = Math.round(basePrice * 0.8); // 20% discount
-  const currentPrice = paymentType === "yearly" ? yearlyPrice : monthlyPrice;
-  const tax = Math.round(currentPrice * 0.1); // 10% tax estimate
-  const total = currentPrice + tax;
+  const planCost = basePrice;
+  const vat = Math.round(planCost * 0.2); // 20% VAT
+  const discount = appliedPromos.length > 0 ? Math.round(planCost * 0.1) : 0; // 10% discount if promo applied
+  const total = planCost + vat - discount;
 
   const isPremium = selectedPlan?.bothAgents;
 
+  const handleApplyPromo = () => {
+    if (promoCode.trim() && !appliedPromos.includes(promoCode.trim())) {
+      setAppliedPromos([...appliedPromos, promoCode.trim()]);
+      setPromoCode("");
+    }
+  };
+
+  const handleRemovePromo = (code) => {
+    setAppliedPromos(appliedPromos.filter((p) => p !== code));
+  };
+
+  const handleTermsAccept = () => {
+    setTermsAccepted(true);
+    setShowTermsModal(false);
+  };
+
   const handleProceedToPay = async () => {
+    if (!termsAccepted) {
+      return;
+    }
     await proceedToCheckout();
   };
 
@@ -177,7 +308,7 @@ const CartPage = () => {
             In your Cart
           </h1>
 
-          <div className="grid lg:grid-cols-[1fr,400px] gap-8">
+          <div className="grid lg:grid-cols-[1fr,380px] gap-8">
             {/* Left Column - Plan Details */}
             <div className="space-y-6">
               {/* Main Plan Card */}
@@ -187,18 +318,25 @@ const CartPage = () => {
                     {selectedPlan.name}
                   </h3>
                   {selectedPlan.isBestseller && (
-                    <span className="px-2 py-1 bg-gray-900 text-white text-xs rounded">
+                    <span className="px-3 py-1 bg-[#4F46E5] text-white text-xs rounded-md font-medium">
                       BESTSELLER
                     </span>
                   )}
                 </div>
 
-                <div className="mb-2">
+                <div className="mb-4">
                   <span className="text-5xl font-bold text-gray-900">
                     £{selectedPlan.price}
                   </span>
                   <span className="text-gray-500">/ month per seat</span>
                 </div>
+
+                {isPremium && (
+                  <div className="bg-[#F0FDF4] rounded-lg p-3 mb-6 text-sm text-gray-700 italic border border-[#BBF7D0]">
+                    Both <span className="font-semibold">B2C Lead Builder Agent</span> & <span className="font-semibold">B2B Lead Builder Agent</span>{" "}
+                    <span className="italic">will be included in this plan</span>
+                  </div>
+                )}
 
                 {!isPremium && (
                   <p className="text-gray-700 mb-4">
@@ -209,22 +347,13 @@ const CartPage = () => {
                   </p>
                 )}
 
-                {isPremium && (
-                  <div className="bg-gray-50 rounded-lg p-3 mb-4 text-sm text-gray-700 italic">
-                    Both B2C Lead Builder Agent & B2B Lead Builder Agent{" "}
-                    <span className="font-medium">
-                      will be included in this plan
-                    </span>
-                  </div>
-                )}
-
                 <div className="mb-4">
-                  <p className="font-medium text-gray-900 mb-3">You will get</p>
+                  <p className="font-semibold text-gray-900 mb-3">You will get</p>
                   <ul className="space-y-2">
                     {selectedPlan.features.map((feature, idx) => (
                       <li
                         key={idx}
-                        className="flex items-center gap-2 text-gray-600"
+                        className="flex items-center gap-3 text-gray-600"
                       >
                         <CheckIcon /> {feature}
                       </li>
@@ -232,7 +361,24 @@ const CartPage = () => {
                   </ul>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100 flex justify-end">
+                {/* Credits & Setup Section */}
+                {selectedPlan.credits && (
+                  <div className="mt-6">
+                    <p className="font-semibold text-gray-900 mb-3">Credits & Setup</p>
+                    <ul className="space-y-2">
+                      {selectedPlan.credits.map((credit, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-center gap-3 text-gray-600"
+                        >
+                          <CheckIcon /> {credit}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t border-gray-100 mt-6 flex justify-end">
                   <button
                     onClick={() => navigate("/choose-plan")}
                     className="flex items-center gap-1 text-[#4F46E5] font-medium hover:text-[#4338CA] transition-colors"
@@ -241,49 +387,9 @@ const CartPage = () => {
                   </button>
                 </div>
               </div>
-
-              {/* SEO Addon Card */}
-              {selectedSEO && (
-                <div className="border border-gray-200 rounded-xl p-6">
-                  <p className="text-gray-500 text-sm">{selectedSEO.name}</p>
-                  <p className="text-4xl font-bold text-gray-900 my-2">
-                    £{selectedSEO.price}
-                  </p>
-                  <p className="flex items-center gap-2 text-gray-600 mb-4">
-                    <CheckIcon /> {selectedSEO.words}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">
-                      SEO Blog & Content Engine
-                    </span>
-                    <button
-                      onClick={() => navigate("/choose-plan")}
-                      className="flex items-center gap-1 text-[#4F46E5] font-medium hover:text-[#4338CA]"
-                    >
-                      Change <ArrowIcon />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Free SEO Tier for Premium */}
-              {isPremium && (
-                <div className="border border-gray-200 rounded-xl p-6">
-                  <p className="text-gray-500 text-sm">SEO Tier - Included</p>
-                  <p className="text-4xl font-bold text-gray-900 my-2">£0</p>
-                  <p className="flex items-center gap-2 text-gray-600 mb-4">
-                    <CheckIcon /> Unlimited Words
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#10B981] font-medium">
-                      Included with your plan
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Right Column - Payment Options */}
+            {/* Right Column - Payment Summary */}
             <div className="space-y-4">
               {/* Currency Selector */}
               <div className="flex justify-end">
@@ -326,66 +432,123 @@ const CartPage = () => {
                 </div>
               </div>
 
-              {/* Payment Type Options */}
-              <button
-                onClick={() => setPaymentType("monthly")}
-                className={`w-full p-4 rounded-xl border-2 text-left transition-all flex justify-between items-center ${
-                  paymentType === "monthly"
-                    ? "border-[#4F46E5] bg-gray-50"
-                    : "border-gray-200 hover:border-gray-300"
-                }`}
-              >
+              {/* Monthly Payment Option */}
+              <div className="w-full p-4 rounded-xl border-2 border-[#4F46E5] bg-white flex justify-between items-center">
                 <div>
                   <p className="text-gray-500 text-sm">Pay monthly</p>
                   <p className="text-xl font-bold text-gray-900">
-                    £{monthlyPrice}/month
+                    £{planCost}/month
                   </p>
                 </div>
-                {paymentType === "monthly" && <CheckmarkIcon />}
-              </button>
-
-              <button
-                onClick={() => setPaymentType("yearly")}
-                className={`w-full p-4 rounded-xl border-2 text-left transition-all flex justify-between items-center ${
-                  paymentType === "yearly"
-                    ? "border-[#4F46E5] bg-gray-50"
-                    : "border-gray-200 hover:border-gray-300"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div>
-                    <p className="text-gray-500 text-sm">Pay yearly</p>
-                    <p className="text-xl font-bold text-gray-900">
-                      £{yearlyPrice}/month
-                    </p>
-                  </div>
-                  <span className="px-2 py-1 bg-[#10B981] text-white text-xs rounded font-medium">
-                    Save 20%
-                  </span>
-                </div>
-                {paymentType === "yearly" && <CheckmarkIcon />}
-              </button>
+                <CheckmarkIcon />
+              </div>
 
               {/* Security Note */}
               <div className="flex items-center gap-2 text-gray-500 text-sm">
                 <LockIcon />
-                <span>Secured payment with Stripe</span>
+                <span>Secured from with UIB Banking</span>
               </div>
 
               {/* Price Breakdown */}
-              <div className="space-y-3 pt-4">
+              <div className="space-y-3 pt-2">
                 <div className="flex justify-between text-gray-600">
                   <span>Plan Cost</span>
-                  <span>£{currentPrice.toFixed(2)}</span>
+                  <span>£{planCost.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Estimated Tax</span>
-                  <span>£{tax.toFixed(2)}</span>
+                  <span>VAT</span>
+                  <span>£{vat.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t">
+                {discount > 0 && (
+                  <div className="flex justify-between text-gray-600">
+                    <span className="flex items-center gap-2">
+                      Discount
+                      <span className="text-xs bg-[#10B981] text-white px-2 py-0.5 rounded">
+                        10% OFF
+                      </span>
+                    </span>
+                    <span>£{discount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-xl font-bold text-gray-900 pt-2">
                   <span>Total</span>
                   <span>£{total.toFixed(2)}</span>
                 </div>
+              </div>
+
+              {/* Terms Checkbox */}
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  onClick={() => setTermsAccepted(!termsAccepted)}
+                  className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                    termsAccepted
+                      ? "bg-[#4F46E5] border-[#4F46E5]"
+                      : "border-gray-300"
+                  }`}
+                >
+                  {termsAccepted && (
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="white"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </button>
+                <span className="text-gray-600 text-sm">
+                  You agree to all the{" "}
+                  <button
+                    onClick={() => setShowTermsModal(true)}
+                    className="text-[#4F46E5] font-medium hover:underline"
+                  >
+                    Terms & Conditions
+                  </button>
+                </span>
+              </div>
+
+              {/* Promo Code Section */}
+              <div className="pt-2">
+                <p className="text-gray-700 font-medium mb-2">Apply Promo Code</p>
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
+                  placeholder="Enter Code Here..."
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#4F46E5]"
+                />
+                
+                {/* Applied Promo Codes */}
+                {appliedPromos.map((code) => (
+                  <div
+                    key={code}
+                    className="mt-2 flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl"
+                  >
+                    <span className="text-gray-700 font-medium">{code}</span>
+                    <button
+                      onClick={() => handleRemovePromo(code)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
               </div>
 
               {/* Error Message */}
@@ -406,36 +569,29 @@ const CartPage = () => {
               )}
 
               {/* Terms Note */}
-              <p className="text-gray-500 text-sm">
-                By clicking "Proceed To Pay", you agree to be charged £
-                {currentPrice} every{" "}
-                {paymentType === "yearly" ? "year" : "month"}, unless you
-                cancel.
+              <p className="text-gray-400 text-sm">
+                By clicking "Proceed To Pay", you agree to be charged £{planCost} every month, unless you cancel.
               </p>
 
               {/* Pay Button */}
               <button
                 onClick={handleProceedToPay}
-                disabled={checkoutLoading}
-                className="w-full h-12 bg-[#10B981] hover:bg-[#059669] disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center"
+                disabled={checkoutLoading || !termsAccepted}
+                className="w-full h-12 bg-[#4F46E5] hover:bg-[#4338CA] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center"
               >
                 {checkoutLoading ? <LoadingSpinner /> : "Proceed To Pay"}
-              </button>
-
-              {/* Clear Cart */}
-              <button
-                onClick={() => {
-                  clearCart();
-                  navigate("/choose-plan");
-                }}
-                className="w-full text-center text-gray-500 text-sm hover:text-gray-700"
-              >
-                Clear cart and browse plans
               </button>
             </div>
           </div>
         </div>
       </main>
+
+      {/* Terms Modal */}
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={handleTermsAccept}
+      />
     </div>
   );
 };
