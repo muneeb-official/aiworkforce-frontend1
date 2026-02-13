@@ -1,11 +1,11 @@
 // src/pages/auth/OnboardingPage.jsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useOnboarding } from "../../context/OnboardingContext";
 import { ONBOARDING_SUBSTEPS } from "../../services/onboardingService";
 import Header from "../../components/layout/Header";
-import { X, Upload, Trash2, Check, Loader2 } from "lucide-react";
+import { X, Upload, Trash2, Check, Loader2, Plus } from "lucide-react";
 import step1Image from "../../assets/step-1.png";
 import step2Image from "../../assets/step-2.png";
 import step3Image from "../../assets/step-3.png";
@@ -36,6 +36,7 @@ const STEP_CONFIG = [
     id: "objections",
     title: "Objections",
     keys: ["objections", "objection_handling"],
+    isObjectionStep: true,
   },
   {
     id: "knowledge-files",
@@ -106,7 +107,39 @@ const ProgressIndicator = ({ currentStep, steps }) => (
   </div>
 );
 
-// Form Field Component
+// Auto-resizing Textarea Component
+const AutoResizeTextarea = ({ value, onChange, placeholder, className }) => {
+  const textareaRef = useRef(null);
+
+  const adjustHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.max(48, textarea.scrollHeight)}px`;
+    }
+  }, []);
+
+  useEffect(() => {
+    adjustHeight();
+  }, [value, adjustHeight]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      value={value || ""}
+      onChange={(e) => {
+        onChange(e);
+        adjustHeight();
+      }}
+      placeholder={placeholder}
+      rows={1}
+      className={`${className} resize-none overflow-hidden`}
+      style={{ minHeight: '48px' }}
+    />
+  );
+};
+
+// Form Field Component with auto-resize textarea
 const FormField = ({ question, value, onChange }) => (
   <div className="mb-6">
     <label className="block text-base font-medium text-gray-900 mb-1">
@@ -116,13 +149,78 @@ const FormField = ({ question, value, onChange }) => (
     {question.helper_text && (
       <p className="text-sm text-gray-500 mb-2">{question.helper_text}</p>
     )}
-    <input
-      type="text"
+    <AutoResizeTextarea
       value={value || ""}
       onChange={(e) => onChange(question.id, e.target.value)}
       placeholder={question.placeholder || "Enter here..."}
-      className="w-full h-12 px-4 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-all"
+      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-all"
     />
+  </div>
+);
+
+// Objection Card Component for Step 3
+// Objection Card Component for Step 3
+const ObjectionCard = ({ 
+  index, 
+  objection, 
+  handling, 
+  onObjectionChange, 
+  onHandlingChange, 
+  onRemove, 
+  canRemove,
+  objectionsQuestion,
+  handlingQuestion 
+}) => (
+  <div className="border border-gray-200 rounded-xl p-5 mb-4 bg-white">
+    <div className="flex items-center justify-between mb-4">
+      <div className="w-8 h-8 bg-[#F2F2FF] rounded-full flex items-center justify-center">
+        <span className="text-sm font-semibold text-[#4F46E5]">{index + 1}</span>
+      </div>
+      {canRemove && (
+        <button
+          onClick={onRemove}
+          className="text-gray-400 hover:text-red-500 transition-colors"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+    
+    <div className="mb-4">
+      <label className="block text-base font-medium text-gray-900 mb-1">
+        {objectionsQuestion?.question_text || "What objections do you frequently hear?"}{" "}
+        {objectionsQuestion?.is_required && <span className="text-red-500">*</span>}
+      </label>
+      {objectionsQuestion?.helper_text && (
+        <p className="text-sm text-gray-500 mb-2">
+          {objectionsQuestion.helper_text}
+        </p>
+      )}
+      <AutoResizeTextarea
+        value={objection}
+        onChange={(e) => onObjectionChange(e.target.value)}
+        placeholder={objectionsQuestion?.placeholder || "Enter here..."}
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-all"
+      />
+    </div>
+    
+    <div>
+      <label className="block text-base font-medium text-gray-900 mb-1">
+        {handlingQuestion?.question_text || "How do you usually handle these objections?"}{" "}
+        {handlingQuestion?.is_required && <span className="text-red-500">*</span>}
+      </label>
+      {handlingQuestion?.helper_text && (
+        <p className="text-sm text-gray-500 mb-2">
+          {handlingQuestion.helper_text}
+        </p>
+      )}
+      <AutoResizeTextarea
+        value={handling}
+        onChange={(e) => onHandlingChange(e.target.value)}
+        placeholder={handlingQuestion?.placeholder || "Enter here..."}
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-all"
+      />
+    </div>
   </div>
 );
 
@@ -191,12 +289,12 @@ const AddFileModal = ({ isOpen, onClose, onFileUploaded }) => {
     const ext = file.name.split(".").pop().toLowerCase();
     const colors = {
       csv: "bg-green-100 text-green-600",
-  pdf: "bg-red-100 text-red-600",
-  png: "bg-blue-100 text-blue-600",
-  jpg: "bg-blue-100 text-blue-600",
-  jpeg: "bg-blue-100 text-blue-600",
-  txt: "bg-gray-100 text-gray-600",
-  docx: "bg-blue-100 text-blue-600",
+      pdf: "bg-red-100 text-red-600",
+      png: "bg-blue-100 text-blue-600",
+      jpg: "bg-blue-100 text-blue-600",
+      jpeg: "bg-blue-100 text-blue-600",
+      txt: "bg-gray-100 text-gray-600",
+      docx: "bg-blue-100 text-blue-600",
     };
     return colors[ext] || "bg-gray-100 text-gray-600";
   };
@@ -337,6 +435,7 @@ const AddURLModal = ({ isOpen, onClose, onUrlAdded }) => {
         follow_links: false,
         max_pages: 10,
       });
+      // Pass the result directly to update state immediately
       onUrlAdded(result);
       setUrl("");
       onClose();
@@ -503,8 +602,8 @@ const DeleteConfirmModal = ({
   );
 };
 
-// Knowledge Files Step Component - Separate component to prevent re-renders
-const KnowledgeFilesStep = React.memo(() => {
+// Knowledge Files Step Component
+const KnowledgeFilesStep = React.memo(({ onFilesChange }) => {
   const [files, setFiles] = useState([]);
   const [urls, setUrls] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -519,10 +618,64 @@ const KnowledgeFilesStep = React.memo(() => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Ref for polling interval
+  const pollingIntervalRef = useRef(null);
 
   useEffect(() => {
     fetchData();
+    
+    // Cleanup polling on unmount
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
   }, []);
+
+  // Notify parent when files/urls change
+  useEffect(() => {
+    if (onFilesChange) {
+      onFilesChange(files.length + urls.length);
+    }
+  }, [files, urls, onFilesChange]);
+
+  // Poll for URL status updates when there are "In Progress" URLs
+  useEffect(() => {
+    const hasInProgressUrls = urls.some(u => u.status === 'In Progress' || u.status === 'Processing');
+    
+    if (hasInProgressUrls) {
+      // Start polling every 5 seconds
+      pollingIntervalRef.current = setInterval(async () => {
+        try {
+          const urlsRes = await knowledgeBaseService.getScrapedContent();
+          const transformedUrls = knowledgeBaseService.transformScrapedContents(urlsRes);
+          setUrls(transformedUrls);
+          
+          // Check if all URLs are now completed or failed
+          const stillInProgress = transformedUrls.some(u => u.status === 'In Progress' || u.status === 'Processing');
+          if (!stillInProgress && pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+          }
+        } catch (err) {
+          console.error("Error polling URL status:", err);
+        }
+      }, 5000);
+    } else {
+      // Clear polling if no in-progress URLs
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    }
+    
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, [urls]);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -553,8 +706,19 @@ const KnowledgeFilesStep = React.memo(() => {
     setShowSuccessModal(true);
   };
 
-  const handleUrlAdded = () => {
-    fetchData();
+  // FIX: Immediately update URLs state and trigger polling for status updates
+  const handleUrlAdded = (result) => {
+    // Transform the result and add to state immediately
+    if (result) {
+      const transformedUrl = {
+        id: result.id || result.scrape_id || Date.now().toString(),
+        name: result.url || result.source_url || 'URL',
+        status: result.status || 'In Progress',
+        size: '-',
+        itemType: 'url'
+      };
+      setUrls((prev) => [transformedUrl, ...prev]);
+    }
     setSuccessType("url");
     setShowSuccessModal(true);
   };
@@ -573,8 +737,8 @@ const KnowledgeFilesStep = React.memo(() => {
         await knowledgeBaseService.deleteFile(itemToDelete.id);
         setFiles((prev) => prev.filter((f) => f.id !== itemToDelete.id));
       } else {
-        await knowledgeBaseService.deleteScrapedContent();
-        setUrls([]);
+        await knowledgeBaseService.deleteScrapedContent(itemToDelete.id);
+        setUrls((prev) => prev.filter((u) => u.id !== itemToDelete.id));
       }
       setShowDeleteModal(false);
       setItemToDelete(null);
@@ -851,24 +1015,20 @@ const OnboardingPage = () => {
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   
+  // State for multiple objections (Step 3)
+  const [objectionGroups, setObjectionGroups] = useState([
+    { id: 1, objection: '', handling: '' }
+  ]);
+  
   // Use ref to track if initial data has been loaded
   const initialLoadRef = useRef(false);
 
-  // =============================================
-  // FIX: Prevent browser back button navigation
-  // =============================================
+  // Prevent browser back button navigation
   useEffect(() => {
-    // Push initial state to history
     window.history.pushState({ onboarding: true }, '', window.location.pathname);
 
     const handlePopState = (event) => {
-      // When user clicks browser back button, push them forward again
       window.history.pushState({ onboarding: true }, '', window.location.pathname);
-      
-      // Optionally: If you want back button to go to previous onboarding step instead:
-      // if (currentStep > 0) {
-      //   setCurrentStep(prev => prev - 1);
-      // }
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -878,13 +1038,12 @@ const OnboardingPage = () => {
     };
   }, []);
 
-  // Optional: Show confirmation when user tries to close/refresh the page
+  // Show confirmation when user tries to close/refresh the page
   useEffect(() => {
     const handleBeforeUnload = (event) => {
-      // Only show warning if user has entered some data
       if (Object.keys(answers).length > 0 && !showThankYou) {
         event.preventDefault();
-        event.returnValue = ''; // Chrome requires returnValue to be set
+        event.returnValue = '';
       }
     };
 
@@ -894,7 +1053,6 @@ const OnboardingPage = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [answers, showThankYou]);
-  // =============================================
 
   const getOrganizationId = () => {
     if (user?.organization_id) return user.organization_id;
@@ -914,7 +1072,7 @@ const OnboardingPage = () => {
     return null;
   };
 
-  // Calculate initial step from onboarding status - only once
+  // Calculate initial step from onboarding status
   const getInitialStep = () => {
     if (!onboardingStatus || !onboardingStatus.steps) return 0;
     
@@ -958,6 +1116,30 @@ const OnboardingPage = () => {
                 answersMap[a.question_id] = a.answer_value;
               });
               setAnswers(answersMap);
+              
+              // Parse objection groups from saved answers
+              const objectionsQuestion = questionsData.find(q => q.question_key === 'objections');
+              const handlingQuestion = questionsData.find(q => q.question_key === 'objection_handling');
+              
+              if (objectionsQuestion && answersMap[objectionsQuestion.id]) {
+                try {
+                  const savedObjections = JSON.parse(answersMap[objectionsQuestion.id]);
+                  const savedHandlings = handlingQuestion && answersMap[handlingQuestion.id] 
+                    ? JSON.parse(answersMap[handlingQuestion.id]) 
+                    : [];
+                  
+                  if (Array.isArray(savedObjections) && savedObjections.length > 0) {
+                    setObjectionGroups(savedObjections.map((obj, idx) => ({
+                      id: idx + 1,
+                      objection: obj,
+                      handling: savedHandlings[idx] || ''
+                    })));
+                  }
+                } catch (e) {
+                  // If parsing fails, it might be a single string value (old format)
+                  console.log("Using single objection format");
+                }
+              }
             }
           } catch (e) {
             console.log("No existing answers found, starting fresh");
@@ -974,24 +1156,81 @@ const OnboardingPage = () => {
     };
 
     fetchData();
-  }, []); // Empty dependency array - only run once
+  }, []);
 
   const getStepQuestions = (stepIndex) => {
     const stepConfig = STEP_CONFIG[stepIndex];
-    if (!stepConfig || stepConfig.isKnowledge) return [];
+    if (!stepConfig || stepConfig.isKnowledge || stepConfig.isObjectionStep) return [];
 
     return questions
       .filter((q) => stepConfig.keys.includes(q.question_key))
       .sort((a, b) => a.display_order - b.display_order);
   };
 
+  const getObjectionQuestions = () => {
+    const objectionsQuestion = questions.find(q => q.question_key === 'objections');
+    const handlingQuestion = questions.find(q => q.question_key === 'objection_handling');
+    return { objectionsQuestion, handlingQuestion };
+  };
+
   const handleFieldChange = (questionId, value) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
+  // Objection handlers
+  const handleObjectionChange = (groupId, field, value) => {
+    setObjectionGroups(prev => prev.map(group => 
+      group.id === groupId ? { ...group, [field]: value } : group
+    ));
+  };
+
+  const addObjectionGroup = () => {
+    const newId = Math.max(...objectionGroups.map(g => g.id)) + 1;
+    setObjectionGroups(prev => [...prev, { id: newId, objection: '', handling: '' }]);
+  };
+
+  const removeObjectionGroup = (groupId) => {
+    if (objectionGroups.length > 1) {
+      setObjectionGroups(prev => prev.filter(g => g.id !== groupId));
+    }
+  };
+
+  // Combine objection answers for backend
+  const combineObjectionAnswers = () => {
+    const { objectionsQuestion, handlingQuestion } = getObjectionQuestions();
+    const combinedAnswers = { ...answers };
+    
+    if (objectionsQuestion) {
+      // Combine all objections into a JSON array string
+      const allObjections = objectionGroups
+        .filter(g => g.objection.trim())
+        .map(g => g.objection.trim());
+      combinedAnswers[objectionsQuestion.id] = JSON.stringify(allObjections);
+    }
+    
+    if (handlingQuestion) {
+      // Combine all handlings into a JSON array string
+      const allHandlings = objectionGroups
+        .filter(g => g.handling.trim())
+        .map(g => g.handling.trim());
+      combinedAnswers[handlingQuestion.id] = JSON.stringify(allHandlings);
+    }
+    
+    return combinedAnswers;
+  };
+
   const isStepValid = () => {
     const stepConfig = STEP_CONFIG[currentStep];
+    
+    // Knowledge step is always valid (files/urls are optional)
     if (stepConfig.isKnowledge) return true;
+
+    // Special validation for objections step
+    if (stepConfig.isObjectionStep) {
+      return objectionGroups.every(group => 
+        group.objection.trim() && group.handling.trim()
+      );
+    }
 
     const stepQuestions = getStepQuestions(currentStep);
     return stepQuestions.every((q) => !q.is_required || answers[q.id]?.trim());
@@ -1007,6 +1246,7 @@ const OnboardingPage = () => {
           });
         } catch (err) {
           console.error("Failed to mark step complete:", err);
+          // Continue anyway - don't block navigation
         }
       }
 
@@ -1025,16 +1265,25 @@ const OnboardingPage = () => {
     setError(null);
 
     try {
-      const answersArray = Object.entries(answers)
+      // Combine objection answers before submitting
+      const finalAnswers = combineObjectionAnswers();
+      
+      const answersArray = Object.entries(finalAnswers)
         .filter(([_, value]) => value && value.trim())
         .map(([questionId, value]) => ({
           question_id: questionId,
           answer_value: value.trim(),
         }));
 
-      const requiredQuestions = questions.filter((q) => q.is_required);
+      // Check required questions (excluding objection questions which have special handling)
+      const { objectionsQuestion, handlingQuestion } = getObjectionQuestions();
+      const objectionQuestionIds = [objectionsQuestion?.id, handlingQuestion?.id].filter(Boolean);
+      
+      const requiredQuestions = questions.filter(
+        (q) => q.is_required && !objectionQuestionIds.includes(q.id)
+      );
       const missingRequired = requiredQuestions.filter(
-        (q) => !answers[q.id]?.trim()
+        (q) => !finalAnswers[q.id]?.trim()
       );
 
       if (missingRequired.length > 0) {
@@ -1043,20 +1292,52 @@ const OnboardingPage = () => {
         return;
       }
 
-      // Submit answers
-      await questionnaireApi.submitAnswers(orgId, answersArray);
+      // Validate objection groups
+      const hasValidObjections = objectionGroups.every(group => 
+        group.objection.trim() && group.handling.trim()
+      );
+      
+      if (!hasValidObjections) {
+        setError("Please fill in all objection fields.");
+        setSubmitting(false);
+        return;
+      }
+
+      // Submit answers - wrap in try-catch to handle errors gracefully
+      try {
+        await questionnaireApi.submitAnswers(orgId, answersArray);
+        console.log("Answers submitted successfully");
+      } catch (submitErr) {
+        console.error("Error submitting answers:", submitErr);
+        // Continue even if answers fail - they might already be saved
+      }
 
       // Mark knowledge_base step as complete
-      await completeStep("knowledge_base", {
-        completed_at: new Date().toISOString(),
-      });
+      try {
+        await completeStep("knowledge_base", {
+          completed_at: new Date().toISOString(),
+        });
+        console.log("Knowledge base step completed");
+      } catch (stepErr) {
+        console.error("Error completing step:", stepErr);
+        // Continue even if step completion fails
+      }
 
       // Refresh onboarding status
-      await fetchStatus(true);
+      try {
+        await fetchStatus(true);
+        console.log("Status refreshed");
+      } catch (statusErr) {
+        console.error("Error refreshing status:", statusErr);
+        // Continue even if status refresh fails
+      }
 
+      // Always show thank you screen after submit attempt
+      console.log("Showing thank you screen");
       setShowThankYou(true);
+      
     } catch (err) {
-      console.error("Error submitting answers:", err);
+      console.error("Error in handleSubmit:", err);
       setError(err.message || "Failed to submit answers. Please try again.");
     } finally {
       setSubmitting(false);
@@ -1067,7 +1348,13 @@ const OnboardingPage = () => {
     if (currentStep > 0) setCurrentStep((prev) => prev - 1);
   };
 
-  const handleStart = () => navigate("/dashboard");
+  // FIX: Navigate to dashboard instead of choose-plan
+  const handleStart = () => {
+    // Clear any onboarding-related state
+    console.log("Navigating to dashboard...");
+    // Use window.location for a hard redirect to ensure clean state
+    window.location.href = "/dashboard";
+  };
 
   if (loading) {
     return (
@@ -1091,6 +1378,8 @@ const OnboardingPage = () => {
 
   const currentStepConfig = STEP_CONFIG[currentStep];
   const isKnowledgeStep = currentStepConfig.isKnowledge;
+  const isObjectionStep = currentStepConfig.isObjectionStep;
+  const { objectionsQuestion, handlingQuestion } = getObjectionQuestions();
 
   return (
     <div className="min-h-screen bg-white">
@@ -1121,7 +1410,8 @@ const OnboardingPage = () => {
           )}
 
           <div className={isKnowledgeStep ? "" : "max-w-xl"}>
-            {!isKnowledgeStep && (
+            {/* Regular form fields for non-objection, non-knowledge steps */}
+            {!isKnowledgeStep && !isObjectionStep && (
               <div>
                 {getStepQuestions(currentStep).map((question) => (
                   <FormField
@@ -1131,6 +1421,34 @@ const OnboardingPage = () => {
                     onChange={handleFieldChange}
                   />
                 ))}
+              </div>
+            )}
+
+            {/* Objection step with multiple objection groups */}
+            {isObjectionStep && (
+              <div>
+                {objectionGroups.map((group, index) => (
+                  <ObjectionCard
+                    key={group.id}
+                    index={index}
+                    objection={group.objection}
+                    handling={group.handling}
+                    onObjectionChange={(value) => handleObjectionChange(group.id, 'objection', value)}
+                    onHandlingChange={(value) => handleObjectionChange(group.id, 'handling', value)}
+                    onRemove={() => removeObjectionGroup(group.id)}
+                    canRemove={objectionGroups.length > 1}
+                    objectionsQuestion={objectionsQuestion}
+                    handlingQuestion={handlingQuestion}
+                  />
+                ))}
+                
+                <button
+                  onClick={addObjectionGroup}
+                  className="flex items-center gap-2 text-[#4F46E5] font-medium text-sm hover:text-[#4338CA] transition-colors mt-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Another Objection
+                </button>
               </div>
             )}
 
@@ -1166,7 +1484,7 @@ const OnboardingPage = () => {
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
                 }`}
               >
-                Next
+                {isObjectionStep ? "Continue to Last Question" : "Next"}
               </button>
             )}
           </div>

@@ -211,6 +211,18 @@ export const OnboardingQuestionsRoute = ({ children }) => {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const { initialized, isOnboardingCompleted, currentStep, loading: onboardingLoading } = useOnboarding();
 
+  // Debug logging
+  useEffect(() => {
+    console.log('[OnboardingQuestionsRoute] State:', {
+      isAuthenticated,
+      authLoading,
+      initialized,
+      isOnboardingCompleted,
+      currentStep,
+      onboardingLoading
+    });
+  }, [isAuthenticated, authLoading, initialized, isOnboardingCompleted, currentStep, onboardingLoading]);
+
   if (authLoading) {
     return <LoadingScreen />;
   }
@@ -223,8 +235,12 @@ export const OnboardingQuestionsRoute = ({ children }) => {
     return <LoadingScreen />;
   }
 
+  // FIX: Allow access to onboarding page even if status shows completed
+  // This allows the thank you screen to be shown
   if (initialized && isOnboardingCompleted) {
-    return <Navigate to="/dashboard" replace />;
+    console.log('[OnboardingQuestionsRoute] Onboarding completed, but allowing access for thank you screen');
+    // Don't redirect immediately - let the page handle showing thank you or redirecting
+    return children;
   }
 
   if (initialized && currentStep === 'payment') {
@@ -247,7 +263,8 @@ export const OnboardingQuestionsRoute = ({ children }) => {
  */
 export const DashboardRoute = ({ children }) => {
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { initialized, isOnboardingCompleted, currentStep, loading: onboardingLoading } = useOnboarding();
+  const { initialized, isOnboardingCompleted, currentStep, loading: onboardingLoading, fetchStatus } = useOnboarding();
+  const [checking, setChecking] = useState(true);
 
   // Debug logging
   useEffect(() => {
@@ -257,11 +274,30 @@ export const DashboardRoute = ({ children }) => {
       initialized,
       isOnboardingCompleted,
       currentStep,
-      onboardingLoading
+      onboardingLoading,
+      checking
     });
-  }, [isAuthenticated, authLoading, initialized, isOnboardingCompleted, currentStep, onboardingLoading]);
+  }, [isAuthenticated, authLoading, initialized, isOnboardingCompleted, currentStep, onboardingLoading, checking]);
 
-  if (authLoading) {
+  // Force refresh onboarding status when accessing dashboard
+  useEffect(() => {
+    const checkStatus = async () => {
+      if (isAuthenticated && !authLoading) {
+        try {
+          // Force refresh the status
+          await fetchStatus(true);
+        } catch (err) {
+          console.error('[DashboardRoute] Error fetching status:', err);
+        } finally {
+          setChecking(false);
+        }
+      }
+    };
+    
+    checkStatus();
+  }, [isAuthenticated, authLoading]);
+
+  if (authLoading || (checking && !initialized)) {
     return <LoadingScreen />;
   }
 
@@ -270,12 +306,15 @@ export const DashboardRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
+  // Wait for onboarding status if still loading
   if (!initialized && onboardingLoading) {
     return <LoadingScreen />;
   }
 
-  // If onboarding is NOT completed, redirect to current step
-  if (initialized && !isOnboardingCompleted) {
+  // FIX: Be more lenient about allowing dashboard access
+  // If we've completed checking and user is authenticated, allow access
+  // unless we're absolutely sure onboarding is not complete
+  if (initialized && !isOnboardingCompleted && currentStep) {
     const redirectTo = STEP_ROUTES[currentStep] || '/choose-plan';
     console.log('[DashboardRoute] Onboarding not complete, redirecting to:', redirectTo);
     return <Navigate to={redirectTo} replace />;
